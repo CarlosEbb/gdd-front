@@ -1,0 +1,76 @@
+---
+interface Props {
+  defaultValue: string
+  class?: string
+}
+
+const { defaultValue, class: className } = Astro.props
+---
+
+<div class:list={['w-full', className]} data-tabs-container data-tabs-value={defaultValue}>
+  <slot />
+</div>
+
+<script>
+  function initTabs() {
+    const tabsContainers = document.querySelectorAll('[data-tabs-container]')
+
+    tabsContainers.forEach((container) => {
+      if (container.hasAttribute('data-tabs-initialized')) return
+      container.setAttribute('data-tabs-initialized', 'true')
+
+      const currentValue = container.getAttribute('data-tabs-value')
+
+      // Inicializar estado
+      updateTabsState(container, currentValue)
+    })
+  }
+
+  function updateTabsState(container: Element, activeValue: string | null) {
+    const triggers = container.querySelectorAll('[data-tabs-trigger]')
+    const contents = container.querySelectorAll('[data-tabs-content]')
+
+    // Actualizar triggers
+    triggers.forEach((trigger) => {
+      const value = trigger.getAttribute('data-tabs-trigger')
+      if (value === activeValue) {
+        trigger.setAttribute('data-state', 'active')
+      } else {
+        trigger.setAttribute('data-state', 'inactive')
+      }
+    })
+
+    // Actualizar contenidos
+    contents.forEach((content) => {
+      const value = content.getAttribute('data-tabs-content')
+      if (value === activeValue) {
+        content.setAttribute('data-state', 'active')
+      } else {
+        content.setAttribute('data-state', 'inactive')
+      }
+    })
+  }
+
+  // Event delegation - un solo listener en el document
+  document.addEventListener('click', (e) => {
+    const trigger = (e.target as Element).closest('[data-tabs-trigger]')
+    if (!trigger) return
+
+    const container = trigger.closest('[data-tabs-container]')
+    if (!container) return
+
+    const value = trigger.getAttribute('data-tabs-trigger')
+    container.setAttribute('data-tabs-value', value || '')
+    updateTabsState(container, value)
+  })
+
+  // Inicializar en la primera carga
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTabs)
+  } else {
+    initTabs()
+  }
+
+  // Reinicializar después de navegaciones con View Transitions
+  document.addEventListener('astro:page-load', initTabs)
+</script>

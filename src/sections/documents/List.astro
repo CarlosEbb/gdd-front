@@ -1,0 +1,28 @@
+---
+import ListDocuments from './ListDocuments.astro'
+import SCardDocument from '@/components/skeleton/SCardDocument.astro'
+
+interface Props {
+  title?: string
+  limit?: number | null
+  uuidWorkspace?: string | null
+}
+
+const { title = 'Documentos recientes', limit = null, uuidWorkspace = null } = Astro.props
+let grid = ''
+
+if (uuidWorkspace) {
+  grid = 'xs:grid-cols-2 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-3'
+} else {
+  grid = 'grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+}
+---
+
+<section class="mb-10">
+  <h2 class="mb-4 text-lg font-semibold text-gray-700">{title}</h2>
+  <ListDocuments limit={limit} uuidWorkspace={uuidWorkspace} server:defer>
+    <div class={`mb-10 grid ${grid}`} slot="fallback">
+      <SCardDocument number={limit ?? 7} />
+    </div>
+  </ListDocuments>
+</section>

@@ -1,0 +1,47 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+
+interface Props {
+  title: string
+}
+
+const pathname = Astro.url.pathname
+const currentPath = pathname + Astro.url.search
+
+const { uuid } = Astro.params
+const { title } = Astro.props
+
+const build_number = Astro.url.searchParams.get('build_number') as string
+
+const NAVIGATION = [
+  { href: `/config/documentation/${uuid}?build_number=${build_number}`, label: 'Documentación' },
+  { href: `/config/validation/${uuid}?build_number=${build_number}`, label: 'Validaciones' },
+  { href: `/config/security/${uuid}?build_number=${build_number}`, label: 'Seguridad' },
+  { href: `/config/version/${uuid}?build_number=${build_number}`, label: 'Versiones' },
+]
+---
+
+<MainLayout title={title}>
+  <div class="mx-auto max-w-7xl">
+    <TitleForPage title="Gestionar documento" />
+
+    <section class="mb-10 border-b border-gray-200">
+      <ul class="flex gap-x-4">
+        {
+          NAVIGATION.map((item) => (
+            <li>
+              <a href={item.href} class:list={['text-sm', { 'border-b border-custom-blue3 text-custom-blue3': currentPath === item.href }]}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section>
+      <slot />
+    </section>
+  </div>
+</MainLayout>

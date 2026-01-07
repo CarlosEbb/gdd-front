@@ -1,0 +1,91 @@
+---
+import gddLogo from '@/assets/images/gdd-logo.png'
+import Button from './Button.astro'
+import Icon from './Icon.astro'
+import Search from './Search.astro'
+---
+
+<nav class="fixed top-0 z-20 flex w-full items-center justify-between bg-[#e8eafa] px-2 py-2">
+  <div id="progress-bar" class="pointer-events-none fixed top-0 left-0 z-50 h-[3px] w-0 bg-custom-blue3 opacity-0 transition-all duration-200 ease-out"></div>
+  <div class="flex h-full items-center justify-center">
+    <a href="/home">
+      <img src={gddLogo.src} alt="logo gdd" class="aspect-auto h-10 max-w-24 object-cover md:max-w-32" />
+    </a>
+  </div>
+
+  <div class="md:w-lg">
+    <Search />
+  </div>
+
+  <div class="flex h-full items-center justify-center">
+    <Button id="btn-logout" variant="ghost" class="items-center gap-2" size="sm" loadingText="Saliendo...">
+      <span class="flex items-center justify-center gap-2">
+        <span class="hidden text-sm font-normal md:block">Salir</span>
+        <Icon name="LogOut" stroke-width={1.5} size={14} />
+      </span>
+    </Button>
+  </div>
+</nav>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { navigate } from 'astro:transitions/client'
+  import { setButtonLoading } from '@/scripts/utils'
+
+  document.addEventListener('astro:page-load', () => {
+    const btnLogout = document.getElementById('btn-logout') as HTMLButtonElement
+
+    const logout = async () => {
+      setButtonLoading('#btn-logout', true)
+      const { data, error } = await actions.auth.logout()
+      localStorage.clear()
+      navigate(data?.data?.redirect ?? '/')
+    }
+
+    btnLogout?.addEventListener('click', logout)
+  })
+</script>
+
+<script>
+  let progressInterval: NodeJS.Timeout | undefined
+
+  document.addEventListener('astro:before-preparation', () => {
+    const progressBar = document.getElementById('progress-bar')
+
+    if (progressBar) {
+      clearInterval(progressInterval)
+
+      progressBar.style.opacity = '1'
+      progressBar.style.width = '0%'
+
+      let width = 0
+      progressInterval = setInterval(() => {
+        // Lógica de carga simulada
+        if (width >= 90) {
+          clearInterval(progressInterval)
+        } else {
+          const increment = width < 30 ? 5 : width < 60 ? 2 : 0.5
+          width += increment
+          progressBar.style.width = `${width}%`
+        }
+      }, 50)
+    }
+  })
+
+  document.addEventListener('astro:page-load', () => {
+    const progressBar = document.getElementById('progress-bar')
+
+    if (progressBar) {
+      clearInterval(progressInterval)
+      progressBar.style.width = '100%'
+
+      setTimeout(() => {
+        progressBar.style.opacity = '0'
+
+        setTimeout(() => {
+          progressBar.style.width = '0%'
+        }, 300)
+      }, 200)
+    }
+  })
+</script>

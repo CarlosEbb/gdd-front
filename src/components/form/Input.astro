@@ -1,0 +1,176 @@
+---
+import { Eye, EyeOff } from '@lucide/astro'
+import type { HTMLAttributes } from 'astro/types'
+
+interface Props extends HTMLAttributes<'input'> {
+  label?: string
+  name: string
+  placeholder?: string
+  value?: string
+  serverError?: string
+}
+
+const { label, placeholder = 'Escribe aquí', name, value = '', serverError, ...rest } = Astro.props
+
+const errorId = `error-${name}`
+const stateClasses = serverError
+  ? 'border-red-600 focus:border-red-600 focus:ring-red-500'
+  : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500 aria-invalid:border-red-600 aria-invalid:focus:border-red-600 aria-invalid:focus:ring-red-500'
+---
+
+<>
+  {
+    label && (
+      <label class="mb-1 block text-sm font-medium text-gray-700" for={rest.id ?? name}>
+        {label}
+      </label>
+    )
+  }
+  <div class="w-full" data-input-wrapper>
+    <div class="relative">
+      <input
+        id={rest.id ?? name}
+        type={rest.type}
+        name={name}
+        placeholder={placeholder}
+        value={value}
+        aria-describedby={errorId}
+        aria-invalid={!!serverError}
+        class:list={[
+          'w-full rounded-lg border bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 read-only:cursor-not-allowed read-only:bg-gray-100 read-only:opacity-50 focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+          stateClasses,
+          rest.class,
+        ]}
+        {...rest}
+      />
+
+      {
+        rest.type === 'password' && (
+          <button
+            type="button"
+            class="absolute -top-3 right-0 bottom-0 flex w-10 items-center justify-center text-custom-lucky-gray-light"
+            data-action="toggle-password"
+            aria-label="Mostrar contraseña"
+          >
+            <Eye data-icon="show" class="absolute top-6 right-3 cursor-pointer text-xl" />
+            <EyeOff data-icon="hide" class="absolute top-6 right-3 hidden cursor-pointer text-xl" />
+          </button>
+        )
+      }
+    </div>
+
+    {
+      serverError && (
+        <span id={errorId} class="error-message server-error mt-1 text-sm text-red-600" role="alert">
+          {serverError}
+        </span>
+      )
+    }
+
+    {!serverError && <span id={errorId} class="error-message client-error mt-1 hidden text-sm text-red-600" data-client-error />}
+  </div>
+</>
+
+<style>
+  input::-webkit-datetime-edit {
+    line-height: 1;
+    padding: 0;
+    margin-bottom: -2px;
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
+
+<script>
+  ;(function () {
+    if (typeof window === 'undefined') return
+
+    document.addEventListener('click', function (e) {
+      const rawTarget = e.target
+      if (!(rawTarget instanceof Element)) return
+
+      const actionEl = rawTarget.closest('button[data-action="toggle-password"]')
+      if (!actionEl) return
+
+      const container = actionEl.closest('div.relative')
+      if (!container) return
+
+      const inputEl = container.querySelector('input')
+      if (!inputEl || !(inputEl instanceof HTMLInputElement)) return
+
+      const showIcon = container.querySelector('[data-icon="show"]')
+      const hideIcon = container.querySelector('[data-icon="hide"]')
+
+      const isPassword = inputEl.type === 'password'
+
+      inputEl.type = isPassword ? 'text' : 'password'
+      actionEl.setAttribute('aria-label', isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña')
+
+      if (showIcon) showIcon.classList.toggle('hidden', isPassword)
+      if (hideIcon) hideIcon.classList.toggle('hidden', !isPassword)
+    })
+  })()
+</script>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll('[data-input-wrapper]').forEach((wrapper) => {
+      const input = wrapper.querySelector('input')
+      const errorEl = wrapper.querySelector('[data-client-error]')
+
+      if (!input || !errorEl) {
+        return
+      }
+
+      input.addEventListener('invalid', (event) => {
+        event.preventDefault()
+
+        const validity = input.validity
+        let customMessage = ''
+
+        if (validity.valueMissing) {
+          // 'required'
+          customMessage = input.dataset.errorRequired || 'Este campo es obligatorio.'
+        } else if (validity.patternMismatch) {
+          // 'pattern'
+          customMessage = input.dataset.errorPattern || 'El valor no coincide con el formato requerido.'
+        } else if (validity.typeMismatch) {
+          // 'type="email"', 'type="url"'
+          customMessage = input.dataset.errorType || 'El valor no es del tipo correcto.'
+        } else if (validity.tooShort) {
+          // 'minlength'
+          customMessage = input.dataset.errorMinlength || `El valor es demasiado corto. Mínimo ${input.minLength} caracteres.`
+        } else if (validity.tooLong) {
+          // 'maxlength'
+          customMessage = input.dataset.errorMaxlength || `El valor es demasiado largo. Máximo ${input.maxLength} caracteres.`
+        } else if (validity.rangeOverflow) {
+          // 'max'
+          customMessage = input.dataset.errorMax || `El valor debe ser menor o igual a ${input.max}.`
+        } else if (validity.rangeUnderflow) {
+          // 'min'
+          customMessage = input.dataset.errorMin || `El valor debe ser mayor o igual a ${input.min}.`
+        }
+        // Puedes añadir más 'else if' para:
+        // validity.stepMismatch (step)
+
+        errorEl.textContent = customMessage || input.validationMessage
+        errorEl.classList.remove('hidden')
+
+        input.setAttribute('aria-invalid', 'true')
+      })
+
+      input.addEventListener('input', () => {
+        if (errorEl.textContent) {
+          errorEl.textContent = ''
+          errorEl.classList.add('hidden')
+
+          if (!input.classList.contains('has-server-error')) {
+            input.setAttribute('aria-invalid', 'false')
+          }
+        }
+      })
+    })
+  })
+</script>

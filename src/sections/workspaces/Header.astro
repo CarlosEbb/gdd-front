@@ -1,0 +1,161 @@
+---
+import Modal from '@/components/modal/Modal.astro'
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Input from '@/components/form/Input.astro'
+import IconPicker from '@/components/ui/IconPicker.astro'
+import { formatISODateWithIntl } from '@/scripts/utils'
+import type { DetailsWorkspace } from '@/types/workspaces'
+import type { icons } from '@lucide/astro'
+
+interface Props {
+  workspace: DetailsWorkspace
+}
+
+const { workspace } = Astro.props
+
+const name = workspace?.name ?? ''
+const lastUpdated = workspace?.updated_at ?? ''
+const icon = (workspace?.icon as keyof typeof icons) ?? ''
+---
+
+<div class="flex flex-col items-start justify-between gap-4 xl:flex-row">
+  <div class="flex-1">
+    <div class="mb-1 flex items-center gap-3">
+      <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-100 text-lg">
+        <Icon name={icon} class="text-custom-blue3/50" size={18} stroke-width={1.5} />
+      </div>
+      <div class="flex flex-col items-start overflow-auto">
+        <h2 class="w-40 truncate text-lg font-semibold text-neutral-900">{name}</h2>
+        <p class="truncate text-xs text-neutral-500">{formatISODateWithIntl(lastUpdated?.toString() ?? '')}</p>
+      </div>
+    </div>
+  </div>
+  <div class="flex gap-2">
+    <Button variant="destructive" data-open-modal="delete-workspace" size="icon" title="Eliminar">
+      <Icon name="Trash" stroke-width={1.5} size={18} />
+    </Button>
+    <Button variant="secondary" data-open-modal="edit-workspace" size="icon" title="Editar">
+      <Icon name="Pencil" stroke-width={1.5} size={18} />
+    </Button>
+  </div>
+</div>
+
+<Modal modalId="delete-workspace" title="Eliminar espacio de trabajo">
+  <form class="space-y-6" id="delete-workspace-form">
+    <div class="flex flex-col items-center justify-center py-5">
+      <Icon name="Trash" size={48} stroke-width={1.5} class="text-red-300" />
+      <p class="mb-2 text-lg font-semibold text-gray-900">{name}</p>
+      <p class="mb-4 text-center">¿Estás seguro de querer eliminar este espacio de trabajo?</p>
+      <input type="hidden" name="uuid" value={workspace.uuid} required readonly />
+    </div>
+    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" id="btn-delete-workspace" loadingText="Eliminando espacio...">Eliminar espacio</Button>
+    </div>
+  </form>
+</Modal>
+
+<Modal modalId="edit-workspace" title="Editar espacio de trabajo">
+  <form class="space-y-6" id="edit-workspace-form">
+    <div>
+      <Input
+        label="Nombre del espacio de trabajo"
+        data-error-required="El nombre del espacio de trabajo es obligatorio"
+        value={name}
+        type="text"
+        id="edit-workspace-name"
+        name="edit-workspace-name"
+        placeholder="Ingresa el nombre"
+        required
+      />
+      <input type="hidden" name="uuid" value={workspace.uuid} required readonly />
+    </div>
+
+    <IconPicker iconSelected={icon} />
+
+    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" id="btn-edit-workspace" loadingText="Editando espacio...">Editar espacio</Button>
+    </div>
+  </form>
+</Modal>
+
+<!-- Editar espacio de trabajo -->
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+
+  const form = document.getElementById('edit-workspace-form') as HTMLFormElement
+  const modal = document.getElementById('edit-workspace') as HTMLDialogElement
+  const editWorkspace = async (e: Event) => {
+    e.preventDefault()
+
+    const dataForm = new FormData(form)
+    setButtonLoading('#btn-edit-workspace', true)
+    const name = dataForm.get('edit-workspace-name') as string
+    const uuid = dataForm.get('uuid') as string
+    const icon = dataForm.get('icon') as string
+
+    if (!name || !icon) {
+      toast.error('Por favor, complete todos los campos')
+      setButtonLoading('#btn-edit-workspace', false)
+      return
+    }
+
+    const { data, error } = await callAction(actions.workspaces.update({ uuid, name, icon }))
+
+    if (error) {
+      toast.error(error.message)
+      setButtonLoading('#btn-edit-workspace', false)
+      return
+    }
+
+    toast.success(data!.message)
+    modal.close()
+    /*
+      Se hace el reload porque no se puede actualizar el icono del workspace con lucide icon
+      ya que no se puede obtener el SVG desde el cliente.
+    */
+    navigate(data!.data.redirect)
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    form.addEventListener('submit', editWorkspace)
+  })
+</script>
+
+<!-- Eliminar espacio de trabajo -->
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+
+  const form = document.getElementById('delete-workspace-form') as HTMLFormElement
+  const modal = document.getElementById('delete-workspace') as HTMLDialogElement
+
+  async function deleteWorkspace(e: Event) {
+    e.preventDefault()
+    const dataForm = new FormData(form)
+    setButtonLoading('#btn-delete-workspace', true)
+    const { data, error } = await callAction(actions.workspaces.delete({ uuid: dataForm.get('uuid') as string }))
+
+    if (error) {
+      toast.error(error.message)
+      setButtonLoading('#btn-delete-workspace', false)
+      modal.close()
+      return
+    }
+
+    toast.success(data!.message)
+    navigate(data!.data.redirect)
+    modal.close()
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    form.addEventListener('submit', deleteWorkspace)
+  })
+</script>

@@ -1,0 +1,81 @@
+---
+import Modal from '@/components/modal/Modal.astro'
+import Button from '@/components/ui/Button.astro'
+import CardDocument from '@/components/ui/CardDocument.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Icon from '@/components/ui/Icon.astro'
+import { actions } from 'astro:actions'
+import type { Document } from '@/types/documents'
+
+interface Props {
+  limit?: number | null
+  uuidWorkspace?: string | null
+}
+
+const { limit = 7, uuidWorkspace = null } = Astro.props
+
+let documents: Document[] | null = null
+let hasDocuments = false
+let error = null
+
+let grid = ''
+
+if (uuidWorkspace) {
+  const { data, error: errorDocuments } = await Astro.callAction(actions.documents.getByWorkspaces, { uuid: uuidWorkspace })
+  documents = data?.data ?? []
+  hasDocuments = documents.length > 0 || false
+  error = errorDocuments ?? null
+  grid = 'xs:grid-cols-2 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-3'
+} else {
+  const { data, error: errorDocuments } = await Astro.callAction(actions.documents.getByUser, { limit })
+  documents = data?.data ?? []
+  hasDocuments = documents.length > 0 || false
+  error = errorDocuments ?? null
+  grid = 'grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+}
+
+const currentPath = Astro.url.pathname
+---
+
+{
+  hasDocuments ? (
+    <div class={`mb-10 grid ${grid}`} data-documents-container>
+      {documents.map((document) => (
+        <CardDocument document={document} />
+      ))}
+    </div>
+  ) : error ? (
+    <EmptyState title="Error al cargar los documentos" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
+  ) : (
+    <EmptyState title="Documentos no encontrados" description="Crea un nuevo documento para empezar a trabajar." modalId="save-template" hrefText="Crear documento" state="notFound" action="create" />
+  )
+}
+
+<Modal modalId="modal-details" title="Detalles del documento">
+  <div>
+    <h2>Detalles del documento</h2>
+  </div>
+</Modal>
+
+<Modal modalId="modal-delete" title="Eliminar documento">
+  <form class="space-y-6" id="delete-document-form">
+    <div class="flex flex-col items-center justify-center py-5">
+      <Icon name="Trash" size={48} stroke-width={1.5} class="text-red-300" />
+      <p class="mb-2 text-lg font-semibold text-gray-900" id="document-name"></p>
+      <p class="mb-4 text-center">¿Estás seguro de querer eliminar el documento?</p>
+      <input type="hidden" name="uuid_template" id="uuid-template" value="" />
+      <input type="hidden" name="name_version" id="name-version" value="" />
+    </div>
+    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" id="btn-delete-document" loadingText="Eliminando...">Eliminar documento</Button>
+    </div>
+  </form>
+</Modal>
+
+<script>
+  import { initDocumentModals } from '@/scripts/document-modals'
+
+  initDocumentModals()
+  document.addEventListener('astro:page-load', initDocumentModals)
+</script>

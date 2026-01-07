@@ -1,0 +1,207 @@
+---
+import Input from '@/components/form/Input.astro'
+import Select from '@/components/form/Select.astro'
+import Button from '@/components/ui/Button.astro'
+import MainLayout from '@/layouts/MainLayout.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import ListDocuments from '@/sections/documents/List.astro'
+import Icon from '@/components/ui/Icon.astro'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+
+const workspaces = await Astro.session?.get('workspaces')
+const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id, label: workspace.name })) ?? []
+---
+
+<MainLayout title="Mis documentos">
+  <div class="mx-auto max-w-7xl">
+    <TitleForPage title="Mis documentos" />
+
+    <section class="">
+      <div class="relative rounded-lg border border-gray-200 bg-linear-to-r from-custom-cyan/10 to-custom-blue2/10 p-4 shadow-sm shadow-blue-100">
+        <p class="absolute -top-3 left-4 rounded-full border border-gray-200 bg-white/80 px-4 py-1 text-sm text-neutral-500">Filtrar por</p>
+        <div class="mt-4 flex flex-wrap items-end justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-2 md:gap-y-0">
+            <div class="w-full md:w-auto">
+              <Input label="Fecha de creación" name="date" type="date" placeholder="buscar por fecha de creación" />
+            </div>
+            <div class="w-full md:w-auto">
+              <Input label="Título" name="title" type="text" placeholder="buscar por título" />
+            </div>
+            <div class="w-full md:w-auto">
+              <Select label="Espacio de trabajo" name="workspace" options={workspacesOptions} placeholder="filtrar por espacio de trabajo" />
+            </div>
+          </div>
+
+          <div class="flex items-end gap-2">
+            <span id="reset-filters" class="hidden">
+              <Button variant="secondary" size="lg" aria-label="Restablecer filtros">
+                <span class="flex items-center gap-2">
+                  <Icon name="X" stroke-width={1.5} size={18} />
+                  Restablecer
+                </span>
+              </Button>
+            </span>
+            <Button id="sort-button" variant="secondary" size="lg" aria-label="Ordenar" data-order="desc">
+              <span class="flex items-center gap-2">
+                <Icon name="ArrowUpDown" stroke-width={1.5} size={18} />
+                Ordenar
+              </span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-10">
+        <ListDocuments limit={null} />
+        <div id="no-results-message" class="hidden">
+          <EmptyState title="Sin resultados" description="No se encontraron documentos que coincidan con los filtros aplicados." hrefText="Limpiar filtros" action="close" state="notFound" href="#" />
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function initDocumentFilter() {
+      const titleInput = document.querySelector('input[name="title"]') as HTMLInputElement
+      const dateInput = document.querySelector('input[name="date"]') as HTMLInputElement
+      const workspaceSelect = document.querySelector('select[name="workspace"]') as HTMLSelectElement
+      const resetButton = document.getElementById('reset-filters') as HTMLElement
+      const sortButton = document.getElementById('sort-button') as HTMLButtonElement
+      const noResultsMessage = document.getElementById('no-results-message') as HTMLElement
+      const emptyStateButton = noResultsMessage?.querySelector('a')
+
+      let cards = document.querySelectorAll('.document-card') as NodeListOf<HTMLElement>
+
+      const reselectElements = () => {
+        cards = document.querySelectorAll('.document-card')
+        return cards.length > 0
+      }
+
+      function filterDocuments() {
+        const titleValue = titleInput?.value.toLowerCase().trim() || ''
+        const dateValue = dateInput?.value || ''
+        const workspaceValue = workspaceSelect?.value || ''
+
+        if (resetButton) {
+          if (titleValue || dateValue || workspaceValue) {
+            resetButton.classList.remove('hidden')
+          } else {
+            resetButton.classList.add('hidden')
+          }
+        }
+
+        let hasVisibleCards = false
+
+        reselectElements()
+
+        cards.forEach((card) => {
+          const cardTitle = (card.dataset.title || '').toLowerCase()
+          const cardDateRaw = card.dataset.createdAt || ''
+          const cardWorkspaceId = card.dataset.workspaceId || ''
+
+          const cardDate = cardDateRaw ? cardDateRaw.split('T')[0] : ''
+
+          const matchesTitle = !titleValue || cardTitle.includes(titleValue)
+          const matchesDate = !dateValue || cardDate === dateValue
+          const matchesWorkspace = !workspaceValue || cardWorkspaceId === workspaceValue
+
+          if (matchesTitle && matchesDate && matchesWorkspace) {
+            card.style.display = ''
+            hasVisibleCards = true
+          } else {
+            card.style.display = 'none'
+          }
+        })
+
+        if (noResultsMessage) {
+          if (hasVisibleCards) {
+            noResultsMessage.classList.add('hidden')
+          } else {
+            noResultsMessage.classList.remove('hidden')
+          }
+        }
+      }
+
+      function debounce(func: Function, wait: number) {
+        let timeout: ReturnType<typeof setTimeout>
+        return function executedFunction(...args: any[]) {
+          const later = () => {
+            clearTimeout(timeout)
+            func(...args)
+          }
+          clearTimeout(timeout)
+          timeout = setTimeout(later, wait)
+        }
+      }
+
+      const observer = new MutationObserver((mutations, obs) => {
+        if (reselectElements()) {
+          filterDocuments()
+        }
+      })
+
+      const targetNode = document.querySelector('main') || document.body
+      observer.observe(targetNode, { childList: true, subtree: true })
+
+      if (titleInput) {
+        titleInput.addEventListener('input', debounce(filterDocuments, 300))
+      }
+
+      if (dateInput) {
+        dateInput.addEventListener('change', filterDocuments)
+      }
+
+      if (workspaceSelect) {
+        workspaceSelect.addEventListener('change', filterDocuments)
+      }
+
+      const clearFilters = () => {
+        if (titleInput) titleInput.value = ''
+        if (dateInput) dateInput.value = ''
+        if (workspaceSelect) workspaceSelect.value = ''
+        filterDocuments()
+      }
+
+      const toggleSort = () => {
+        const currentOrder = sortButton.dataset.order
+        const newOrder = currentOrder === 'desc' ? 'asc' : 'desc'
+        sortButton.dataset.order = newOrder
+
+        const cardsContainerRef = document.querySelector('[data-documents-container]') as HTMLElement
+
+        if (!cardsContainerRef) return
+
+        reselectElements()
+        const cardsArray = Array.from(cards) as HTMLElement[]
+
+        cardsArray.sort((a, b) => {
+          const dateA = new Date(a.dataset.createdAt || '').getTime()
+          const dateB = new Date(b.dataset.createdAt || '').getTime()
+
+          return newOrder === 'asc' ? dateA - dateB : dateB - dateA
+        })
+
+        cardsArray.forEach((card) => {
+          cardsContainerRef.appendChild(card)
+        })
+      }
+
+      if (resetButton) {
+        resetButton.addEventListener('click', clearFilters)
+      }
+
+      if (sortButton) {
+        sortButton.addEventListener('click', toggleSort)
+      }
+
+      if (emptyStateButton) {
+        emptyStateButton.addEventListener('click', (e) => {
+          e.preventDefault()
+          clearFilters()
+        })
+      }
+    }
+
+    document.addEventListener('astro:page-load', initDocumentFilter)
+  </script>
+</MainLayout>

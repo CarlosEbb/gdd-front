@@ -1,0 +1,212 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+interface Props extends HTMLAttributes<'div'> {
+  label?: string
+  idPrefix: string
+  namePrefix: string
+  optionsPrefix: Array<{ value: string; label?: string }>
+  placeholderPrefix?: string
+  idInput: string
+  nameInput: string
+  placeholderInput?: string
+  valuePrefix?: string
+  valueInput?: string
+  serverError?: string
+  requiredPrefix?: boolean
+  requiredInput?: boolean
+  typeInput?: HTMLAttributes<'input'>['type']
+  patternInput?: HTMLAttributes<'input'>['pattern']
+  minlengthInput?: HTMLAttributes<'input'>['minlength']
+  maxlengthInput?: HTMLAttributes<'input'>['maxlength']
+}
+
+const {
+  label,
+  idPrefix,
+  namePrefix,
+  optionsPrefix,
+  placeholderPrefix,
+  nameInput,
+  idInput,
+  placeholderInput,
+  valuePrefix = '',
+  valueInput = '',
+  serverError,
+  requiredPrefix,
+  requiredInput,
+  typeInput = 'text',
+  patternInput,
+  minlengthInput,
+  maxlengthInput,
+  ...rest
+}: Props = Astro.props
+
+const errorId = `error-${namePrefix}-${nameInput}`
+const stateClasses = serverError
+  ? 'border-red-600 focus:border-red-600 focus:ring-red-500'
+  : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500 aria-invalid:border-red-600 aria-invalid:focus:border-red-600 aria-invalid:focus:ring-red-500'
+---
+
+<>
+  {label && <label class="mb-1 block text-sm font-medium text-gray-700">{label}</label>}
+  <div class="w-full" data-inputprefix-wrapper>
+    <div class="flex items-start space-x-2">
+      <div class="w-1/3 lg:w-1/4">
+        <select
+          id={idPrefix}
+          name={namePrefix}
+          value={valuePrefix}
+          required={requiredPrefix}
+          aria-describedby={errorId}
+          aria-invalid={!!serverError}
+          class:list={[
+            'w-full rounded-lg border bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+            stateClasses,
+          ]}
+        >
+          {
+            placeholderPrefix && !valuePrefix && (
+              <option class="block font-sans text-base font-medium text-neutral-400 disabled:text-neutral-400" disabled selected value="">
+                {placeholderPrefix}
+              </option>
+            )
+          }
+          {
+            optionsPrefix.map((option) => (
+              <option value={option.value} selected={option.value === valuePrefix}>
+                {option.label || option.value}
+              </option>
+            ))
+          }
+        </select>
+      </div>
+      <div class="flex-1">
+        <input
+          id={idInput}
+          type={typeInput}
+          name={nameInput}
+          placeholder={placeholderInput || '000-00-00'}
+          value={valueInput}
+          required={requiredInput}
+          pattern={patternInput}
+          minlength={minlengthInput}
+          maxlength={maxlengthInput}
+          aria-describedby={errorId}
+          aria-invalid={!!serverError}
+          class:list={[
+            'w-full rounded-lg border bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 read-only:cursor-not-allowed read-only:bg-gray-100 read-only:opacity-50 focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+            stateClasses,
+          ]}
+          {...rest}
+        />
+      </div>
+    </div>
+
+    {
+      serverError && (
+        <span id={errorId} class="error-message server-error mt-1 text-sm text-red-600" role="alert">
+          {serverError}
+        </span>
+      )
+    }
+
+    {!serverError && <span id={errorId} class="error-message client-error mt-1 hidden text-sm text-red-600" data-client-error />}
+  </div>
+</>
+
+<style>
+  .hidden {
+    display: none;
+  }
+</style>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll('[data-inputprefix-wrapper]').forEach((wrapper) => {
+      const select = wrapper.querySelector('select')
+      const input = wrapper.querySelector('input')
+      const errorEl = wrapper.querySelector('[data-client-error]')
+
+      if (!select || !input || !errorEl) {
+        return
+      }
+
+      // Validación del select
+      select.addEventListener('invalid', (event) => {
+        event.preventDefault()
+
+        const validity = select.validity
+        let customMessage = ''
+
+        if (validity.valueMissing) {
+          customMessage = select.dataset.errorPrefixRequired || 'Debes seleccionar una opción.'
+        }
+
+        errorEl.textContent = customMessage || select.validationMessage
+        errorEl.classList.remove('hidden')
+
+        select.setAttribute('aria-invalid', 'true')
+        input.setAttribute('aria-invalid', 'true')
+      })
+
+      // Validación del input
+      input.addEventListener('invalid', (event) => {
+        event.preventDefault()
+
+        const validity = input.validity
+        let customMessage = ''
+
+        if (validity.valueMissing) {
+          customMessage = input.dataset.errorInputRequired || 'Este campo es obligatorio.'
+        } else if (validity.patternMismatch) {
+          customMessage = input.dataset.errorInputPattern || 'El valor no coincide con el formato requerido.'
+        } else if (validity.typeMismatch) {
+          customMessage = input.dataset.errorInputType || 'El valor no es del tipo correcto.'
+        } else if (validity.tooShort) {
+          customMessage = input.dataset.errorInputMinlength || `El valor es demasiado corto. Mínimo ${input.minLength} caracteres.`
+        } else if (validity.tooLong) {
+          customMessage = input.dataset.errorInputMaxlength || `El valor es demasiado largo. Máximo ${input.maxLength} caracteres.`
+        } else if (validity.rangeOverflow) {
+          customMessage = input.dataset.errorInputMax || `El valor debe ser menor o igual a ${input.max}.`
+        } else if (validity.rangeUnderflow) {
+          customMessage = input.dataset.errorInputMin || `El valor debe ser mayor o igual a ${input.min}.`
+        }
+
+        errorEl.textContent = customMessage || input.validationMessage
+        errorEl.classList.remove('hidden')
+
+        select.setAttribute('aria-invalid', 'true')
+        input.setAttribute('aria-invalid', 'true')
+      })
+
+      // Limpiar error cuando el select cambie
+      select.addEventListener('change', () => {
+        // Verificar si ambos campos son válidos
+        if (select.checkValidity() && input.checkValidity()) {
+          errorEl.textContent = ''
+          errorEl.classList.add('hidden')
+
+          if (!select.classList.contains('has-server-error')) {
+            select.setAttribute('aria-invalid', 'false')
+            input.setAttribute('aria-invalid', 'false')
+          }
+        }
+      })
+
+      // Limpiar error cuando el input cambie
+      input.addEventListener('input', () => {
+        // Verificar si ambos campos son válidos
+        if (select.checkValidity() && input.checkValidity()) {
+          errorEl.textContent = ''
+          errorEl.classList.add('hidden')
+
+          if (!input.classList.contains('has-server-error')) {
+            select.setAttribute('aria-invalid', 'false')
+            input.setAttribute('aria-invalid', 'false')
+          }
+        }
+      })
+    })
+  })
+</script>

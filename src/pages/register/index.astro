@@ -1,0 +1,153 @@
+---
+import AuthLayout from '@/layouts/AuthLayout.astro'
+import Input from '@/components/form/Input.astro'
+import Button from '@/components/ui/Button.astro'
+import Select from '@/components/form/Select.astro'
+import { countries } from '@/constants/countries.ts'
+---
+
+<AuthLayout titleTabBrowser="Crear cuenta" titleCardAuth="Crear cuenta">
+  <form method="POST" id="form-register" class="space-y-3">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div>
+        <Input
+          type="text"
+          data-error-required="El nombre es obligatorio"
+          data-error-pattern="El nombre debe contener solo letras"
+          pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
+          required
+          label="Nombre"
+          name="name"
+          autocomplete="new-name"
+        />
+      </div>
+      <div>
+        <Input
+          type="text"
+          data-error-required="El apellido es obligatorio"
+          data-error-pattern="El apellido debe contener solo letras"
+          pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
+          required
+          label="Apellido"
+          name="last_name"
+          autocomplete="new-last_name"
+        />
+      </div>
+    </div>
+
+    <Input
+      type="email"
+      data-error-required="El correo electrónico es obligatorio"
+      data-error-type="El correo electrónico no es válido"
+      required
+      placeholder="email@dominio.com"
+      label="Correo"
+      name="email"
+    />
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div>
+        <Input
+          type="password"
+          data-error-required="La contraseña es obligatoria"
+          data-error-minlength="La contraseña debe tener al menos 6 caracteres"
+          minlength={6}
+          required
+          label="Contraseña"
+          name="password"
+          placeholder="••••••••"
+          autocomplete="new-password"
+        />
+      </div>
+      <div>
+        <Input
+          type="password"
+          data-error-required="La contraseña es obligatoria"
+          data-error-minlength="La contraseña debe tener al menos 6 caracteres"
+          minlength={6}
+          required
+          label="Repetir contraseña"
+          name="confirm_password"
+          placeholder="••••••••"
+          autocomplete="new-confirm_password"
+        />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div>
+        <Input
+          type="number"
+          data-error-required="El código es obligatorio"
+          data-error-type="El código debe ser numérico"
+          pattern="[0-9]+"
+          required
+          label="Código postal"
+          name="zip_code"
+          placeholder="1010"
+        />
+      </div>
+      <div class="col-span-2">
+        <Select data-error-required="El país es obligatorio" label="País" name="country" options={countries} required placeholder="Selecciona un país" />
+      </div>
+    </div>
+
+    <Button id="btn-register" class="my-5 w-full" variant="gradient" loadingText="Creando cuenta...">Crear cuenta</Button>
+
+    <div class="pt-2 text-center">
+      <p class="text-sm">
+        ¿ Ya tienes una cuenta ?
+        <a href="/" class="font-medium text-blue-600 hover:text-blue-700 hover:underline"> Inicia sesión </a>
+      </p>
+    </div>
+  </form>
+</AuthLayout>
+
+<script>
+  import { navigate } from 'astro:transitions/client'
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('form-register') as HTMLFormElement
+    const name = document.getElementById('name') as HTMLInputElement
+    const lastName = document.getElementById('last_name') as HTMLInputElement
+
+    const firstLetterToUpperCase = (event: Event) => {
+      const target = event.target as HTMLInputElement
+      const value = target.value
+      target.value = value.charAt(0).toUpperCase() + value.slice(1)
+    }
+
+    name.addEventListener('input', firstLetterToUpperCase)
+    lastName.addEventListener('input', firstLetterToUpperCase)
+
+    const handleSubmit = async (e: Event) => {
+      e.preventDefault()
+
+      const dataForm = new FormData(form)
+      const password = dataForm.get('password') as string
+      const confirmPassword = dataForm.get('confirm_password') as string
+
+      if (password !== confirmPassword) {
+        toast.error('Las contraseñas no coinciden')
+        return
+      }
+
+      setButtonLoading('#btn-register', true)
+      const { data, error } = await callAction(actions.auth.register(dataForm))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-register', false)
+        return
+      }
+
+      toast.success(data?.message ?? '')
+      navigate(data?.data?.redirect ?? '/')
+    }
+
+    form.addEventListener('submit', handleSubmit)
+  })
+</script>

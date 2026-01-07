@@ -1,0 +1,123 @@
+---
+import EmptyState from '@/components/ui/EmptyState.astro'
+import MainLayout from '@/layouts/MainLayout.astro'
+import Aside from '@/sections/workspaces/Aside.astro'
+import type { DetailsWorkspace } from '@/types/workspaces'
+import { actions } from 'astro:actions'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+import Icon from '@/components/ui/Icon.astro'
+// import ListDocuments from '@/sections/documents/ListDocuments.astro'
+import ListDocuments from '@/sections/documents/List.astro'
+const { uuid } = Astro.params
+
+if (!uuid) {
+  return Astro.redirect('/home')
+}
+
+const workspaces = await Astro.session?.get('workspaces')
+const workspaceExists = workspaces?.some((workspace) => workspace.uuid === uuid)
+
+const { data: details, error: errorDetails } = await Astro.callAction(actions.workspaces.getById, { uuid })
+
+const name = details?.data.name ?? 'Espacio de trabajo no encontrado'
+const currentPath = Astro.url.pathname
+---
+
+<MainLayout title={`${name}`}>
+  <div class="mx-auto mb-10 max-w-7xl">
+    <TitleForPage title={name} />
+    {
+      workspaceExists ? (
+        <div class="grid grid-cols-1 items-start gap-x-6 lg:grid-cols-3">
+          <div class="lg:col-span-2">
+            <ListDocuments uuidWorkspace={uuid} />
+          </div>
+
+          <button
+            id="btn-open-aside"
+            class="fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-custom-purple-light text-white shadow-lg transition-transform hover:scale-105 hover:bg-custom-blue3 lg:hidden"
+            aria-label="Abrir panel de información"
+          >
+            <Icon name="PanelRight" size={24} />
+          </button>
+
+          <div
+            id="aside-drawer"
+            class="invisible fixed inset-0 z-50 opacity-0 transition-all duration-300 lg:visible lg:sticky lg:inset-auto lg:top-24 lg:col-span-1 lg:self-start lg:opacity-100 xl:ps-10"
+          >
+            <div id="aside-overlay" class="absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-300 lg:hidden" />
+
+            <div
+              id="aside-panel"
+              class="absolute top-0 right-0 h-full w-80 translate-x-full overflow-y-auto bg-transparent p-4 transition-transform duration-300 ease-out lg:static lg:h-auto lg:w-auto lg:translate-x-0 lg:overflow-visible lg:p-0"
+            >
+              <button
+                id="btn-close-aside"
+                class="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-600 shadow-md transition-colors hover:bg-gray-100 lg:hidden"
+                aria-label="Cerrar panel"
+              >
+                <Icon name="X" size={20} />
+              </button>
+
+              <Aside workspace={details?.data as DetailsWorkspace} />
+            </div>
+          </div>
+        </div>
+      ) : errorDetails ? (
+        <EmptyState title="Error al cargar el espacio de trabajo" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
+      ) : (
+        <EmptyState
+          title="Espacio de trabajo no encontrado"
+          description="El espacio de trabajo no existe o no tiene acceso."
+          href="/home"
+          hrefText="Volver a la página de inicio"
+          state="notFound"
+          action="back"
+        />
+      )
+    }
+  </div>
+</MainLayout>
+
+<script>
+  function initAsideDrawer() {
+    const btnOpen = document.getElementById('btn-open-aside')
+    const btnClose = document.getElementById('btn-close-aside')
+    const drawer = document.getElementById('aside-drawer')
+    const overlay = document.getElementById('aside-overlay')
+    const panel = document.getElementById('aside-panel')
+
+    if (!btnOpen || !drawer || !overlay || !panel) return
+
+    const openDrawer = () => {
+      drawer.classList.remove('invisible', 'opacity-0')
+      drawer.classList.add('visible', 'opacity-100')
+      overlay.classList.remove('opacity-0')
+      overlay.classList.add('opacity-100')
+      panel.classList.remove('translate-x-full')
+      panel.classList.add('translate-x-0')
+      document.body.style.overflow = 'hidden'
+    }
+
+    const closeDrawer = () => {
+      overlay.classList.remove('opacity-100')
+      overlay.classList.add('opacity-0')
+      panel.classList.remove('translate-x-0')
+      panel.classList.add('translate-x-full')
+
+      setTimeout(() => {
+        drawer.classList.remove('visible', 'opacity-100')
+        drawer.classList.add('invisible', 'opacity-0')
+        document.body.style.overflow = ''
+      }, 300)
+    }
+
+    btnOpen.addEventListener('click', openDrawer)
+    btnClose?.addEventListener('click', closeDrawer)
+    overlay.addEventListener('click', closeDrawer)
+  }
+
+  // Inicializar en carga
+  document.addEventListener('DOMContentLoaded', initAsideDrawer)
+  document.addEventListener('astro:page-load', initAsideDrawer)
+</script>

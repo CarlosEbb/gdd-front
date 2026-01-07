@@ -1,0 +1,40 @@
+---
+import type { InfoUser } from '@/types/user'
+const { PROJECT_URL } = import.meta.env
+
+interface Props {
+  size: 'sm' | 'md' | 'lg'
+}
+
+const { size } = Astro.props
+const getUser = (await Astro.session?.get('user')) as InfoUser
+const { name, last_name, photo } = getUser
+
+const SIZES = {
+  sm: 'size-6',
+  md: 'size-8',
+  lg: 'size-10',
+}
+
+const SIZE_TEXT = {
+  sm: 'text-xs',
+  md: 'text-sm',
+  lg: 'text-base',
+}
+
+const sizeClass = SIZES[size]
+const initials = name.charAt(0).toUpperCase() + last_name.charAt(0).toUpperCase()
+const textSize = SIZE_TEXT[size]
+
+const hasPhoto = photo === null || photo === '{}'
+const photoUrl = hasPhoto ? '' : `${PROJECT_URL}${photo}`
+const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
+---
+
+<img src={photoUrl} alt="Foto de perfil" class={`aspect-square ${sizeClass} rounded-full border border-gray-200 object-cover ${isHiddenPhoto}`} id="photo-profile" />
+
+<div
+  class={`flex aspect-square ${sizeClass} items-center justify-center rounded-full border border-gray-200 bg-linear-to-bl from-custom-blue3/30 to-custom-blue2/30 object-cover font-semibold ${textSize}  ${isHiddenPhoto ? '' : 'hidden'}`}
+>
+  {initials}
+</div>

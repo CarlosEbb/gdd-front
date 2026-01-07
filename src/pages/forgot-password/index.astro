@@ -1,0 +1,59 @@
+---
+import AuthLayout from '@/layouts/AuthLayout.astro'
+import Input from '@/components/form/Input.astro'
+import Button from '@/components/ui/Button.astro'
+---
+
+<AuthLayout titleCardAuth="Cambiar contraseña">
+  <form method="POST" class="space-y-6" id="form-send-email">
+    <div>
+      <Input label="Correo" name="email" placeholder="correo@dominio.com" type="email" required />
+    </div>
+    <div class="space-y-4">
+      <Button id="btn-send-email" variant="gradient" class="w-full" loadingText="Enviando correo..."> Enviar correo </Button>
+      <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+          <span class="w-full border-t border-gray-200"></span>
+        </div>
+        <div class="relative flex justify-center text-xs uppercase">
+          <span class="bg-linear-to-br from-blue-50/50 via-purple-50/30 to-white px-2"> O </span>
+        </div>
+      </div>
+      <div class="pt-2 text-center">
+        <p class="text-sm">
+          ¿Ya tienes una cuenta?
+          <a href="/" class="font-medium text-blue-600 hover:text-blue-700 hover:underline"> Inicia sesión </a>
+        </p>
+      </div>
+    </div>
+  </form>
+</AuthLayout>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+
+  const form = document.getElementById('form-send-email') as HTMLFormElement
+
+  const sendEmail = async (e: Event) => {
+    e.preventDefault()
+
+    const dataForm = new FormData(form)
+
+    setButtonLoading('#btn-send-email', true)
+    const { data, error } = await callAction(actions.auth.resetPassword(dataForm))
+
+    if (error) {
+      toast.error(error.message)
+      setButtonLoading('#btn-send-email', false)
+      return
+    }
+
+    toast.success(data.message)
+    setButtonLoading('#btn-send-email', false)
+    form.reset()
+  }
+
+  form.addEventListener('submit', sendEmail)
+</script>

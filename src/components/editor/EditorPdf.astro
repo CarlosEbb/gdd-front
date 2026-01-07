@@ -1,0 +1,413 @@
+---
+import Modal from '@/components/modal/Modal.astro'
+import { actions } from 'astro:actions'
+import Button from '../ui/Button.astro'
+import Input from '../form/Input.astro'
+import Icon from '../ui/Icon.astro'
+import type { SchemaFile } from '@/types/documents'
+import Dropdown from '../ui/Dropdown.astro'
+import Link from '../ui/Link.astro'
+
+interface Props {
+  uuid: string
+}
+
+const { uuid } = Astro.props
+const urlParams = Astro.url.searchParams
+const buildNumber = urlParams.get('build_number') as string
+const hasBuildNumber = urlParams.has('build_number')
+const idWorkspace = urlParams.get('id_workspace') as string
+const nameDocument = urlParams.get('name_document') as string
+let schemaFile: SchemaFile | null = null
+
+if (hasBuildNumber) {
+  const { data, error } = await Astro.callAction(actions.documents.getDocument, { uuid_template: uuid, build_number: buildNumber })
+
+  if (error) {
+    console.error('Error al obtener el documento:', error)
+    return
+  }
+  schemaFile = data?.data || null
+}
+
+const getWorkspace = await Astro.session?.get('workspaces')
+
+const { data: documents, error: errorDocuments } = await Astro.callAction(actions.documents.getByUser, { limit: null })
+if (errorDocuments) {
+  console.error('Error al obtener los documentos:', errorDocuments)
+  return
+}
+
+const documentsWorkspace = documents?.data
+const removeCurrentDocument = documentsWorkspace?.filter((document: any) => document.uuid !== uuid)
+
+const documentsByWorkspace =
+  (removeCurrentDocument?.reduce((acc: any, document: any) => {
+    const workspaceName = getWorkspace?.find((workspace) => Number(workspace.id) === Number(document.id_workspace))?.name
+    if (!acc[workspaceName]) {
+      acc[workspaceName] = []
+    }
+    const infoDocument = {
+      uuid: document.uuid,
+      title: document.title,
+      buildNumber: document.last_version.build_number,
+      idWorkspace: document.id_workspace,
+    }
+    acc[workspaceName].push(infoDocument)
+    return acc
+  }, {}) as Record<string, { uuid: string; title: string; buildNumber: string; idWorkspace: number }[]>) || {}
+
+const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 0
+---
+
+<div class="absolute top-14 right-0 left-0 flex h-16 p-2">
+  <div class="grid w-full grid-cols-3 items-center gap-x-2 divide-x divide-gray-200 rounded-lg border border-gray-200 bg-white px-2">
+    <div class="flex items-center justify-around gap-x-2">
+      {
+        validateDocumentsByWorkspace ? (
+          <Dropdown buttonLabel={nameDocument} size="sm" shadow="none" border="none">
+            {Object.entries(documentsByWorkspace).map(([workspaceName, documents]) => (
+              <div class="mx-2 border-b border-gray-200 p-2.5 last:border-b-0">
+                <h3 class="text-sm font-medium text-gray-700">{workspaceName}</h3>
+                <ul class="space-y-1 pl-2">
+                  {documents.map((document) => (
+                    <li class="text-sm text-gray-500 hover:text-gray-700">
+                      <a
+                        class="block rounded-md py-1 ps-2 hover:bg-gray-100"
+                        href={`/editor/${document.uuid}?build_number=${document.buildNumber}&id_workspace=${document.idWorkspace}&name_document=${document.title}`}
+                      >
+                        {document.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </Dropdown>
+        ) : (
+          <p class="text-sm text-gray-500">{nameDocument}</p>
+        )
+      }
+      <Button type="button" size="sm" variant="ghost" id="btn-save-document" loadingText="Guardando..." data-uuid-template={uuid}>
+        <span class="flex items-center gap-x-2">
+          <Icon name="Save" class="size-4" stroke-width={1.5} />
+          Guardar
+        </span>
+      </Button>
+
+      <Button type="button" size="sm" class="me-2" variant="ghost" id="btn-new-version-document" loadingText="Creando versión..." data-open-modal="new-version-document">
+        <span class="flex items-center gap-x-2">
+          <Icon name="GitBranch" class="size-4" stroke-width={1.5} />
+          Crear versión
+        </span>
+      </Button>
+    </div>
+
+    <div>
+      <Button type="button" size="sm" variant="ghost" id="generatePdfBtn">
+        <span class="flex items-center gap-x-2">
+          <Icon name="FileText" class="size-4" stroke-width={1.5} />
+          Visualizar
+        </span>
+      </Button>
+      <Button type="button" size="sm" variant="ghost" id="toggleFullscreenBtn">
+        <span class="flex items-center gap-x-2">
+          <Icon name="Expand" class="size-4" stroke-width={1.5} />
+          Pantalla completa
+        </span>
+      </Button>
+
+      <!-- Botón Cambiar BasePDF(Plantilla) -->
+      <Button type="button" size="sm" variant="ghost" id="changeBasePdfBtn">
+        <span class="flex items-center gap-x-2">
+          <Icon name="FileInput" class="size-4" stroke-width={1.5} />
+          Insertar PDF
+        </span>
+      </Button>
+    </div>
+
+    <div>
+      <Link href=`/config/documentation/${uuid}?build_number=${buildNumber}` size="sm" variant="ghost">
+        <span class="flex items-center gap-x-2">
+          <Icon name="FileInput" class="size-4" stroke-width={1.5} />
+          Documentación
+        </span>
+      </Link>
+      <Button type="button" size="sm" variant="destructive" data-open-modal="delete-document">
+        <span class="flex items-center gap-x-2">
+          <Icon name="Eraser" class="size-4" stroke-width={1.5} />
+          Eliminar
+        </span>
+      </Button>
+
+      <input type="file" id="uploadTemplateInput" accept=".json" class="hidden" />
+      <input type="file" id="basePdfInput" class="hidden" accept="application/pdf" />
+    </div>
+  </div>
+</div>
+
+<div id="container" class="absolute top-[120px] right-0 left-0 h-[calc(100vh-120px)]"></div>
+
+<Modal title="Crear versión" modalId="new-version-document">
+  <form id="new-version-document-form">
+    <div>
+      <Input label="Versión" name="name_version" placeholder="Ingrese la versión del documento" required />
+      <input type="hidden" name="uuid_template" value={uuid} />
+    </div>
+    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" id="btn-new-version-document" loadingText="Guardando...">Crear versión</Button>
+    </div>
+  </form>
+</Modal>
+
+<Modal title="Eliminar documento" modalId="delete-document">
+  <form class="space-y-6" id="delete-document-form">
+    <div class="flex flex-col items-center justify-center py-5">
+      <Icon name="Trash" size={48} stroke-width={1.5} class="text-red-300" />
+      <p class="mb-2 text-lg font-semibold text-gray-900">{nameDocument}</p>
+      <p class="mb-4 text-center">¿Estás seguro de querer eliminar el documento <b>{nameDocument}</b>?</p>
+      <input type="hidden" name="uuid_template" value={uuid} />
+      <input type="hidden" name="name_version" value={buildNumber} />
+    </div>
+    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" id="btn-delete-document" loadingText="Eliminando...">Eliminar documento</Button>
+    </div>
+  </form>
+</Modal>
+
+<script type="application/json" id="schema-file-data" set:html={JSON.stringify(schemaFile)} />
+<script>
+  import { callAction, setButtonLoading } from '@/scripts/utils.js'
+  import { toast } from '@/scripts/toast'
+  import { actions } from 'astro:actions'
+  import { navigate } from 'astro:transitions/client'
+  import { downloadJsonFile, readJsonFile, toggleFullscreen, handleBasePdfChange, handleGeneratePdf, initializeFonts } from '@/pdfme/utils.js'
+  import { text, multiVariableText, table, line, rectangle, ellipse, image, svg } from '@pdfme/schemas'
+  import { signature } from '@/pdfme/plugins/signature'
+  import { Designer } from '@pdfme/ui'
+  import { BLANK_A4_PDF, getInputFromTemplate } from '@pdfme/common'
+
+  function initializePage() {
+    const domContainer = document.getElementById('container') as HTMLElement
+    const formNewVersionDocument = document.getElementById('new-version-document-form') as HTMLFormElement
+    const formDeleteDocument = document.getElementById('delete-document-form') as HTMLFormElement
+    const modalNewVersionDocument = document.getElementById('new-version-document') as HTMLDialogElement
+    const modalDeleteDocument = document.getElementById('delete-document') as HTMLDialogElement
+    const saveDocumentButton = document.getElementById('btn-save-document') as HTMLButtonElement
+    const schemaFileData = document.getElementById('schema-file-data') as HTMLScriptElement
+    const schemaFile = schemaFileData ? JSON.parse(schemaFileData.textContent || '{}') : {}
+
+    if (!domContainer) {
+      console.error('No se encontró el contenedor del editor')
+      throw new Error('Container element not found')
+    }
+
+    let designerInstance: Designer | undefined = undefined
+
+    // Inicializar el editor
+    async function initializeEditor() {
+      try {
+        const fonts = await initializeFonts()
+        const jsonContent = { ...schemaFile.schemas[0].content }
+
+        let template = schemaFile
+
+        if (template === null) {
+          template = {
+            schemas: [{}],
+            basePdf: BLANK_A4_PDF,
+          }
+        }
+
+        if (template.basePdf === 'BLANK_PDF') {
+          template.basePdf = BLANK_A4_PDF
+        }
+
+        // Configurar plugins
+        const plugins = {
+          text,
+          multiVariableText,
+          table,
+          line,
+          rectangle,
+          ellipse,
+          image,
+          signature,
+          svg,
+        }
+
+        // Crear el designer
+        designerInstance = new Designer({
+          domContainer,
+          template,
+          plugins,
+          options: {
+            lang: 'es',
+            font: fonts,
+          },
+        })
+
+        // Evento: Generar PDF
+        const generatePdfBtn = document.getElementById('generatePdfBtn')
+        if (generatePdfBtn) {
+          generatePdfBtn.addEventListener('click', async () => {
+            try {
+              if (!designerInstance) {
+                throw new Error('Designer no está inicializado')
+              }
+              await handleGeneratePdf(designerInstance, getInputFromTemplate(designerInstance.getTemplate()), plugins, fonts)
+            } catch (error) {
+              toast.error('Ah ocurrido un error al generar el PDF. Por favor, intente nuevamente.')
+            }
+          })
+        }
+
+        // Evento: Cambiar Base PDF
+        const changeBasePdfBtn = document.getElementById('changeBasePdfBtn')
+        const basePdfInput = document.getElementById('basePdfInput')
+
+        if (changeBasePdfBtn && basePdfInput) {
+          changeBasePdfBtn.addEventListener('click', () => {
+            basePdfInput.click()
+          })
+
+          basePdfInput.addEventListener('change', (e) => {
+            handleBasePdfChange(e, designerInstance)
+          })
+        }
+
+        // Evento: Descargar plantilla
+        const downloadTemplateBtn = document.getElementById('downloadTemplateBtn') as HTMLButtonElement
+        if (downloadTemplateBtn) {
+          downloadTemplateBtn.addEventListener('click', () => {
+            try {
+              if (!designerInstance) {
+                throw new Error('Designer no está inicializado')
+              }
+              const currentTemplate = designerInstance.getTemplate()
+              downloadJsonFile(currentTemplate, 'plantilla')
+            } catch (error) {
+              toast.error('Ah ocurrido un error al descargar la plantilla. Por favor, intente nuevamente.')
+            }
+          })
+        }
+
+        // Evento: Cargar plantilla
+        const loadTemplateBtn = document.getElementById('loadTemplateBtn') as HTMLButtonElement
+        const uploadTemplateInput = document.getElementById('uploadTemplateInput') as HTMLInputElement
+
+        if (loadTemplateBtn && uploadTemplateInput) {
+          loadTemplateBtn.addEventListener('click', () => {
+            uploadTemplateInput.click()
+          })
+
+          uploadTemplateInput.addEventListener('change', async (e) => {
+            const inputElement = e.target as HTMLInputElement
+            const file = inputElement.files?.[0] as File
+            if (!file) return
+
+            try {
+              const loadedTemplate = await readJsonFile(file)
+              if (designerInstance) {
+                designerInstance.updateTemplate(loadedTemplate)
+              }
+              toast.success('Plantilla cargada correctamente')
+            } catch (err) {
+              toast.error(`Error al cargar la plantilla:\n${err}`)
+            }
+          })
+        }
+
+        // Evento: Maximizar
+        const toggleFullscreenBtn = document.getElementById('toggleFullscreenBtn') as HTMLButtonElement
+        if (toggleFullscreenBtn) {
+          toggleFullscreenBtn.addEventListener('click', toggleFullscreen)
+        }
+
+        document.addEventListener('keydown', (event: KeyboardEvent) => {
+          if (event.key === 'Escape' && document.body.classList.contains('editor-fullscreen')) {
+            toggleFullscreen()
+          }
+        })
+      } catch (error) {
+        toast.error('Ah ocurrido un error al inicializar el editor. Por favor, intente nuevamente.')
+      }
+    }
+
+    const handleSave = async (uuidTemplate: string, templateData: any, nameVersion: string, btnId: string) => {
+      try {
+        setButtonLoading(btnId, true)
+
+        const { data, error } = await callAction(actions.documents.createNewVersion({ uuid_template: uuidTemplate, template_data: templateData, name_version: nameVersion }))
+        if (error) {
+          toast.error(error.message)
+          setButtonLoading(btnId, false)
+          return
+        }
+
+        nameVersion && modalNewVersionDocument.close()
+        toast.success(data.message)
+        console.log(data)
+        updateUrlWithNewVersion(data.data.version.build_number)
+      } catch (error) {
+        toast.error('Ah ocurrido un error al guardar la plantilla. Por favor, intente nuevamente.')
+      } finally {
+        setButtonLoading(btnId, false)
+      }
+    }
+
+    const updateUrlWithNewVersion = (buildNumber: string) => {
+      const url = new URL(window.location.href)
+      url.searchParams.set('build_number', buildNumber)
+      window.history.replaceState({}, '', url.toString())
+    }
+
+    const handleDeleteDocument = async (e: Event) => {
+      e.preventDefault()
+      const formData = new FormData(formDeleteDocument)
+
+      try {
+        setButtonLoading('#btn-delete-document', true)
+        const { data, error } = await callAction(actions.documents.deleteDocument(formData))
+        if (error) {
+          toast.error(error.message)
+          setButtonLoading('#btn-delete-document', false)
+          return
+        }
+        toast.success(data.message)
+        navigate(data.data.redirect)
+      } catch (error) {
+        toast.error('Ah ocurrido un error al eliminar la plantilla. Por favor, intente nuevamente.')
+      } finally {
+        setButtonLoading('#btn-delete-document', false)
+        modalDeleteDocument.close()
+      }
+    }
+
+    const handleNewVersion = async (e: Event) => {
+      e.preventDefault()
+      const formData = new FormData(formNewVersionDocument)
+      const uuidTemplate = formData.get('uuid_template') as string
+      const templateData = designerInstance?.getTemplate()
+      const nameVersion = formData.get('name_version') as string
+      await handleSave(uuidTemplate, templateData, nameVersion, '#btn-new-version-document')
+    }
+
+    const handleSaveNewDocument = async (e: Event) => {
+      const uuidTemplate = saveDocumentButton.dataset.uuidTemplate as string
+      const templateData = designerInstance?.getTemplate() as any
+      await handleSave(uuidTemplate, templateData, '', '#btn-save-document')
+    }
+
+    formNewVersionDocument.addEventListener('submit', handleNewVersion)
+    formDeleteDocument.addEventListener('submit', handleDeleteDocument)
+    saveDocumentButton.addEventListener('click', handleSaveNewDocument)
+    initializeEditor()
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    initializePage()
+  })
+</script>

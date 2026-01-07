@@ -1,0 +1,310 @@
+---
+import ConfigLayout from '@/layouts/ConfigLayout.astro'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+import { actions } from 'astro:actions'
+import { Code } from 'astro:components'
+import Icon from '@/components/ui/Icon.astro'
+
+const { uuid } = Astro.params
+
+if (!uuid) {
+  return Astro.redirect('/home')
+}
+
+const build_number = Astro.url.searchParams.get('build_number') as string
+const url = `/documents/variables/${uuid}/${build_number}`
+const base_url = 'https://1xxz16z4-8300.use2.devtunnels.ms'
+
+const responseExample = {
+  status: 200,
+  message: 'Documento guardado exitosamente',
+  data: {
+    uuid: 'c73bc0b8-ea3b-49b7-8974-f3f9553ad281',
+    url: 'https://1xxz16z4-8300.use2.devtunnels.ms/documents/viewPDF/c73bc0b8-ea3b-49b7-8974-f3f9553ad281',
+  },
+}
+
+const { data, error } = await Astro.callAction(actions.documents.getRequestForDocument, { uuid_template: uuid, build_number: build_number })
+
+const request = data?.data
+---
+
+<ConfigLayout title="Documentación">
+  <div class="relative">
+    <div class="flex gap-x-6 md:gap-x-10">
+      <div class="flex flex-col items-center">
+        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">1</div>
+        <div class="-my-2 h-full w-0.5 bg-custom-blue3/60"></div>
+      </div>
+
+      <div class="w-full pt-2 pb-16">
+        <h3 class="mb-3 text-2xl font-bold text-slate-900">El Endpoint (URL)</h3>
+        <p class="mb-6 leading-relaxed text-slate-600">
+          Todas las peticiones deben realizarse a través de HTTPS. Para crear un nuevo documento, utiliza el endpoint de documentos. Asegúrate de incluir tu API Key en los headers.
+        </p>
+
+        <div class="overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
+          <div class="flex items-center justify-between border-b border-custom-blue3/60 bg-custom-blue3/40 px-4 py-3">
+            <div class="flex space-x-2">
+              <div class="h-3 w-3 rounded-full bg-red-500"></div>
+              <div class="h-3 w-3 rounded-full bg-yellow-500"></div>
+              <div class="h-3 w-3 rounded-full bg-green-500"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-xs text-custom-blue3">POST Request</span>
+              <button class="copy-btn p-1 text-custom-blue3 transition-colors hover:text-white" title="Copiar URL" data-content={base_url + url}>
+                <Icon name="Copy" stroke-width={1.5} class="size-4" />
+              </button>
+            </div>
+          </div>
+          <div class="code-scroll overflow-x-auto p-6 font-mono text-sm">
+            <div class="flex items-center gap-3">
+              <span class="bg-brand-500/20 text-brand-400 rounded px-2 py-1 text-xs font-bold tracking-wider uppercase">POST</span>
+              <span class="text-custom-blue3">{base_url}<span class="text-brand-400">{url}</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-x-6 md:gap-x-10">
+      <div class="flex flex-col items-center">
+        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">2</div>
+        <div class="-my-2 h-full w-0.5 bg-custom-blue3/60"></div>
+      </div>
+
+      <div class="w-full pt-2 pb-16">
+        <h3 class="mb-3 text-2xl font-bold text-slate-900">La Petición (Request)</h3>
+        <p class="mb-4 leading-relaxed text-slate-600">Envía un objeto JSON en el cuerpo de la petición. todos los campos son obligatorios para iniciar el proceso.</p>
+        <ul class="mb-6 space-y-2">
+          <li class="flex items-center gap-2 text-sm text-slate-600">
+            <svg class="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg
+            >
+            Validación automática de campos requeridos
+          </li>
+          <li class="flex items-center gap-2 text-sm text-slate-600">
+            <svg class="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg
+            >
+            Soporte para variables personalizadas
+          </li>
+        </ul>
+
+        <div class="overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
+          <div class="flex items-center justify-between border-b border-custom-blue3/60 bg-custom-blue3/40 px-4 py-2">
+            <span class="font-mono text-xs text-custom-blue3">body.json</span>
+            <button class="copy-btn p-1 text-custom-blue3 transition-colors hover:text-white" title="Copiar código" data-content={JSON.stringify(request, null, 2)}>
+              <Icon name="Copy" stroke-width={1.5} class="size-4" />
+            </button>
+          </div>
+          <div class="code-scroll code-container overflow-x-auto p-4">
+            <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(request, null, 2)} />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-x-6 md:gap-x-10">
+      <div class="flex flex-col items-center">
+        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">3</div>
+      </div>
+
+      <div class="w-full pt-2 pb-16">
+        <h3 class="mb-3 text-2xl font-bold text-slate-900">La Respuesta (Response)</h3>
+        <p class="mb-6 leading-relaxed text-slate-600">
+          Si todo es correcto, recibirás un código <code>200 OK</code>. La respuesta incluirá un <code>uuid</code> único de documento que deberás y la url para ver el documento.
+        </p>
+
+        <div class="overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
+          <div class="flex items-center justify-between border-b border-custom-blue3/60 bg-custom-blue3/40 px-4 py-2">
+            <div class="flex items-center gap-2">
+              <span class="flex h-2 w-2 rounded-full bg-custom-blue3"></span>
+              <span class="font-mono text-xs font-bold text-custom-blue3">200 OK</span>
+            </div>
+            <button class="copy-btn p-1 text-slate-400 transition-colors hover:text-white" title="Copiar código" data-content={JSON.stringify(responseExample, null, 2)}>
+              <Icon name="Copy" stroke-width={1.5} class="size-4" />
+            </button>
+          </div>
+          <div class="code-scroll code-container overflow-x-auto p-4">
+            <Code theme="catppuccin-latte" lang="json" code={JSON.stringify(responseExample, null, 2)} />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-x-6 md:gap-x-10">
+      <div class="flex flex-col items-center">
+        <div class="z-10 flex h-12 w-12 shrink-0"></div>
+      </div>
+
+      <div class="w-full pt-2 pb-16">
+        <h3 class="mb-3 text-2xl font-bold text-slate-900">Cómo importar en Postman:</h3>
+        <p class="mb-6 leading-relaxed text-slate-600">Para importar la colección en Postman, haz clic en el botón de descarga y sigue las instrucciones.</p>
+
+        <div class="overflow-hidden rounded-xl bg-orange-50 shadow-lg ring-1 ring-orange-800/60">
+          <div class="code-scroll code-container flex items-start justify-between overflow-x-auto p-4">
+            <ol class="space-y-1 text-left text-sm text-orange-800">
+              <li class="flex items-start gap-2">
+                <span class="font-bold">1.</span>
+                <span>Haz clic en el botón de descarga</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="font-bold">2.</span>
+                <span>Abre Postman (Desktop o Web)</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="font-bold">3.</span>
+                <span>Ve a <span class="rounded bg-orange-100 px-1.5 py-0.5 font-mono text-xs">File → Import</span></span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="font-bold">4.</span>
+                <span>Selecciona el archivo descargado</span>
+              </li>
+            </ol>
+
+            <button
+              class="postman-btn group flex items-center gap-3 rounded-xl bg-linear-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+            >
+              <span>Descargar para Postman</span>
+              <Icon name="Download" stroke-width={2} class="size-5 transition-transform group-hover:translate-y-1" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ConfigLayout>
+
+<script>
+  import { toast } from '@/scripts/toast'
+
+  function setupCopyButtons() {
+    const buttons = document.querySelectorAll('.copy-btn')
+
+    buttons.forEach((btn) => {
+      const button = btn as HTMLElement
+
+      if (button.dataset.listenerAdded === 'true') return
+
+      button.addEventListener('click', async () => {
+        const content = button.getAttribute('data-content')
+        if (content) {
+          try {
+            await navigator.clipboard.writeText(content)
+
+            button.style.color = '#22c55e'
+            toast.success('Copiado al portapapeles')
+
+            setTimeout(() => {
+              button.style.color = ''
+            }, 2000)
+          } catch (err) {
+            toast.error('Error al copiar')
+            console.error('Error al copiar: ', err)
+          }
+        }
+      })
+
+      button.dataset.listenerAdded = 'true'
+    })
+  }
+
+  function setupPostmanButton() {
+    const postmanButtons = document.querySelectorAll('.postman-btn')
+
+    postmanButtons.forEach((btn) => {
+      const button = btn as HTMLElement
+
+      if (button.dataset.listenerAdded === 'true') return
+
+      button.addEventListener('click', () => {
+        const url = window.location.pathname
+        const uuid = url.split('/').pop()
+        const buildNumber = new URLSearchParams(window.location.search).get('build_number')
+
+        const baseUrl = 'https://1xxz16z4-8300.use2.devtunnels.ms'
+        const endpoint = `/documents/variables/${uuid}/${buildNumber}`
+
+        const copyBtn = document.querySelector('.copy-btn[data-content*="{"]') as HTMLElement
+        const requestBody = copyBtn?.getAttribute('data-content') || '{}'
+
+        const postmanCollection = {
+          info: {
+            name: `GDD - Documento ${uuid}`,
+            description: 'Colección generada automáticamente para crear documentos.',
+            schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
+          },
+          item: [
+            {
+              name: 'Crear Documento',
+              request: {
+                method: 'POST',
+                header: [
+                  {
+                    key: 'Content-Type',
+                    value: 'application/json',
+                  },
+                ],
+                body: {
+                  mode: 'raw',
+                  raw: requestBody,
+                  options: {
+                    raw: {
+                      language: 'json',
+                    },
+                  },
+                },
+                url: {
+                  raw: baseUrl + endpoint,
+                  protocol: 'https',
+                  host: [baseUrl.replace('https://', '').replace('http://', '')],
+                  path: endpoint.split('/').filter(Boolean),
+                },
+                description: 'Endpoint para crear un nuevo documento con las variables especificadas',
+              },
+              response: [],
+            },
+          ],
+          variable: [],
+        }
+
+        const collectionJson = JSON.stringify(postmanCollection, null, 2)
+
+        const blob = new Blob([collectionJson], { type: 'application/json' })
+        const blobUrl = URL.createObjectURL(blob)
+
+        const downloadLink = document.createElement('a')
+        downloadLink.href = blobUrl
+        downloadLink.download = `GDD-Documento-${uuid}.postman_collection.json`
+        downloadLink.style.display = 'none'
+        document.body.appendChild(downloadLink)
+
+        downloadLink.click()
+
+        setTimeout(() => {
+          document.body.removeChild(downloadLink)
+          URL.revokeObjectURL(blobUrl)
+        }, 100)
+
+        toast.success('¡Colección descargada! Ahora impórtala en Postman.')
+      })
+
+      button.dataset.listenerAdded = 'true'
+    })
+  }
+
+  setupCopyButtons()
+  setupPostmanButton()
+
+  document.addEventListener('astro:page-load', () => {
+    setupCopyButtons()
+    setupPostmanButton()
+  })
+</script>
+<style>
+  .code-container,
+  pre {
+    background-color: transparent !important;
+  }
+</style>

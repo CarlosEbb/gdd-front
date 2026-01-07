@@ -1,0 +1,61 @@
+---
+import { House, FileText, FolderOpen, User, type Icon as IconType, Bolt, CirclePlus } from '@lucide/astro'
+
+type MenuItem = {
+  name: string
+  href: string
+  icon: typeof IconType
+}
+
+const OPTIONS_MENU: MenuItem[] = [
+  { href: '/home', name: 'Inicio', icon: House },
+  { href: '/documents', name: 'Documentos', icon: FolderOpen },
+  { href: '/templates', name: 'Plantillas', icon: FileText },
+  { href: '/profile', name: 'Perfil', icon: User },
+]
+
+const currentPath = Astro.url.pathname
+---
+
+<div id="menu-overlay" class="fixed inset-0 z-40 hidden bg-black/50 lg:hidden"></div>
+
+<aside id="menubar" class={`fixed left-0 bottom-0 z-40 h-[calc(100vh-56px)] w-16 md:w-24 bg-custom-blue3/10 shadow-md shadow-custom-blue3/20`}>
+  <div class="flex flex-col">
+    <div class="flex w-full items-center justify-center p-2">
+      <button
+        data-open-modal="save-template"
+        class="group haver:scale-105 flex w-full flex-col items-center justify-center rounded-lg bg-custom-blue3 p-3 text-xs text-white shadow-md transition-all duration-200 hover:shadow-lg"
+      >
+        <CirclePlus />
+        Crear
+      </button>
+    </div>
+
+    <nav class="mt-7 h-[calc(100vh-260px)] space-y-5 overflow-y-auto">
+      <ul class="space-y-2 p-2">
+        {
+          OPTIONS_MENU.map((option) => (
+            <li>
+              <a
+                class:list={[
+                  'group flex flex-col items-center justify-center rounded-lg p-3 text-xs text-custom-blue3/80 transition-all duration-200 hover:bg-custom-blue3/30',
+                  { 'bg-custom-blue3/30 font-bold text-custom-blue3': option.href === currentPath },
+                ]}
+                href={option.href}
+              >
+                <option.icon class="size-5 md:size-6" />
+                <span class="hidden md:block">{option.name}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <div class="flex items-center justify-center p-2">
+      <!-- <a href="/config" id="logout" class="group flex w-full flex-col items-center justify-center rounded-lg p-3 text-xs text-custom-blue3/80 transition-all duration-200 hover:bg-custom-blue3/30">
+        <Bolt class="size-5 md:size-6" />
+        <span class="hidden md:block">Configuración</span>
+      </a> -->
+    </div>
+  </div>
+</aside>

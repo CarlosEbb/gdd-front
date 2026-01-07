@@ -1,0 +1,101 @@
+---
+import Input from '@/components/form/Input.astro'
+import Select from '@/components/form/Select.astro'
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import { icons } from '@lucide/astro'
+import { TYPES_DATA, OPERATORS } from '../_constants'
+import DateFormatSelector from './DateFormatSelector.astro'
+---
+
+<div class="col-span-2 space-y-4" id="container-card-validation">
+  <div class="rounded-lg border border-dashed border-gray-300 bg-gray-50" id="empty-card-state">
+    <EmptyState title="Sin campo seleccionado" description="Selecciona un campo del panel izquierdo para configurar sus validaciones" state="info" hiddenAction={true} />
+  </div>
+  <div class="card-validation hidden rounded-lg border border-gray-200 bg-white p-4" data-card-field="" id="validation-card">
+    <div class="mb-4 flex items-center justify-between border-b border-gray-200 pb-4">
+      <h3 class="text-lg font-medium text-gray-700" data-card-title>Nombre</h3>
+      <div>
+        <Button variant="ghost" size="icon" data-btn-delete-card>
+          <Icon name="X" class="size-4" />
+        </Button>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <h4 class="mb-2 text-lg font-medium text-gray-700">Requerido</h4>
+
+      <label
+        class="flex cursor-pointer justify-between rounded-lg border border-gray-200 p-4 transition-all duration-200 hover:border-custom-blue3 hover:bg-custom-blue3/10 hover:text-custom-blue3 has-checked:bg-custom-blue3/10 has-checked:text-custom-blue3 has-checked:ring-custom-blue3"
+      >
+        <span class="flex items-center gap-2">
+          <span class="flex items-center justify-center rounded-lg bg-custom-blue3/10 p-1">
+            <Icon name="BadgeCheck" class="size-4" />
+          </span>
+          Requerido
+        </span>
+        <input type="checkbox" data-required-checkbox class="block accent-custom-blue3 checked:border-indigo-500" />
+      </label>
+    </div>
+
+    <div class="mb-4">
+      <h4 class="mb-2 text-lg font-medium text-gray-700">Tipo de dato</h4>
+      <div class="relative grid grid-cols-3 gap-2" data-types-container>
+        {
+          TYPES_DATA.map((type) => (
+            <label class="flex cursor-pointer justify-between rounded-lg border border-gray-200 p-4 transition-all duration-200 hover:border-custom-blue3 hover:bg-custom-blue3/10 hover:text-custom-blue3 has-checked:bg-custom-blue3/10 has-checked:text-custom-blue3 has-checked:ring-custom-blue3">
+              <span class="flex items-center gap-2">
+                <span class="flex items-center justify-center rounded-lg bg-custom-blue3/10 p-1">
+                  <Icon name={type.icon as keyof typeof icons} class="size-4" />
+                </span>
+                {type.label}
+                {type.value === 'Date' && <span data-date-format-label class="ml-2 hidden cursor-pointer rounded bg-custom-blue3/20 px-2 py-0.5 text-xs text-custom-blue3 hover:bg-custom-blue3/30" />}
+              </span>
+              <input type="checkbox" data-type-checkbox={type.value} value={type.value} class="block accent-custom-blue3 checked:border-indigo-500" />
+            </label>
+          ))
+        }
+        <DateFormatSelector />
+      </div>
+    </div>
+
+    <div>
+      <h4 class="mb-2 text-lg font-medium text-gray-700">Validaciones personalizadas</h4>
+
+      <div class="mb-4 hidden space-y-3" data-validations-container></div>
+      <Button variant="ghost" class="border border-dashed border-custom-blue3" size="sm" data-btn-add-validation>
+        <span class="flex items-center gap-2 text-custom-blue3">
+          <Icon name="Plus" class="size-4" />
+          Agregar validación
+        </span>
+      </Button>
+
+      <div class="mt-4 hidden rounded-lg border border-gray-200 p-4" data-form-validation>
+        <div class="grid grid-cols-3 items-center gap-2">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700"> Campo </label>
+            <div class="rounded-lg bg-white/80 px-4 py-3 shadow-sm" data-field-preview></div>
+          </div>
+          <div>
+            <Select name="operator" options={OPERATORS} label="Operador" data-operator-select />
+          </div>
+          <div>
+            <Input type="text" name="value" label="Valor" data-value-input />
+          </div>
+        </div>
+
+        <div class="mt-2.5 flex items-center justify-end gap-2">
+          <Button variant="secondary" size="sm" data-btn-create-validation>
+            <span class="flex items-center gap-2 text-custom-blue3">
+              <Icon name="Plus" class="size-4" />
+              Crear validación
+            </span>
+          </Button>
+
+          <Button variant="outline" size="sm" class="text-custom-blue3" data-btn-cancel-validation> Cancelar </Button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

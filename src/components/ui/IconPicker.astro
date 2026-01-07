@@ -1,0 +1,170 @@
+---
+import {
+  House,
+  User,
+  Users,
+  UserCheck,
+  UserPlus,
+  Settings,
+  Search,
+  Mail,
+  Bell,
+  Lock,
+  KeyRound,
+  Key,
+  Sun,
+  Moon,
+  Star,
+  Heart,
+  Info,
+  CircleQuestionMark,
+  TriangleAlert,
+  Check,
+  CircleCheck,
+  X,
+  CircleX,
+  Plus,
+  Minus,
+  CirclePlus,
+  CircleMinus,
+  ArrowRight,
+  ArrowLeft,
+  ArrowUp,
+  ArrowDown,
+  ChevronRight,
+  ChevronLeft,
+  ChevronUp,
+  ChevronDown,
+  Menu,
+  MoveHorizontal,
+  MoveVertical,
+  Pencil,
+  Trash,
+  Copy,
+  File,
+  Folder,
+  Image,
+  Video,
+  Music,
+  Mic,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Minimize,
+  Globe,
+  MapPin,
+  Calendar,
+  Clock,
+  Smartphone,
+  Laptop,
+  Database,
+  Server,
+  Cloud,
+  CloudSun,
+  CloudRain,
+  Wind,
+  ExternalLink,
+  Cog,
+  Shield,
+} from '@lucide/astro'
+
+const iconList = [
+  { name: 'Home', component: House },
+  { name: 'User', component: User },
+  { name: 'Users', component: Users },
+  { name: 'UserCheck', component: UserCheck },
+  { name: 'UserPlus', component: UserPlus },
+  { name: 'Settings', component: Settings },
+  { name: 'Search', component: Search },
+  { name: 'Mail', component: Mail },
+  { name: 'Bell', component: Bell },
+  { name: 'Lock', component: Lock },
+  { name: 'Unlock', component: KeyRound },
+  { name: 'Key', component: Key },
+  { name: 'Sun', component: Sun },
+  { name: 'Moon', component: Moon },
+  { name: 'Star', component: Star },
+  { name: 'Heart', component: Heart },
+  { name: 'Info', component: Info },
+  { name: 'CircleQuestionMark', component: CircleQuestionMark },
+  { name: 'TriangleAlert', component: TriangleAlert },
+  { name: 'Check', component: Check },
+  { name: 'CircleCheck', component: CircleCheck },
+  { name: 'X', component: X },
+  { name: 'CircleX', component: CircleX },
+  { name: 'Plus', component: Plus },
+  { name: 'Minus', component: Minus },
+  { name: 'CirclePlus', component: CirclePlus },
+  { name: 'CircleMinus', component: CircleMinus },
+  { name: 'ArrowRight', component: ArrowRight },
+  { name: 'ArrowLeft', component: ArrowLeft },
+  { name: 'ArrowUp', component: ArrowUp },
+  { name: 'ArrowDown', component: ArrowDown },
+  { name: 'ChevronRight', component: ChevronRight },
+  { name: 'ChevronLeft', component: ChevronLeft },
+  { name: 'ChevronUp', component: ChevronUp },
+  { name: 'ChevronDown', component: ChevronDown },
+  { name: 'Menu', component: Menu },
+  { name: 'MoveHorizontal', component: MoveHorizontal },
+  { name: 'MoveVertical', component: MoveVertical },
+  { name: 'Pencil', component: Pencil },
+  { name: 'Trash', component: Trash },
+  { name: 'Copy', component: Copy },
+  { name: 'File', component: File },
+  { name: 'Folder', component: Folder },
+  { name: 'Image', component: Image },
+  { name: 'Video', component: Video },
+  { name: 'Music', component: Music },
+  { name: 'Mic', component: Mic },
+  { name: 'Volume2', component: Volume2 },
+  { name: 'VolumeX', component: VolumeX },
+  { name: 'Maximize', component: Maximize },
+  { name: 'Minimize', component: Minimize },
+  { name: 'Globe', component: Globe },
+  { name: 'MapPin', component: MapPin },
+  { name: 'Calendar', component: Calendar },
+  { name: 'Clock', component: Clock },
+  { name: 'Smartphone', component: Smartphone },
+  { name: 'Laptop', component: Laptop },
+  { name: 'Database', component: Database },
+  { name: 'Server', component: Server },
+  { name: 'Cloud', component: Cloud },
+  { name: 'CloudSun', component: CloudSun },
+  { name: 'CloudRain', component: CloudRain },
+  { name: 'Wind', component: Wind },
+  { name: 'ExternalLink', component: ExternalLink },
+  { name: 'Cog', component: Cog },
+  { name: 'Shield', component: Shield },
+]
+
+interface Props {
+  iconSelected?: string
+}
+
+const { iconSelected } = Astro.props
+
+let isChecked = false
+
+if (iconSelected) {
+  const existsIconSelected = iconSelected ? iconList.find((icon) => icon.name === iconSelected) : false
+  isChecked = existsIconSelected ? true : false
+}
+---
+
+<p class="mb-1 block text-sm font-medium text-gray-700">Seleccione un icono</p>
+<div class="w-full max-w-lg rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
+  <div class="grid h-72 grid-cols-5 gap-2 overflow-y-auto p-2">
+    {
+      iconList.map((icon) => (
+        <label
+          title={icon.name}
+          class="has-checked:text-blue-60 peer flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg p-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-blue-600 has-checked:bg-gray-100 has-checked:text-blue-600"
+        >
+          <icon.component class="h-6 w-6" />
+          <span class="mt-1 truncate text-xs peer-has-checked:text-blue-600">{icon.name}</span>
+          <input type="radio" value={icon.name} class="hidden" name="icon" checked={isChecked} />
+        </label>
+      ))
+    }
+  </div>
+</div>

@@ -1,0 +1,31 @@
+---
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Icon from '@/components/ui/Icon.astro'
+import type { DetailsWorkspace } from '@/types/workspaces'
+import type { icons } from '@lucide/astro'
+
+interface Props {
+  workspaces: DetailsWorkspace[]
+  currentWorkspaceName: string
+}
+
+const { workspaces, currentWorkspaceName } = Astro.props
+---
+
+<div class="flex flex-col">
+  <p class="mb-1 block text-sm font-medium text-gray-700">Cambiar espacio de trabajo</p>
+  <Dropdown buttonLabel={currentWorkspaceName}>
+    <ul>
+      {
+        workspaces.map((workspace) => (
+          <li>
+            <a href={`/workspaces/${workspace.uuid}`} class="flex items-center gap-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              <Icon name={workspace.icon as keyof typeof icons} stroke-width={1.5} size={22} />
+              {workspace.name}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Dropdown>
+</div>

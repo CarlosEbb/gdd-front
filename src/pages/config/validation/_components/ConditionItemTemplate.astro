@@ -1,0 +1,24 @@
+---
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+---
+
+<template id="template-condition-item">
+  <li
+    class="flex items-center justify-between rounded-lg border border-gray-200 bg-slate-50 p-2 transition-all duration-200 hover:border-custom-blue3 hover:bg-custom-blue3/10 hover:text-custom-blue3"
+    data-condition-index=""
+  >
+    <div class="flex-1">
+      <div class="flex items-center gap-2 text-xs">
+        <span class="rounded-lg bg-custom-blue3/20 px-2 py-1 font-medium text-gray-700" data-field-text></span>
+        <span data-operator-text></span>
+        <span class="max-w-20 truncate rounded-lg bg-custom-blue3/20 px-2 py-1 font-medium text-gray-700" data-value-text></span>
+      </div>
+      <span class="mt-1 block text-xs text-gray-500" data-message-text></span>
+    </div>
+
+    <Button variant="destructive" size="icon" data-btn-delete-condition>
+      <Icon name="X" class="size-4" />
+    </Button>
+  </li>
+</template>

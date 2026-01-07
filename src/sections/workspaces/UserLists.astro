@@ -1,0 +1,51 @@
+---
+import Icon from '@/components/ui/Icon.astro'
+import type { WorkspaceByUser } from '@/types/workspaces'
+import Button from '@/components/ui/Button.astro'
+
+interface Props {
+  user: WorkspaceByUser
+  workspaceUuid: string
+}
+
+const { user, workspaceUuid } = Astro.props
+
+const name = user.name
+const email = user.email
+const isOwner = user.is_owner
+const createdAt = user.created_at
+
+const initials = name
+  .split(' ')
+  .map((n) => n[0])
+  .join('')
+---
+
+<div class="flex w-full items-center justify-between">
+  <div class="flex flex-1 items-center">
+    <div class="shrink-0">
+      <div
+        class="flex aspect-square h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-linear-to-bl from-custom-blue3/30 to-custom-blue2/30 object-cover text-sm font-semibold"
+      >
+        {initials}
+      </div>
+    </div>
+    <div class="ms-3 min-w-0 flex-1">
+      <p class="truncate text-sm font-medium text-gray-900">{name}</p>
+      <p class="truncate text-sm text-gray-500">{email}</p>
+    </div>
+  </div>
+  <div class="flex items-center justify-end">
+    <Button
+      variant="destructive"
+      size="icon"
+      title="Eliminar"
+      data-open-modal={`delete-user-from-workspace`}
+      data-workspace-uuid={workspaceUuid}
+      data-user-email={email}
+      id={`btn-delete-user-from-workspace`}
+    >
+      <Icon name="Trash2" size={18} stroke-width={1.5} data-workspace-uuid={workspaceUuid} data-user-email={email} />
+    </Button>
+  </div>
+</div>

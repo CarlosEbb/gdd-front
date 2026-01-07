@@ -1,0 +1,69 @@
+---
+import Input from '@/components/form/Input.astro'
+import Button from '@/components/ui/Button.astro'
+import type { DetailsWorkspace } from '@/types/workspaces'
+
+interface Props {
+  workspace: DetailsWorkspace
+}
+
+const { workspace } = Astro.props
+---
+
+<form id="form-to-assign-user" method="POST" class="gap-2">
+  <div>
+    <Input
+      label="Asignar usuario"
+      name="email"
+      placeholder="email@ejemplo.com"
+      data-error-required="El correo electrónico es obligatorio"
+      data-error-type="El correo electrónico no es válido"
+      type="email"
+      required
+    />
+    <input type="hidden" name="uuid" value={workspace.uuid} />
+  </div>
+  <div class="mt-2">
+    <Button id="assign-user-btn" variant="default" title="Asignar" class="w-full" size="sm" loadingText="Asignando..."> Asignar </Button>
+  </div>
+</form>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+
+  const form = document.getElementById('form-to-assign-user') as HTMLFormElement
+
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault()
+    const dataForm = new FormData(form)
+
+    const uuid = dataForm.get('uuid') as string
+    const email = dataForm.get('email') as string
+
+    if (!uuid || !email) {
+      toast.error('Por favor, complete todos los campos')
+      return
+    }
+
+    setButtonLoading('#assign-user-btn', true)
+
+    const { data, error } = await callAction(actions.workspaces.assignUser({ uuid, email }))
+
+    setButtonLoading('#assign-user-btn', false)
+
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+
+    toast.success(data.message)
+    form.reset()
+    window.location.reload()
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    form.addEventListener('submit', handleSubmit)
+  })
+</script>

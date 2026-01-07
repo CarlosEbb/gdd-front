@@ -1,0 +1,208 @@
+---
+import { FileText, icons } from '@lucide/astro'
+import type { Document } from '@/types/documents'
+import template from '@/assets/images/preview/template-1.png'
+import { formatISODateWithIntl } from '@/scripts/utils'
+import Icon from './Icon.astro'
+import Avatar from './Avatar.astro'
+const { PROJECT_URL } = import.meta.env
+
+interface Props {
+  document: Document
+}
+
+const ACTIONS = [
+  {
+    name: 'Ver documentación',
+    icon: 'FileCode',
+    action: 'view-documentation',
+  },
+  {
+    name: 'Ver documento',
+    icon: 'FileText',
+    action: 'view',
+  },
+  {
+    name: 'Documentos generados',
+    icon: 'ListTree',
+    action: 'generated',
+  },
+]
+
+const { document } = Astro.props
+
+const { uuid, last_version, id_workspace, title, created_at } = document
+const { path_thumbnails, build_number, name_version, uuid: uuid_version } = last_version
+
+const thumbnails = `${PROJECT_URL}${path_thumbnails}` || template.src
+
+const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_workspace}&name_document=${title}`
+---
+
+<div
+  class="document-card group block cursor-pointer rounded-xl border border-gray-200 bg-white p-3 transition-all duration-200 hover:bg-neutral-50"
+  data-url={url}
+  data-title={title}
+  data-created-at={created_at}
+  data-workspace-id={id_workspace}
+  data-uuid={uuid}
+  data-name-version={name_version}
+  data-build-number={build_number}
+  data-uuid-version={uuid_version}
+>
+  <div class="mb-3 flex items-center justify-between space-x-2">
+    <div class="flex items-center gap-x-2">
+      <FileText class="h-4 w-4 text-blue-400" />
+      <h3 class="truncate font-medium text-gray-800 group-hover:text-purple-700">{title}</h3>
+    </div>
+
+    <div class="relative">
+      <button class="size-6 rounded-full p-1 transition-colors duration-150 hover:bg-gray-200" data-btn-dropdown>
+        <Icon name="EllipsisVertical" stroke-width={1.5} class="size-4" />
+      </button>
+
+      <div
+        class="invisible absolute top-full right-0 z-20 mt-1 w-56 origin-top-right scale-95 transform rounded-lg border border-gray-200 bg-white p-2 opacity-0 shadow-lg transition-all duration-150 ease-out [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100"
+        data-card-dropdown
+      >
+        <div class="py-1">
+          {
+            ACTIONS.map((action) => (
+              <button
+                class="flex w-full items-center gap-x-2 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors duration-150 hover:bg-neutral-100 hover:text-gray-800"
+                data-action={action.action}
+              >
+                <Icon name={action.icon as keyof typeof icons} stroke-width={1.5} class="size-4" />
+                <span>{action.name}</span>
+              </button>
+            ))
+          }
+          <button class="flex w-full items-center gap-x-2 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors duration-150 hover:bg-red-500/20" data-action="delete">
+            <Icon name="Trash2" stroke-width={1.5} class="size-4" />
+            <span>Eliminar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-lg bg-neutral-100">
+    <div class="thumbnail-skeleton absolute inset-0 animate-pulse bg-neutral-200"></div>
+    <img
+      src={thumbnails}
+      class="thumbnail-img relative z-10 h-full w-full object-contain opacity-0 transition-opacity duration-200"
+      alt={title}
+      width="200"
+      height="128"
+      loading="lazy"
+      decoding="async"
+      onload="this.classList.remove('opacity-0'); this.previousElementSibling.classList.add('hidden')"
+    />
+  </div>
+
+  <div class="mt-3 flex items-center space-x-2">
+    <Avatar size="sm" />
+    <p class="mt-0.5 text-sm text-gray-500">{formatISODateWithIntl(created_at)}</p>
+  </div>
+</div>
+
+<script>
+  import { navigate } from 'astro:transitions/client'
+
+  let initialized = false
+
+  function handleDocumentClick(e: Event) {
+    const target = e.target as HTMLElement
+
+    // Si se hace clic en el botón del dropdown
+    const dropdownBtn = target.closest<HTMLButtonElement>('[data-btn-dropdown]')
+    if (dropdownBtn) {
+      e.stopPropagation()
+      const card = dropdownBtn.closest<HTMLDivElement>('.document-card')
+      const dropdown = card?.querySelector<HTMLDivElement>('[data-card-dropdown]')
+
+      // Cerrar otros dropdowns abiertos
+      document.querySelectorAll('[data-card-dropdown].is-open').forEach((menu) => {
+        if (menu !== dropdown) {
+          menu.classList.remove('is-open')
+        }
+      })
+
+      dropdown?.classList.toggle('is-open')
+      return
+    }
+
+    // Si se hace clic en una acción del dropdown
+    const actionBtn = target.closest<HTMLButtonElement>('[data-action]')
+    if (actionBtn) {
+      e.stopPropagation()
+      const card = actionBtn.closest<HTMLDivElement>('.document-card')
+      const action = actionBtn.dataset.action
+
+      if (!card) return
+
+      // Obtener los data attributes del contenedor padre
+      const cardData = {
+        url: card.dataset.url,
+        title: card.dataset.title,
+        createdAt: card.dataset.createdAt,
+        workspaceId: card.dataset.workspaceId,
+        uuid: card.dataset.uuid,
+        nameVersion: card.dataset.nameVersion,
+        buildNumber: card.dataset.buildNumber,
+        uuidVersion: card.dataset.uuidVersion,
+      }
+
+      // Cerrar el dropdown
+      const dropdown = card.querySelector<HTMLDivElement>('[data-card-dropdown]')
+      dropdown?.classList.remove('is-open')
+
+      if (action === 'view') {
+        const detailsEvent = new CustomEvent('document:view', {
+          detail: cardData,
+          bubbles: true,
+        })
+        card.dispatchEvent(detailsEvent)
+      } else if (action === 'delete') {
+        const deleteEvent = new CustomEvent('document:delete', {
+          detail: cardData,
+          bubbles: true,
+        })
+        card.dispatchEvent(deleteEvent)
+      } else if (action === 'view-documentation') {
+        const viewDocumentationEvent = new CustomEvent('document:view-documentation', {
+          detail: cardData,
+          bubbles: true,
+        })
+        card.dispatchEvent(viewDocumentationEvent)
+      } else if (action === 'generated') {
+        const generatedEvent = new CustomEvent('document:generated', {
+          detail: cardData,
+          bubbles: true,
+        })
+        card.dispatchEvent(generatedEvent)
+      }
+      return
+    }
+
+    // Cerrar dropdowns al hacer clic fuera
+    document.querySelectorAll('[data-card-dropdown].is-open').forEach((menu) => {
+      menu.classList.remove('is-open')
+    })
+
+    // Si se hace clic en la card (pero no en el dropdown o sus botones)
+    const card = target.closest<HTMLDivElement>('.document-card')
+    if (card && !target.closest('[data-card-dropdown]') && !target.closest('[data-btn-dropdown]')) {
+      const url = card.dataset.url as string
+      navigate(url)
+    }
+  }
+
+  function init() {
+    if (initialized) return
+    initialized = true
+    document.addEventListener('click', handleDocumentClick)
+  }
+
+  init()
+  document.addEventListener('astro:page-load', init)
+</script>

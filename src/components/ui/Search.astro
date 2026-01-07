@@ -1,0 +1,132 @@
+---
+import Icon from './Icon.astro'
+import { FileText } from '@lucide/astro'
+import { actions } from 'astro:actions'
+
+const { data } = await Astro.callAction(actions.documents.getByUser, { limit: null })
+const documents = data?.data ?? []
+---
+
+<div class="relative" id="search-container">
+  <div class="pointer-events-none absolute inset-y-0 start-0 z-10 flex items-center ps-4">
+    <Icon name="Search" stroke-width={1.5} size={16} />
+  </div>
+  <input
+    type="search"
+    id="input-search"
+    class="focus:ring-custom-Lucky-gray-light h-full w-full rounded-lg border border-custom-gray-dark bg-white p-2 ps-11 text-sm focus:ring-1 focus:outline-none"
+    placeholder="Buscar documentos..."
+    autocomplete="off"
+  />
+
+  <div id="search-results" class="absolute top-full z-50 mt-2 hidden max-h-96 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+    <div id="results-list" class="py-2">
+      <!-- Los resultados se insertarán aquí dinámicamente -->
+    </div>
+    <div id="no-results" class="hidden px-4 py-8 text-center text-gray-500">
+      <p class="text-sm">No se encontraron documentos</p>
+    </div>
+  </div>
+</div>
+
+<template id="search-result-template">
+  <a class="flex items-center gap-3 border-b border-gray-100 px-4 py-3 transition-colors duration-150 last:border-b-0 hover:bg-gray-50">
+    <FileText class="size-3 shrink-0 text-blue-500 md:size-4" />
+    <div class="min-w-0 flex-1">
+      <p class="truncate text-sm font-medium text-gray-900" data-title></p>
+      <p class="truncate text-xs text-gray-500" data-description></p>
+    </div>
+    <span class="hidden shrink-0 text-xs text-gray-400 md:block" data-date></span>
+  </a>
+</template>
+
+<script type="application/json" id="search-documents-data" set:html={JSON.stringify(documents)} />
+
+<script>
+  import { formatDate } from '@/scripts/utils'
+  import type { Document } from '@/types/documents'
+
+  function initSearchComponent() {
+    const dataScript = document.getElementById('search-documents-data')
+    const documents: Document[] = dataScript ? JSON.parse(dataScript.textContent || '[]') : []
+
+    const input = document.getElementById('input-search') as HTMLInputElement | null
+    const resultsContainer = document.getElementById('search-results')
+    const resultsList = document.getElementById('results-list')
+    const noResults = document.getElementById('no-results')
+    const searchContainer = document.getElementById('search-container')
+    const template = document.getElementById('search-result-template') as HTMLTemplateElement | null
+
+    if (!input || !resultsContainer || !resultsList || !noResults || !template || !searchContainer) return
+
+    const $input = input
+    const $resultsContainer = resultsContainer
+    const $resultsList = resultsList
+    const $noResults = noResults
+    const $template = template
+    const $searchContainer = searchContainer
+
+    function createResultItem(doc: Document) {
+      const clone = $template.content.cloneNode(true) as DocumentFragment
+      const link = clone.querySelector('a')
+      const title = clone.querySelector('[data-title]')
+      const description = clone.querySelector('[data-description]')
+      const date = clone.querySelector('[data-date]')
+
+      if (link) link.href = `/editor/${doc.uuid}?build_number=${doc.last_version.build_number}&id_workspace=${doc.id_workspace}&name_document=${doc.title}`
+      if (title) title.textContent = doc.title
+      if (description) description.textContent = doc.description || 'Sin descripción'
+      if (date) date.textContent = formatDate(doc.updated_at)
+
+      return clone
+    }
+
+    function renderResults(filteredDocs: Document[]) {
+      $resultsList.innerHTML = ''
+
+      if (filteredDocs.length === 0) {
+        $resultsList.classList.add('hidden')
+        $noResults.classList.remove('hidden')
+      } else {
+        $resultsList.classList.remove('hidden')
+        $noResults.classList.add('hidden')
+
+        const fragment = document.createDocumentFragment()
+        filteredDocs.forEach((doc) => fragment.appendChild(createResultItem(doc)))
+        $resultsList.appendChild(fragment)
+      }
+    }
+
+    function filterDocuments(searchTerm: string) {
+      const term = searchTerm.toLowerCase().trim()
+
+      if (term === '') {
+        $resultsContainer.classList.add('hidden')
+        return
+      }
+
+      const filtered = documents.filter((doc) => doc.title.toLowerCase().includes(term) || (doc.description && doc.description.toLowerCase().includes(term)))
+
+      renderResults(filtered)
+      $resultsContainer.classList.remove('hidden')
+    }
+
+    $input.addEventListener('input', (e) => filterDocuments((e.target as HTMLInputElement).value))
+
+    document.addEventListener('click', (e) => {
+      if (!$searchContainer.contains(e.target as Node)) {
+        $resultsContainer.classList.add('hidden')
+      }
+    })
+
+    $input.addEventListener('focus', () => {
+      if ($input.value.trim() !== '') {
+        filterDocuments($input.value)
+      }
+    })
+
+    $resultsContainer.addEventListener('click', (e) => e.stopPropagation())
+  }
+
+  document.addEventListener('astro:page-load', initSearchComponent)
+</script>

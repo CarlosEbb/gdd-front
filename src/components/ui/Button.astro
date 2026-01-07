@@ -1,0 +1,116 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export interface Props extends HTMLAttributes<'button'> {
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient'
+  size?: 'default' | 'sm' | 'lg' | 'icon'
+  href?: string
+  rounded?: 'default' | 'full'
+  loadingText?: string
+  showTextOnLoading?: boolean
+}
+
+const { variant = 'default', size = 'default', class: className, href, rounded = 'default', loadingText, showTextOnLoading = true, ...props } = Astro.props
+
+const baseClasses =
+  'inline-flex items-center justify-center whitespace-nowrap rounded-full font-semibold ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+
+const variantClasses = {
+  default: 'bg-custom-purple-light text-white hover:bg-custom-blue3',
+  destructive: 'bg-red-500/30 text-red-500 hover:bg-red-500/40',
+  outline: 'border border-custom-purple-light bg-custom-purple-light/10 hover:custom-purple-light hover:text-custom-purple-light',
+  secondary: 'bg-custom-purple-light/30 text-custom-purple-light hover:bg-custom-purple-light/40',
+  ghost: 'hover:bg-custom-purple-light/10 hover:text-custom-purple-light',
+  gradient: 'bg-gradient-to-r from-custom-purple-light to-custom-blue3 hover:bg-gradient-to-r hover:from-custom-blue hover:to-custom-purple-light text-white',
+}
+
+const sizeClasses = {
+  default: 'h-12 px-4 py-2.5 ',
+  sm: 'h-9 px-3',
+  lg: 'h-11 px-8',
+  icon: 'h-9 w-9',
+}
+
+const roundedClasses = {
+  default: 'rounded-lg',
+  full: 'rounded-full',
+}
+---
+
+<button
+  class:list={[baseClasses, variantClasses[variant], sizeClasses[size], roundedClasses[rounded], className]}
+  data-loading-text={loadingText}
+  data-show-text-on-loading={showTextOnLoading}
+  {...props}
+>
+  <span data-button-spinner class="mr-2 hidden animate-spin" aria-hidden="true">
+    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  </span>
+  <span data-button-content>
+    <slot />
+  </span>
+</button>
+
+<script>
+  function initButtonLoadingSystem() {
+    // Seleccionar todos los botones que tengan los elementos internos de spinner y content
+    const buttons = document.querySelectorAll('button[data-button-spinner], button:has([data-button-spinner])') as NodeListOf<HTMLButtonElement>
+
+    buttons.forEach((button) => {
+      const spinner = button.querySelector('[data-button-spinner]') as HTMLElement
+      const content = button.querySelector('[data-button-content]') as HTMLElement
+
+      if (!spinner || !content) return
+
+      // Evitar inicializar el mismo botón múltiples veces
+      if (button.hasAttribute('data-loading-initialized')) return
+      button.setAttribute('data-loading-initialized', 'true')
+
+      const originalContent = content.innerHTML
+
+      button.addEventListener('button:start-loading', () => {
+        const loadingText = button.dataset.loadingText
+        const showTextOnLoading = button.dataset.showTextOnLoading !== 'false'
+
+        button.setAttribute('data-loading', 'true')
+        button.disabled = true
+
+        spinner.classList.remove('hidden')
+
+        if (loadingText) {
+          content.textContent = loadingText
+        } else if (!showTextOnLoading) {
+          content.classList.add('hidden')
+        }
+      })
+
+      button.addEventListener('button:stop-loading', () => {
+        const loadingText = button.dataset.loadingText
+        const showTextOnLoading = button.dataset.showTextOnLoading !== 'false'
+
+        button.removeAttribute('data-loading')
+        button.disabled = false
+
+        spinner.classList.add('hidden')
+
+        if (loadingText || !showTextOnLoading) {
+          content.innerHTML = originalContent
+          content.classList.remove('hidden')
+        }
+      })
+    })
+  }
+
+  // Inicializar en la primera carga
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initButtonLoadingSystem)
+  } else {
+    initButtonLoadingSystem()
+  }
+
+  // Reinicializar después de navegaciones del lado del cliente (si aplica)
+  document.addEventListener('astro:page-load', initButtonLoadingSystem)
+</script>

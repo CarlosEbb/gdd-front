@@ -1,0 +1,16 @@
+---
+import ConfigLayout from '@/layouts/ConfigLayout.astro'
+
+const { uuid } = Astro.params
+const build_number = Astro.url.searchParams.get('build_number') as string
+
+if (!uuid || !build_number) {
+  return Astro.redirect('/home')
+}
+---
+
+<ConfigLayout title="Seguridad">
+  <div class="relative">
+    text {uuid}
+  </div>
+</ConfigLayout>

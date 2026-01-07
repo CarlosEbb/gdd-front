@@ -1,0 +1,131 @@
+---
+import '@/styles/global.css'
+
+import Sidebar from '@/components/ui/Sidebar.astro'
+import Navbar from '@/components/ui/Navbar.astro'
+import { ClientRouter } from 'astro:transitions'
+import Modal from '@/components/modal/Modal.astro'
+import CreateDocumentModal from '@/components/modal/CreateDocumentModal.astro'
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+
+interface Props {
+  title?: string
+  class?: string
+}
+
+const { title = null, class: className = 'px-4 pt-20' } = Astro.props
+const optionalTitle = title === null ? 'GDD' : `${title} | GDD`
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href={'@/assets/images/favicon.ico'} />
+    <meta name="generator" content={Astro.generator} />
+    <title>{optionalTitle}</title>
+    <script src="@/scripts/modal.ts"></script>
+
+    <ClientRouter />
+  </head>
+
+  <body class="relative min-h-screen bg-linear-to-br from-blue-100/30 via-purple-100/30 to-white">
+    <Sidebar />
+    <div>
+      <Navbar />
+      <div class:list={['ml-16 md:ml-24', className]}>
+        <main>
+          <slot />
+        </main>
+      </div>
+    </div>
+
+    <Modal modalId="modal-warning" title="Advertencia">
+      <div class="flex flex-col items-center justify-center space-y-4 py-5">
+        <Icon name="Clock" size={48} stroke-width={1.5} class="text-yellow-400" />
+        <p class="mb-2 text-lg font-semibold text-gray-900">Tu sesión expirará en 1 minuto por inactividad.</p>
+      </div>
+      <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+        <Button variant="outline" size="sm" id="btn-logout" loadingText="Cerrando sesión...">Salir</Button>
+        <Button size="sm" id="btn-no-logout">Mantener sesión</Button>
+      </div>
+    </Modal>
+
+    <CreateDocumentModal />
+  </body>
+</html>
+<!--
+<script>
+  import { navigate } from 'astro:transitions/client'
+  import { actions } from 'astro:actions'
+  import { setButtonLoading } from '@/scripts/utils'
+
+  const modalWarning = document.getElementById('modal-warning') as HTMLDialogElement
+  const btnNoLogout = document.getElementById('btn-no-logout') as HTMLButtonElement
+  const btnLogout = document.getElementById('btn-logout') as HTMLButtonElement
+
+  // // --- CONFIGURACIÓN ---
+  const INACTIVITY_TIMEOUT_MS = parseInt(import.meta.env.PUBLIC_TOKEN_EXPIRATION) // 15 minutos
+  const DURATION_SHOW_MODAL = parseInt(import.meta.env.PUBLIC_TOKEN_EXPIRATION_SHOW_MODAL) // 14 minutos
+  // -------------------
+
+  let inactivityTimer: NodeJS.Timeout | undefined
+  let warningTimer: NodeJS.Timeout | undefined
+
+  const showWarning = () => {
+    modalWarning.showModal()
+  }
+
+  const handleSignOut = async (redirect: string = '/inactivity') => {
+    setButtonLoading('#btn-logout', true)
+    const { data, error } = await actions.auth.logout()
+    localStorage.clear()
+    navigate(redirect ?? data?.data?.redirect)
+  }
+
+  // Reiniciar el temporizador
+  const resetTimer = () => {
+    // Limpia el temporizador anterior
+    clearTimeout(inactivityTimer)
+    clearTimeout(warningTimer)
+
+    // Inicia un nuevo temporizador
+    inactivityTimer = setTimeout(() => handleSignOut(), INACTIVITY_TIMEOUT_MS)
+    warningTimer = setTimeout(showWarning, DURATION_SHOW_MODAL)
+  }
+
+  const userActivityEvents = [
+    'mousemove',
+    'keydown',
+    'click',
+    'scroll',
+    'touchstart', // para teléfonos
+  ]
+
+  // reiniciar el temporizador con cada actividad
+  userActivityEvents.forEach((event) => {
+    window.addEventListener(event, resetTimer, true)
+  })
+
+  // Inicia el temporizador
+  resetTimer()
+
+  btnNoLogout?.addEventListener('click', (e: Event) => {
+    e.preventDefault()
+    modalWarning.close()
+  })
+
+  btnLogout?.addEventListener('click', (e: Event) => {
+    e.preventDefault()
+    handleSignOut('/')
+  })
+
+  // Limpia los listeners cuando el usuario se va
+  window.addEventListener('beforeunload', () => {
+    userActivityEvents.forEach((event) => {
+      window.removeEventListener(event, resetTimer, true)
+    })
+  })
+</script> -->

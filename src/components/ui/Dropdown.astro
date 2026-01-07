@@ -1,0 +1,133 @@
+---
+interface Props {
+  buttonLabel?: string
+  withSearch?: boolean
+  size?: 'default' | 'sm'
+  shadow?: 'lg' | 'md' | 'sm' | 'none'
+  border?: 'border' | 'none'
+}
+
+const { buttonLabel = 'Seleccionar', withSearch = false, size = 'default', shadow = 'sm', border = 'border' } = Astro.props
+
+const sizeClasses = {
+  default: 'px-4 py-3',
+  sm: 'px-3 py-1.5',
+}
+
+const shadowClasses = {
+  lg: 'shadow-lg',
+  md: 'shadow-md',
+  sm: 'shadow-sm',
+  none: '',
+}
+
+const borderClasses = {
+  border: 'border border-gray-200',
+  none: '',
+}
+---
+
+<div class="relative inline-block w-full cursor-pointer text-left" data-dropdown-container>
+  <button
+    class:list={[
+      'inline-flex w-full cursor-pointer items-center justify-between gap-x-1.5 rounded-lg bg-white/80 backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+      sizeClasses[size],
+      shadowClasses[shadow],
+      borderClasses[border],
+    ]}
+    data-dropdown-toggle
+  >
+    <span class="truncate">{buttonLabel}</span>
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="-mr-1 ml-2 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180"
+    >
+      <path d="m6 9 6 6 6-6"></path>
+    </svg>
+  </button>
+
+  <div
+    class="ring-opacity-5 invisible absolute left-0 z-10 mt-1 max-h-72 w-72 origin-top-right scale-95 transform overflow-y-auto rounded-lg bg-white opacity-0 shadow-lg ring-1 ring-gray-200 transition-all duration-150 ease-out focus:outline-none [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100"
+    data-dropdown-menu
+  >
+    {
+      withSearch && (
+        <div class="border-b border-gray-100 p-2">
+          <input
+            type="text"
+            class="block w-full rounded-lg border border-gray-200 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
+            placeholder="Buscar..."
+            data-dropdown-search
+          />
+        </div>
+      )
+    }
+
+    <div class="py-1" data-options-container>
+      <slot />
+    </div>
+  </div>
+</div>
+
+<script>
+  function initAstroDropdowns() {
+    const dropdowns = document.querySelectorAll('[data-dropdown-container]')
+    if (dropdowns.length === 0) return
+
+    dropdowns.forEach((container) => {
+      const toggleButton = container.querySelector('[data-dropdown-toggle]')
+      const menu = container.querySelector('[data-dropdown-menu]')
+      const searchInput = container.querySelector('[data-dropdown-search]') as HTMLInputElement
+      const optionsContainer = container.querySelector('[data-options-container]') as HTMLElement
+
+      if (!toggleButton || !menu || !optionsContainer) return
+
+      toggleButton.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const isOpen = menu.classList.toggle('is-open')
+        container.classList.toggle('is-open', isOpen)
+
+        if (isOpen && searchInput) {
+          searchInput.focus()
+        }
+      })
+
+      if (searchInput) {
+        searchInput.addEventListener('click', (e) => e.stopPropagation())
+        searchInput.addEventListener('input', () => {
+          const filter = searchInput.value.toLowerCase()
+          const items = Array.from(optionsContainer.children)
+          items.forEach((item) => {
+            const text = item.textContent?.toLowerCase() || ''
+            if (text.includes(filter)) {
+              ;(item as HTMLElement).style.display = ''
+            } else {
+              ;(item as HTMLElement).style.display = 'none'
+            }
+          })
+        })
+      }
+    })
+  }
+
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('[data-dropdown-menu].is-open').forEach((menu) => {
+      const container = menu.closest('[data-dropdown-container]')
+      if (container && !container.contains(e.target as Node)) {
+        menu.classList.remove('is-open')
+        container.classList.remove('is-open')
+      }
+    })
+  })
+
+  document.addEventListener('astro:page-load', () => {
+    initAstroDropdowns()
+  })
+</script>

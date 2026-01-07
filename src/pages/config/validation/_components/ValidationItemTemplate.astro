@@ -1,0 +1,21 @@
+---
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+---
+
+<template id="template-validation-items">
+  <div class="validation-item flex items-center justify-between rounded-lg border border-gray-200 p-4 shadow-sm" data-validation-index="">
+    <div class="flex-1">
+      <div class="flex items-center gap-2">
+        <span class="rounded-md bg-custom-blue3/10 px-2 py-1 text-xs font-medium text-custom-blue3" data-label-validation></span>
+        <span class="text-sm font-medium text-gray-700" data-value-validation></span>
+      </div>
+      <p class="mt-1 text-xs text-gray-500" data-message-validation></p>
+    </div>
+    <div>
+      <Button variant="destructive" size="icon" data-btn-delete-validation-item>
+        <Icon name="X" class="size-4" />
+      </Button>
+    </div>
+  </div>
+</template>

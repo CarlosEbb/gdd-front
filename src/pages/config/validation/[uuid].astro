@@ -1,0 +1,107 @@
+---
+import ConfigLayout from '@/layouts/ConfigLayout.astro'
+import Tabs from '@/components/tabs/Tabs.astro'
+import TabsList from '@/components/tabs/TabsList.astro'
+import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
+import TabsContent from '@/components/tabs/TabsContent.astro'
+import { actions } from 'astro:actions'
+
+// Componentes locales
+import FieldsSidebar from './_components/FieldsSidebar.astro'
+import ValidationCard from './_components/ValidationCard.astro'
+import FieldsToHide from './_components/FieldsToHide.astro'
+import ConditionForm from './_components/ConditionForm.astro'
+import ConditionsList from './_components/ConditionsList.astro'
+import DebugPanel from './_components/DebugPanel.astro'
+import ValidationItemTemplate from './_components/ValidationItemTemplate.astro'
+import ConditionItemTemplate from './_components/ConditionItemTemplate.astro'
+
+const { uuid } = Astro.params
+const build_number = Astro.url.searchParams.get('build_number') as string
+
+if (!uuid || !build_number) {
+  return Astro.redirect('/home')
+}
+
+const { data } = await Astro.callAction(actions.documents.getRequestForDocument, {
+  uuid_template: uuid,
+  build_number: build_number,
+})
+
+const request = data?.data || {}
+const fields = Object.keys(request) as Array<string>
+---
+
+<ConfigLayout title="Validaciones">
+  <Tabs defaultValue="json">
+    <TabsList>
+      <TabsTrigger value="json">JSON</TabsTrigger>
+      <TabsTrigger value="documento">Documento</TabsTrigger>
+    </TabsList>
+
+    <TabsContent value="json">
+      <div class="grid grid-cols-3 gap-x-3">
+        <FieldsSidebar fields={fields} />
+        <ValidationCard />
+      </div>
+    </TabsContent>
+
+    <TabsContent value="documento">
+      <div class="grid grid-cols-3 gap-x-3">
+        <FieldsToHide />
+        <ConditionForm />
+        <ConditionsList />
+      </div>
+    </TabsContent>
+  </Tabs>
+
+  <DebugPanel />
+
+  <ValidationItemTemplate />
+  <ConditionItemTemplate />
+</ConfigLayout>
+
+<script type="application/json" id="json-input-data" set:html={JSON.stringify(request)} />
+
+<script>
+  import { initValidationSystem } from './_scripts/json-validation'
+  import { initDocumentValidation, resetDocumentValidation } from './_scripts/document-validation'
+
+  document.addEventListener('astro:page-load', () => {
+    resetDocumentValidation()
+    initValidationSystem()
+    initDocumentValidation()
+  })
+</script>
+
+<style>
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .card-validation-enter {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+
+  .card-validation-exit {
+    animation: fadeOut 0.2s ease-out forwards;
+  }
+</style>

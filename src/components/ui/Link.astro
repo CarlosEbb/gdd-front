@@ -1,0 +1,41 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+export interface Props extends HTMLAttributes<'a'> {
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient'
+  size?: 'default' | 'sm' | 'lg' | 'icon'
+  href?: string
+  rounded?: 'default' | 'full'
+  target?: '_blank' | '_self' | '_parent' | '_top'
+}
+
+const { variant = 'default', size = 'default', class: className, href, rounded = 'default', target = '_self', ...props } = Astro.props
+
+const baseClasses =
+  'inline-flex items-center justify-center whitespace-nowrap rounded-full font-semibold ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+
+const variantClasses = {
+  default: 'bg-custom-purple-light text-white hover:bg-custom-blue3',
+  destructive: 'bg-red-500/30 text-red-500 hover:bg-red-500/40',
+  outline: 'border border-custom-purple-light bg-custom-purple-light/10 hover:custom-purple-light hover:text-custom-purple-light',
+  secondary: 'bg-custom-purple-light/30 text-custom-purple-light hover:bg-custom-purple-light/40',
+  ghost: 'hover:bg-custom-purple-light/10 hover:text-custom-purple-light',
+  gradient: 'bg-gradient-to-r from-custom-purple-light to-custom-blue3 hover:bg-gradient-to-r hover:from-custom-blue hover:to-custom-purple-light text-white',
+}
+
+const sizeClasses = {
+  default: 'h-12 px-4 py-2.5 ',
+  sm: 'h-9 px-3',
+  lg: 'h-11 px-8',
+  icon: 'h-9 w-9',
+}
+
+const roundedClasses = {
+  default: 'rounded-lg',
+  full: 'rounded-full',
+}
+---
+
+<a class:list={[baseClasses, variantClasses[variant], sizeClasses[size], roundedClasses[rounded], className]} href={href} target={target} {...props}>
+  <slot />
+</a>

@@ -1,0 +1,83 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+import { actions } from 'astro:actions'
+import { formatISODateWithIntl } from '@/scripts/utils'
+import EmptyState from '@/components/ui/EmptyState.astro'
+const { uuid } = Astro.params
+
+const { PROJECT_URL } = import.meta.env
+if (!uuid) {
+  return Astro.redirect('/home')
+}
+
+const { data, error } = await Astro.callAction(actions.documents.getListGeneratedDocuments, { uuid_template: uuid })
+
+const documents = data?.data ?? []
+
+const status = {
+  active: 'Activo',
+  deleted: 'Eliminado',
+}
+
+const statusColor = {
+  active: 'bg-green-100 text-green-800',
+  deleted: 'bg-red-100 text-red-800',
+}
+
+const currentPath = Astro.url.pathname
+---
+
+<MainLayout title="Documentos generados">
+  <div class="mx-auto max-w-7xl">
+    <TitleForPage title={`Documentos generados`} />
+
+    {
+      documents.length > 0 ? (
+        error ? (
+          <EmptyState title="Error al cargar los documentos" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
+        ) : (
+          <div class="mt-6 flow-root sm:mt-8">
+            <div class="">
+              {documents.map((document) => (
+                <div class="mb-4 flex flex-wrap items-center gap-y-4 rounded-xl border border-gray-200 bg-white px-6 py-6 shadow-sm shadow-custom-blue3/10">
+                  <dl class="w-1/2 sm:w-1/4 lg:w-auto lg:flex-1">
+                    <dt class="text-base font-medium text-gray-500">ID:</dt>
+                    <dd class="mt-1.5 text-base font-semibold text-gray-900">
+                      <a href={`${PROJECT_URL}/documents/viewPDF/${document.uuid}`} class="hover:underline" target="_blank" rel="noopener noreferrer">
+                        {document.id}
+                      </a>
+                    </dd>
+                  </dl>
+
+                  <dl class="w-1/2 sm:w-1/4 lg:w-auto lg:flex-1">
+                    <dt class="text-base font-medium text-gray-500">Fecha:</dt>
+                    <dd class="mt-1.5 text-base font-semibold text-gray-900">{formatISODateWithIntl(document.created_at)}</dd>
+                  </dl>
+
+                  <dl class="w-1/2 sm:w-1/4 lg:w-auto lg:flex-1">
+                    <dt class="text-base font-medium text-gray-500">Status:</dt>
+                    <dd class={`${statusColor[document.status]} me-2 mt-1.5 inline-flex items-center rounded px-2.5 py-0.5 text-xs font-medium`}>{status[document.status]}</dd>
+                  </dl>
+
+                  <div class="grid w-full gap-4 sm:grid-cols-2 lg:flex lg:w-64 lg:items-center lg:justify-end">
+                    <a
+                      href={`${PROJECT_URL}/documents/viewPDF/${document.uuid}`}
+                      class="hover:text-primary-700 inline-flex w-full justify-center rounded-lg border border-custom-blue3/30 bg-custom-blue3/10 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-custom-blue3/20 focus:z-10 focus:ring-4 focus:ring-custom-blue3/30 focus:outline-none lg:w-auto"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Ver documento
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      ) : (
+        <EmptyState title="No se encontraron documentos generados" description="Genera un documento para empezar a trabajar." />
+      )
+    }
+  </div>
+</MainLayout>

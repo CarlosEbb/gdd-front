@@ -1,0 +1,25 @@
+---
+import Input from '@/components/form/Input.astro'
+import Button from '@/components/ui/Button.astro'
+import { TYPES_DATE } from '../_constants'
+---
+
+<div class="absolute top-28 right-0 mt-4 hidden space-y-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm" data-date-format-container>
+  <h3 class="mb-2 text-base font-medium text-gray-700">Tipo de fecha</h3>
+  <div class="">
+    {
+      TYPES_DATE.map((type) => (
+        <label class="flex cursor-pointer justify-between border-b border-gray-200 p-2 text-xs transition-all duration-200 last:border-b-0 hover:border-custom-blue3 hover:bg-custom-blue3/10 hover:text-custom-blue3 has-checked:bg-custom-blue3/10 has-checked:text-custom-blue3 has-checked:ring-custom-blue3">
+          <span class="px-2">{type.label}</span>
+          <input type="radio" name="date-format" data-date-format-radio value={type.value} class="block accent-custom-blue3 checked:border-indigo-500" />
+        </label>
+      ))
+    }
+
+    <!-- Input para formato personalizado (hidden by default) -->
+    <div class="mt-2 hidden" data-custom-date-format-container>
+      <Input type="text" name="custom-date-format" label="Formato personalizado" placeholder="Ej: DD/MM/YYYY HH:mm" id="custom-date-format-input" />
+      <Button variant="secondary" size="sm" class="mt-2 w-full" data-btn-confirm-date-format> Confirmar formato </Button>
+    </div>
+  </div>
+</div>

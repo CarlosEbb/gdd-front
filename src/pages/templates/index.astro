@@ -1,0 +1,321 @@
+---
+import TemplateCard from '@/components/ui/TemplateCard.astro'
+import MainLayout from '@/layouts/MainLayout.astro'
+import { Box, File, FileText, NotepadText, Scale, ScrollText } from '@lucide/astro'
+import Icon from '@/components/ui/Icon.astro'
+import { actions } from 'astro:actions'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Modal from '@/components/modal/Modal.astro'
+import Select from '@/components/form/Select.astro'
+import Input from '@/components/form/Input.astro'
+import Button from '@/components/ui/Button.astro'
+
+const workspaces = (await Astro.session?.get('workspaces')) || []
+const { data, error } = await Astro.callAction(actions.templates.get, {})
+
+const TEMPLATES = data?.data?.categories ?? []
+
+const CATEGORIES = {
+  Facturas: { name: 'Facturas', icon: File, color: 'bg-blue-500/20 text-blue-500/80' },
+  diplomas: { name: 'Diplomas', icon: ScrollText, color: 'bg-orange-500/20 text-orange-500/80' },
+  constancias: { name: 'Constancias', icon: FileText, color: 'bg-red-500/20 text-red-500/80' },
+  Productos: { name: 'Productos', icon: Box, color: 'bg-pink-500/20 text-pink-500/80' },
+  Documentos: { name: 'Documentos', icon: Scale, color: 'bg-purple-500/20 text-purple-500/80' },
+  Boletas: { name: 'Boletas', icon: NotepadText, color: 'bg-green-500/20 text-green-500/80' },
+} as const
+
+const categories = TEMPLATES.map((template) => template.category)
+const uniqueCategories = [...new Set(categories)]
+const AssignedCategories = uniqueCategories.map((category) => CATEGORIES[category as keyof typeof CATEGORIES])
+
+const groupedTemplates = () => {
+  const grouped: { [key: string]: typeof TEMPLATES } = {}
+
+  TEMPLATES.forEach((template) => {
+    if (!grouped[template.category]) {
+      grouped[template.category] = []
+    }
+    grouped[template.category].push(template)
+  })
+  return grouped
+}
+
+const currentPath = Astro.url.pathname
+---
+
+<MainLayout class="ml-16 p-0 md:ml-24">
+  <div class="relative flex-1 overflow-auto">
+    <div class="w-full bg-linear-to-l from-blue-300/30 via-indigo-300/30 to-violet-300/30 mask-b-from-20% mask-b-to-95%">
+      <div class="mx-auto max-w-6xl p-6">
+        <div class="mb-8 text-center">
+          <h1 class="mt-24 text-2xl font-bold md:text-4xl">Descubre nuestras plantillas más recientes</h1>
+
+          <div class="relative mx-auto my-2 mb-8 max-w-2xl py-5 md:my-5 md:py-10">
+            <div class="absolute top-1/2 left-4 -translate-y-1/2">
+              <Icon name="Search" stroke-width={1.5} size={16} />
+            </div>
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Buscar plantillas"
+              class="w-full rounded-lg border border-custom-blue3/40 bg-white py-4 pr-14 pl-12 text-xl text-neutral-950 placeholder-gray-500 shadow-lg focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+            <div class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {
+    !error ? (
+      <>
+        <div id="categories-sticky" class="sticky top-14 z-10 -mt-10 flex snap-x items-center gap-2 overflow-x-auto transition-colors duration-300 md:justify-center md:gap-3">
+          {AssignedCategories.map((item, idx) => (
+            <a href={`#${item.name}`} class="group flex snap-start flex-col items-center gap-2 rounded-lg px-2 py-1 whitespace-nowrap transition-all duration-100 hover:bg-white/30 md:px-4 md:py-2">
+              <div class={`size-10 rounded-lg md:size-14 ${item.color} flex items-center justify-center text-xl group-hover:scale-105`}>
+                <item.icon class="size-5 group-hover:animate-bounce md:size-8" stroke-width={1.5} />
+              </div>
+              <span class="text-xs font-medium text-gray-700">{item.name}</span>
+            </a>
+          ))}
+        </div>
+        <div class="mx-auto max-w-7xl">
+          <section class="mt-20 mb-24">
+            <div id="no-results-message" class="hidden px-10 py-16">
+              <EmptyState
+                title="No se encontraron plantillas"
+                description="No hay plantillas que coincidan con tu búsqueda. Intenta con otros términos."
+                state="notFound"
+                href="#"
+                hrefText="Limpiar búsqueda"
+              />
+            </div>
+            <div class="space-y-8" id="category-templates">
+              {Object.entries(groupedTemplates()).map(([category, templates]) => (
+                <div id={category.charAt(0).toUpperCase() + category.slice(1)} class="category-section md-px-4 scroll-mt-44 px-10 lg:px-0">
+                  <h2 class="mb-4 text-lg font-semibold text-gray-700">{category.charAt(0).toUpperCase() + category.slice(1)}</h2>
+                  <div class="xs:grid-cols-2 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                    {templates.map((template) => (
+                      <TemplateCard template={template} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </>
+    ) : (
+      <EmptyState title="Error al cargar las plantillas" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
+    )
+  }
+
+  <Modal modalId="create-template" title="Crear plantilla">
+    <form class="space-y-6" id="create-template-form">
+      <div>
+        <Select
+          label="Espacio de trabajo"
+          name="uuid_workspace"
+          placeholder="Seleccione un espacio de trabajo"
+          options={workspaces.map((workspace) => ({ value: workspace.uuid, label: workspace.name }))}
+          required
+        />
+      </div>
+
+      <div>
+        <Input label="Nombre" name="title" placeholder="Ingrese el nombre del documento" required />
+      </div>
+
+      <div>
+        <Input label="Descripción" name="description" placeholder="Ingrese la descripción del documento" required />
+        <input type="hidden" name="uuid_category" id="uuid_category" value="" required readonly />
+      </div>
+
+      <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+        <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+        <Button type="submit" size="sm" id="btn-create-template" loadingText="Creando documento...">Crear documento</Button>
+      </div>
+    </form>
+  </Modal>
+</MainLayout>
+
+<script type="application/json" id="templates-data" set:html={JSON.stringify(TEMPLATES)} />
+
+<script>
+  import toast from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import { actions } from 'astro:actions'
+  import { navigate } from 'astro:transitions/client'
+
+  interface Template {
+    uuid: string
+    title: string
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const elements = {
+      sticky: document.getElementById('categories-sticky'),
+      categoryTemplates: document.getElementById('category-templates') as HTMLElement,
+      createTemplateForm: document.getElementById('create-template-form') as HTMLFormElement,
+      modalCreateTemplate: document.getElementById('create-template') as HTMLDialogElement,
+      inputIdTemplate: document.getElementById('uuid_category') as HTMLInputElement,
+      searchInput: document.getElementById('search-input') as HTMLInputElement,
+      noResultsMessage: document.getElementById('no-results-message') as HTMLElement,
+    }
+
+    if (!elements.categoryTemplates || !elements.createTemplateForm) return
+
+    const dataScript = document.getElementById('templates-data')
+    const templates: Template[] = dataScript ? JSON.parse(dataScript.textContent || '[]') : []
+
+    const toggleElement = (element: HTMLElement, show: boolean) => {
+      element.style.display = show ? '' : 'none'
+    }
+
+    const toggleClass = (element: HTMLElement | null, className: string, add: boolean) => {
+      if (!element) return
+      add ? element.classList.add(className) : element.classList.remove(className)
+    }
+
+    const showAllTemplates = () => {
+      const allCards = elements.categoryTemplates.querySelectorAll<HTMLElement>('[id]')
+      const allSections = elements.categoryTemplates.querySelectorAll<HTMLElement>('.category-section')
+
+      allCards.forEach((card) => toggleElement(card, true))
+      allSections.forEach((section) => toggleElement(section, true))
+      toggleClass(elements.noResultsMessage, 'hidden', true)
+    }
+
+    const getFilteredUuids = (term: string): Set<string> => {
+      return new Set(templates.filter((template) => template.title?.toLowerCase().includes(term)).map((template) => template.uuid))
+    }
+
+    const processSectionVisibility = (section: HTMLElement, filteredUuids: Set<string>): number => {
+      const templateCards = section.querySelectorAll<HTMLElement>('[id]')
+      let visibleCount = 0
+
+      templateCards.forEach((card) => {
+        const isVisible = filteredUuids.has(card.id)
+        toggleElement(card, isVisible)
+        if (isVisible) visibleCount++
+      })
+
+      toggleElement(section, visibleCount > 0)
+      return visibleCount
+    }
+
+    // Función principal de filtrado
+    const filterTemplates = (searchTerm: string) => {
+      const term = searchTerm.toLowerCase().trim()
+
+      if (term === '') {
+        showAllTemplates()
+        return
+      }
+
+      const filteredUuids = getFilteredUuids(term)
+      const categorySections = elements.categoryTemplates.querySelectorAll<HTMLElement>('.category-section')
+
+      let totalVisible = 0
+      categorySections.forEach((section) => {
+        totalVisible += processSectionVisibility(section, filteredUuids)
+      })
+
+      toggleClass(elements.noResultsMessage, 'hidden', totalVisible > 0)
+    }
+
+    // Event Listeners - Búsqueda
+    const setupSearchListeners = () => {
+      elements.searchInput?.addEventListener('input', (e) => {
+        filterTemplates((e.target as HTMLInputElement).value)
+      })
+
+      elements.noResultsMessage?.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement
+        const isLink = target.tagName === 'A' || target.closest('a')
+
+        if (isLink && elements.searchInput) {
+          e.preventDefault()
+          elements.searchInput.value = ''
+          filterTemplates('')
+        }
+      })
+    }
+
+    // Abrir modal al hacer clic en template
+    const setupTemplateClickListener = () => {
+      elements.categoryTemplates.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement
+        const uuidTemplate = target.closest('[id]')?.id
+
+        if (elements.inputIdTemplate && uuidTemplate) {
+          elements.inputIdTemplate.value = uuidTemplate
+        }
+        elements.modalCreateTemplate?.showModal()
+      })
+    }
+
+    // Configurar sticky header observer
+    const setupStickyObserver = () => {
+      if (!elements.sticky) return
+
+      const stickyClasses = ['bg-[#fdfaff]', 'backdrop-blur-sm', 'border-b', 'border-gray-200']
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          const method = entry.isIntersecting ? 'remove' : 'add'
+          elements.sticky?.classList[method](...stickyClasses)
+        },
+        {
+          threshold: 1,
+          rootMargin: '-57px 0px 0px 0px',
+        }
+      )
+
+      observer.observe(elements.sticky)
+    }
+
+    // Handler para crear template
+    const handleCreateTemplate = async (e: Event) => {
+      e.preventDefault()
+
+      const formData = new FormData(elements.createTemplateForm)
+      const title = formData.get('title') as string
+      const name = title
+        .toLowerCase()
+        .replace(/ /g, '_')
+        .replace(/[^a-z0-9_]/g, '')
+      formData.append('name', name)
+
+      try {
+        setButtonLoading('#btn-create-template', true)
+        const { data, error } = await callAction(actions.documents.createTemplate(formData))
+
+        if (error) {
+          toast.error(error.message)
+          return
+        }
+
+        toast.success(data.message)
+        const { uuid, id_workspace, title: templateTitle } = data.data.template
+        const { build_number } = data.data.version
+
+        navigate(`/editor/${uuid}?build_number=${build_number}&id_workspace=${id_workspace}&name_document=${templateTitle}`)
+        elements.modalCreateTemplate?.close()
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error al guardar la plantilla'
+        toast.error(message)
+        elements.modalCreateTemplate?.close()
+      } finally {
+        setButtonLoading('#btn-create-template', false)
+      }
+    }
+
+    // Inicializar todos los listeners
+    setupSearchListeners()
+    setupTemplateClickListener()
+    setupStickyObserver()
+    elements.createTemplateForm.addEventListener('submit', handleCreateTemplate)
+  })
+</script>

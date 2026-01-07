@@ -1,0 +1,22 @@
+---
+import type { icons } from '@lucide/astro'
+import Icon from './Icon.astro'
+
+interface Props {
+  id: string
+  icon?: keyof typeof icons
+  tippy?: string
+  addClass?: string
+}
+
+const { icon = '', tippy = 'button', addClass = '', id } = Astro.props
+---
+
+<!-- Botón Generar PDF -->
+<button
+  id={id}
+  data-tippy-content={tippy}
+  class=`${addClass} ml-[5px] ant-btn ant-btn-default ant-btn-variant-outlined p-[6.5px] rounded-md border border-gray-300 text-black-600 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500`
+>
+  {icon && <Icon class="h-4 w-4" name={icon} />}
+</button>

@@ -1,0 +1,115 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+interface Props extends HTMLAttributes<'select'> {
+  label?: string
+  name: string
+  placeholder?: string
+  options: Array<{ value: string; label?: string }>
+  serverError?: string
+}
+
+const { label, name, placeholder, options = [], serverError, ...rest }: Props = Astro.props
+
+const errorId = `error-${name}`
+const stateClasses = serverError
+  ? 'border-red-600 focus:border-red-600 focus:ring-red-500'
+  : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500 aria-invalid:border-red-600 aria-invalid:focus:border-red-600 aria-invalid:focus:ring-red-500'
+---
+
+<>
+  {
+    label && (
+      <label for={rest.id ?? name} class="mb-1 block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+    )
+  }
+  <div class="w-full" data-select-wrapper>
+    <select
+      id={rest.id ?? name}
+      name={name}
+      value={rest.value}
+      aria-describedby={errorId}
+      aria-invalid={!!serverError}
+      class:list={[
+        'w-full rounded-lg border bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+        stateClasses,
+        rest.class,
+      ]}
+      {...rest}
+    >
+      {
+        placeholder && !rest.value && (
+          <option class="block font-sans text-base font-medium text-neutral-400 disabled:text-neutral-400" disabled selected value="">
+            {placeholder}
+          </option>
+        )
+      }
+      {
+        options.map((option) => (
+          <option value={option.value} selected={option.value === rest.value}>
+            {option.label || option.value}
+          </option>
+        ))
+      }
+    </select>
+
+    {
+      serverError && (
+        <span id={errorId} class="error-message server-error mt-1 text-sm text-red-600" role="alert">
+          {serverError}
+        </span>
+      )
+    }
+
+    {!serverError && <span id={errorId} class="error-message client-error mt-1 hidden text-sm text-red-600" data-client-error />}
+  </div>
+</>
+
+<style>
+  .hidden {
+    display: none;
+  }
+</style>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll('[data-select-wrapper]').forEach((wrapper) => {
+      const select = wrapper.querySelector('select')
+      const errorEl = wrapper.querySelector('[data-client-error]')
+
+      if (!select || !errorEl) {
+        return
+      }
+
+      select.addEventListener('invalid', (event) => {
+        event.preventDefault()
+
+        const validity = select.validity
+        let customMessage = ''
+
+        if (validity.valueMissing) {
+          // 'required'
+          customMessage = select.dataset.errorRequired || 'Este campo es obligatorio.'
+        }
+
+        errorEl.textContent = customMessage || select.validationMessage
+        errorEl.classList.remove('hidden')
+
+        select.setAttribute('aria-invalid', 'true')
+      })
+
+      select.addEventListener('change', () => {
+        if (errorEl.textContent) {
+          errorEl.textContent = ''
+          errorEl.classList.add('hidden')
+
+          if (!select.classList.contains('has-server-error')) {
+            select.setAttribute('aria-invalid', 'false')
+          }
+        }
+      })
+    })
+  })
+</script>

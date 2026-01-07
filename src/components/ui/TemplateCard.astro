@@ -1,0 +1,28 @@
+---
+import { Image } from 'astro:assets'
+import type { Category } from '@/types/templates'
+const { PROJECT_URL } = import.meta.env
+
+interface Props {
+  template: Category
+}
+
+const { template } = Astro.props
+const thumbnails = `${PROJECT_URL}${template.path_thumbnails}`
+---
+
+<div class="group hover:border-primary cursor-pointer overflow-hidden rounded-lg bg-white shadow-sm shadow-custom-blue3/10 transition-all hover:shadow-lg" id={template.uuid}>
+  <div class="flex h-96 items-center justify-center p-4">
+    <Image src={thumbnails} alt={template.category} width={200} height={200} class="h-full w-full object-contain" priority={false} />
+  </div>
+
+  <div class="px-4 py-2">
+    <h3 class="mb-2 line-clamp-2 font-semibold">{template.title}</h3>
+
+    <div class="mb-4">
+      <span class="text-custom-bg-custom-blue3 inline-block rounded bg-linear-to-r from-custom-blue3/10 to-custom-blue3/10 px-3 py-1 text-xs font-medium">
+        {template.category}
+      </span>
+    </div>
+  </div>
+</div>

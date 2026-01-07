@@ -1,0 +1,18 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import ListLatestOpenid from '@/sections/workspaces/List.astro'
+import ListDocuments from '@/sections/documents/List.astro'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+
+const user = await Astro.session?.get('user')
+const name = user.name
+---
+
+<MainLayout title="Inicio">
+  <div class="mx-auto max-w-7xl">
+    <TitleForPage title={`¡Bienvenido, ${name}!`} />
+
+    <ListLatestOpenid />
+    <ListDocuments limit={7} />
+  </div>
+</MainLayout>

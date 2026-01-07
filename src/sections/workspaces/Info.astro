@@ -1,0 +1,22 @@
+---
+import { formatISODateWithIntl } from '@/scripts/utils'
+
+interface Props {
+  isOwner: boolean
+  createdAt: string
+}
+
+const { isOwner, createdAt } = Astro.props
+---
+
+<div class="grid grid-cols-1 gap-2 xl:grid-cols-2">
+  <div>
+    <p class="block text-sm font-medium text-gray-700">¿Eres propietario?</p>
+    <p class="text-sm text-gray-500">{isOwner ? 'Sí' : 'No'}</p>
+  </div>
+
+  <div>
+    <p class="block text-sm font-medium text-gray-700">Creado el:</p>
+    <p class="text-sm text-gray-500">{formatISODateWithIntl(createdAt)}</p>
+  </div>
+</div>

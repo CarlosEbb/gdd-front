@@ -1,0 +1,84 @@
+---
+import AuthLayout from '@/layouts/AuthLayout.astro'
+import Input from '@/components/form/Input.astro'
+import Button from '@/components/ui/Button.astro'
+
+const isAuthenticated = await Astro.session?.has('token')
+const url = new URL(Astro.url.toString())
+const params = new URLSearchParams(url.searchParams)
+const token = params.get('token')
+const email = params.get('email')
+
+if (!token || !email) return Astro.redirect('/')
+if (isAuthenticated) return Astro.redirect(`/profile/change-password/?token=${token}&email=${email}`)
+---
+
+<AuthLayout titleCardAuth="Cambiar contraseña">
+  <form class="space-y-6" id="form-reset-password">
+    <div>
+      <Input label="Nueva contraseña" name="password" placeholder="●●●●●●●●" type="password" required />
+    </div>
+    <div>
+      <Input label="Confirmar contraseña" name="confirm_password" placeholder="●●●●●●●●" type="password" required />
+    </div>
+    <div class="space-y-4">
+      <Button id="btn-reset-password" variant="gradient" class="w-full" loadingText="Cambiando contraseña..."> Cambiar contraseña </Button>
+      <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+          <span class="w-full border-t border-gray-200"></span>
+        </div>
+        <div class="relative flex justify-center text-xs uppercase">
+          <span class="bg-linear-to-br from-blue-50/50 via-purple-50/30 to-white px-2"> O </span>
+        </div>
+      </div>
+      <div class="pt-2 text-center">
+        <p class="text-sm">
+          ¿Ya tienes una cuenta?
+          <a href="/" class="font-medium text-blue-600 hover:text-blue-700 hover:underline"> Inicia sesión </a>
+        </p>
+      </div>
+    </div>
+  </form>
+</AuthLayout>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction, getTokenAndEmailForUrl, setButtonLoading } from '@/scripts/utils'
+  import { navigate } from 'astro:transitions/client'
+
+  const form = document.getElementById('form-reset-password') as HTMLFormElement
+
+  const resetPassword = async (e: Event) => {
+    e.preventDefault()
+
+    const dataForm = new FormData(form)
+    const password = dataForm.get('password') as string
+    const confirmPassword = dataForm.get('confirm_password') as string
+
+    if (password !== confirmPassword) {
+      toast.error('Las contraseñas no coinciden')
+      return
+    }
+
+    setButtonLoading('#btn-reset-password', true)
+
+    const { token, email } = getTokenAndEmailForUrl()
+
+    const { data, error } = await callAction(actions.auth.changePassword({ token, newPassword: password }))
+
+    if (error) {
+      toast.error(error.message)
+      setButtonLoading('#btn-reset-password', false)
+      return
+    }
+
+    toast.success(data.message)
+    navigate('/')
+    setButtonLoading('#btn-reset-password', false)
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    form.addEventListener('submit', resetPassword)
+  })
+</script>

@@ -1,0 +1,35 @@
+---
+import type { DetailsWorkspace } from '@/types/workspaces'
+import { actions } from 'astro:actions'
+import Header from './Header.astro'
+import Info from './Info.astro'
+import Selector from './Selector.astro'
+import UsersManagement from './UsersManagement.astro'
+
+interface Props {
+  workspace: DetailsWorkspace
+}
+
+const { workspace } = Astro.props
+
+const name = workspace?.name ?? ''
+const isOwner = workspace?.is_owner ?? false
+const createAt = workspace?.created_at?.toString() ?? ''
+const workspaces = (await Astro.session?.get('workspaces')) || []
+const hasMoreOneWorkspace = workspaces.length > 1
+const { data: users, error: errorUsers } = await Astro.callAction(actions.workspaces.getByUser, { uuid: workspace.uuid })
+const usersData = users?.data ?? []
+---
+
+<aside class="z-10 h-[calc(100vh-10rem)] w-full gap-6 space-y-6 overflow-x-hidden overflow-y-auto rounded-2xl border border-gray-200 bg-white p-5 lg:w-auto">
+  <Header workspace={workspace} />
+
+  <div class="h-px bg-gray-200"></div>
+
+  <Info isOwner={isOwner} createdAt={createAt} />
+
+  <div class="h-px bg-gray-200"></div>
+
+  {hasMoreOneWorkspace && <Selector workspaces={workspaces} currentWorkspaceName={name} />}
+  {isOwner && <UsersManagement workspace={workspace} users={usersData} errorUsers={errorUsers} />}
+</aside>

@@ -1,0 +1,32 @@
+---
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+import { PARTS_VALIDATION } from '../_constants'
+---
+
+<div class="flex flex-col rounded-lg border border-gray-200 bg-white p-4">
+  <div class="mb-4 border-b border-gray-200 pb-4">
+    <h2 class="text-lg font-medium text-gray-700">
+      <span class="inline-flex size-7 items-center justify-center rounded-lg border-2 border-white bg-custom-blue3 p-2 text-base text-white shadow-sm"> 1 </span>
+      Campos a ocultar
+    </h2>
+  </div>
+  <div class="h-[calc(100vh-30rem)] space-y-1 overflow-y-auto">
+    {
+      PARTS_VALIDATION.map((part) => (
+        <label class="flex cursor-pointer justify-between rounded-lg border border-gray-200 p-2 transition-all duration-200 hover:border-custom-blue3 hover:bg-custom-blue3/10 hover:text-custom-blue3 has-checked:border-custom-blue3 has-checked:bg-custom-blue3/10 has-checked:text-custom-blue3 has-checked:ring-custom-blue3">
+          {part}
+          <input type="checkbox" name={part} id={part} value={part} data-field-hide-checkbox class="block accent-custom-blue3 checked:border-indigo-500" />
+        </label>
+      ))
+    }
+  </div>
+  <div class="mt-4 flex justify-end border-t border-gray-200 pt-4">
+    <Button variant="secondary" size="sm" id="btn-create-validation">
+      <span class="flex items-center gap-2 text-custom-blue3">
+        <Icon name="Plus" class="size-4" />
+        Crear validación
+      </span>
+    </Button>
+  </div>
+</div>

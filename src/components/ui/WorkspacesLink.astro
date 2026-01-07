@@ -1,0 +1,39 @@
+---
+import { formatISODateWithIntl } from '@/scripts/utils'
+import Icon from '@/components/ui/Icon.astro'
+import { icons } from '@lucide/astro'
+
+interface Workspace {
+  id: string
+  name: string
+  uuid: string
+  icon: keyof typeof icons
+  updated_at: string
+}
+
+type Props = {
+  workspace: Workspace
+  index: number
+}
+
+const GRADIENTS: Record<number, any> = {
+  0: { gradientBg: 'to-purple-50', bgIcon: 'bg-purple-100', colorIcon: 'text-purple-600' },
+  1: { gradientBg: 'to-blue-50', bgIcon: 'bg-blue-100', colorIcon: 'text-blue-600' },
+  2: { gradientBg: 'to-red-50', bgIcon: 'bg-red-100', colorIcon: 'text-red-600' },
+}
+
+const { workspace, index } = Astro.props
+---
+
+<a
+  class={`flex h-20 md:h-24 cursor-pointer items-center gap-3 rounded-lg border border-gray-200 bg-linear-to-br from-white ${GRADIENTS[index].gradientBg} p-3 md:p-4 text-center shadow-sm transition-all hover:border-purple-300 hover:shadow-md`}
+  href={`/workspaces/${workspace.uuid}`}
+>
+  <div class={`rounded-lg ${GRADIENTS[index].bgIcon} p-2 md:p-3`}>
+    <Icon name={workspace.icon} class={`size-6 md:size-8 ${GRADIENTS[index].colorIcon}`} stroke-width={1.5} />
+  </div>
+  <div class="flex flex-col items-start justify-start">
+    <span class="font-semibold text-gray-800">{workspace.name}</span>
+    <span class="text-sm text-gray-400">{formatISODateWithIntl(workspace.updated_at)}</span>
+  </div>
+</a>

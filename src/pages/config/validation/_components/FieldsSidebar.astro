@@ -1,0 +1,64 @@
+---
+import Icon from '@/components/ui/Icon.astro'
+
+interface Props {
+  fields: string[]
+}
+
+const { fields } = Astro.props
+---
+
+<div class="sticky top-16 col-span-1 flex h-[calc(100vh-20rem)] flex-col rounded-lg border border-gray-200 bg-white p-4">
+  <div class="mb-4 border-b border-gray-200 pb-4">
+    <h2 class="text-lg font-medium text-gray-700">
+      <span class="inline-flex size-7 items-center justify-center rounded-lg border-2 border-white bg-custom-blue3 p-2 text-base text-white shadow-sm"> 1 </span>
+      Selecciona los campos a validar
+    </h2>
+  </div>
+  <div class="h-[calc(100vh-25rem)] space-y-1 overflow-y-auto" id="fields-sidebar">
+    {
+      fields.map((field) => (
+        <div
+          class="field-item flex items-center gap-2 rounded-lg border border-transparent transition-all duration-200 hover:border-custom-blue3 hover:bg-custom-blue3/10 has-checked:border-custom-blue3 has-checked:bg-custom-blue3/10"
+          data-field-item={field}
+        >
+          <label class="flex flex-1 cursor-pointer flex-col p-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 font-mono text-sm">
+                <input type="radio" name="field-selection" value={field} data-field-radio={field} class="accent-custom-blue3" />
+                {field}
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="hidden rounded-lg bg-orange-100 px-2 py-1 text-xs font-medium text-orange-900" data-required-badge>
+                  Requerido
+                </span>
+              </div>
+            </div>
+            <div class="hidden flex-col gap-1 pl-5" data-field-info>
+              <span class="text-sm font-medium text-gray-700">
+                Tipo:{' '}
+                <span class="text-xs font-medium text-gray-500" data-types-info>
+                  -
+                </span>
+              </span>
+              <span class="text-sm font-medium text-gray-700">
+                Validaciones:{' '}
+                <span class="text-xs font-medium text-gray-500" data-validations-info>
+                  -
+                </span>
+              </span>
+            </div>
+          </label>
+          <button
+            type="button"
+            class="hidden size-6 shrink-0 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-100"
+            data-btn-delete-field-validation={field}
+            title="Eliminar validación"
+          >
+            <Icon name="Trash2" class="size-3.5" />
+          </button>
+        </div>
+      ))
+    }
+  </div>
+</div>

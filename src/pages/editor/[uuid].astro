@@ -1,0 +1,12 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import Editor from '@/components/editor/EditorPdf.astro'
+
+const { uuid } = Astro.params
+
+if (!uuid) return Astro.redirect('/home')
+---
+
+<MainLayout class="relative p-0" title="Editor de documentos">
+  <Editor uuid={uuid} />
+</MainLayout>
