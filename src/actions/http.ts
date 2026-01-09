@@ -10,6 +10,7 @@ interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
 
 export class ApiError extends Error {
   public readonly code: number
+  public readonly _isApiError = true as const
 
   constructor(message: string, code: number) {
     super(message)
@@ -19,10 +20,20 @@ export class ApiError extends Error {
 }
 
 export class UnauthorizedError extends ApiError {
+  public readonly _isUnauthorizedError = true as const
+
   constructor(message: string) {
     super(message, 401)
     this.name = 'UnauthorizedError'
   }
+}
+
+function isUnauthorizedError(error: unknown): error is UnauthorizedError {
+  return typeof error === 'object' && error !== null && '_isUnauthorizedError' in error
+}
+
+function isApiError(error: unknown): error is ApiError {
+  return typeof error === 'object' && error !== null && '_isApiError' in error
 }
 
 async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic: boolean = false): Promise<ApiResponse<T>> {
@@ -161,7 +172,7 @@ export const http = {
 
 export function handleApiError(error: unknown, request: ActionAPIContext): never {
   // Token expirado o no autorizado
-  if (error instanceof UnauthorizedError) {
+  if (isUnauthorizedError(error)) {
     console.error(`Token expirado o no autorizado (${error.code}): ${error.message}`)
     request.session?.destroy()
     throw new ActionError({
@@ -171,7 +182,7 @@ export function handleApiError(error: unknown, request: ActionAPIContext): never
   }
 
   // Otros errores de API
-  if (error instanceof ApiError) {
+  if (isApiError(error)) {
     console.error(`Error de API (${error.code}): ${error.message}`)
     throw new ActionError({
       code: 'INTERNAL_SERVER_ERROR',
