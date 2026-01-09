@@ -11,7 +11,7 @@ export const user = {
       last_name: z.string(),
       email: z.string().email(),
       country: z.string().optional(),
-      img_profile_file: z.instanceof(File).optional(),
+      img_profile_file: z.any().optional(),
       zip_code: z.string().optional(),
     }),
     handler: async (input, request) => {
