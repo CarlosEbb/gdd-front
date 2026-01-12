@@ -37,7 +37,6 @@ export const auth = {
           },
         }
       } catch (error) {
-        console.log(error, request)
         handleApiError(error, request)
       }
     },
