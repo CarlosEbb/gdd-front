@@ -6,7 +6,7 @@ import { handleApiError, http } from './http'
 
 export const auth = {
   login: defineAction({
-    // accept: 'form',
+    accept: 'form',
     input: z.object({
       email: z.string().email(),
       password: z.string(),
