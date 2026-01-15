@@ -49,27 +49,27 @@ const hasWorkSpaces = workspaces.length > 0
   import { navigate } from 'astro:transitions/client'
   import { callAction, setButtonLoading } from '@/scripts/utils'
 
-  const form = document.getElementById('create-workspace-form') as HTMLFormElement
-  const modal = document.getElementById('create-workspace') as HTMLDialogElement
-
-  const handleSubmit = async (e: Event) => {
-    e.preventDefault()
-    const dataForm = new FormData(form)
-    setButtonLoading('#btn-create-workspace', true)
-    const { data, error } = await callAction(actions.workspaces.create(dataForm))
-
-    if (error) {
-      toast.error(error.message)
-      setButtonLoading('#btn-create-workspace', false)
-      return
-    }
-
-    toast.success(data.message)
-    navigate(`/workspaces/${data.data.uuid}`)
-    modal.close()
-  }
 
   document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('create-workspace-form') as HTMLFormElement
+    const modal = document.getElementById('create-workspace') as HTMLDialogElement
+
+    const handleSubmit = async (e: Event) => {
+      e.preventDefault()
+      const dataForm = new FormData(form)
+      setButtonLoading('#btn-create-workspace', true)
+      const { data, error } = await callAction(actions.workspaces.create(dataForm))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-create-workspace', false)
+        return
+      }
+
+      toast.success(data.message)
+      navigate(`/workspaces/${data.data.uuid}`)
+      modal.close()
+    }
     form.addEventListener('submit', handleSubmit)
   })
 </script>

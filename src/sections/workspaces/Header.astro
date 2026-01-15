@@ -81,48 +81,52 @@ const icon = (workspace?.icon as keyof typeof icons) ?? ''
   </form>
 </Modal>
 
-<!-- Editar espacio de trabajo -->
+
+<!-- Editar un workspace -->
 <script>
   import { actions } from 'astro:actions'
   import { toast } from '@/scripts/toast'
   import { navigate } from 'astro:transitions/client'
   import { callAction, setButtonLoading } from '@/scripts/utils'
 
-  const form = document.getElementById('edit-workspace-form') as HTMLFormElement
-  const modal = document.getElementById('edit-workspace') as HTMLDialogElement
-  const editWorkspace = async (e: Event) => {
-    e.preventDefault()
-
-    const dataForm = new FormData(form)
-    setButtonLoading('#btn-edit-workspace', true)
-    const name = dataForm.get('edit-workspace-name') as string
-    const uuid = dataForm.get('uuid') as string
-    const icon = dataForm.get('icon') as string
-
-    if (!name || !icon) {
-      toast.error('Por favor, complete todos los campos')
-      setButtonLoading('#btn-edit-workspace', false)
-      return
-    }
-
-    const { data, error } = await callAction(actions.workspaces.update({ uuid, name, icon }))
-
-    if (error) {
-      toast.error(error.message)
-      setButtonLoading('#btn-edit-workspace', false)
-      return
-    }
-
-    toast.success(data!.message)
-    modal.close()
-    /*
-      Se hace el reload porque no se puede actualizar el icono del workspace con lucide icon
-      ya que no se puede obtener el SVG desde el cliente.
-    */
-    navigate(data!.data.redirect)
-  }
-
   document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('edit-workspace-form') as HTMLFormElement
+    const modal = document.getElementById('edit-workspace') as HTMLDialogElement
+
+    if (!form || !modal) return
+
+    // Evitar agregar múltiples listeners
+    if (form.dataset.initialized) return
+    form.dataset.initialized = 'true'
+
+    const editWorkspace = async (e: Event) => {
+      e.preventDefault()
+
+      const dataForm = new FormData(form)
+      setButtonLoading('#btn-edit-workspace', true)
+      const name = dataForm.get('edit-workspace-name') as string
+      const uuid = dataForm.get('uuid') as string
+      const icon = dataForm.get('icon') as string
+
+      if (!name || !icon) {
+        toast.error('Por favor, complete todos los campos')
+        setButtonLoading('#btn-edit-workspace', false)
+        return
+      }
+
+      const { data, error } = await callAction(actions.workspaces.update({ uuid, name, icon }))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-edit-workspace', false)
+        return
+      }
+
+      toast.success(data!.message)
+      modal.close()
+      navigate(data!.data.redirect)
+    }
+
     form.addEventListener('submit', editWorkspace)
   })
 </script>
@@ -134,28 +138,34 @@ const icon = (workspace?.icon as keyof typeof icons) ?? ''
   import { navigate } from 'astro:transitions/client'
   import { callAction, setButtonLoading } from '@/scripts/utils'
 
-  const form = document.getElementById('delete-workspace-form') as HTMLFormElement
-  const modal = document.getElementById('delete-workspace') as HTMLDialogElement
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('delete-workspace-form') as HTMLFormElement
+    const modal = document.getElementById('delete-workspace') as HTMLDialogElement
 
-  async function deleteWorkspace(e: Event) {
-    e.preventDefault()
-    const dataForm = new FormData(form)
-    setButtonLoading('#btn-delete-workspace', true)
-    const { data, error } = await callAction(actions.workspaces.delete({ uuid: dataForm.get('uuid') as string }))
+    if (!form || !modal) return
 
-    if (error) {
-      toast.error(error.message)
-      setButtonLoading('#btn-delete-workspace', false)
+    // Evitar agregar múltiples listeners
+    if (form.dataset.initialized) return
+    form.dataset.initialized = 'true'
+
+    async function deleteWorkspace(e: Event) {
+      e.preventDefault()
+      const dataForm = new FormData(form)
+      setButtonLoading('#btn-delete-workspace', true)
+      const { data, error } = await callAction(actions.workspaces.delete({ uuid: dataForm.get('uuid') as string }))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-delete-workspace', false)
+        modal.close()
+        return
+      }
+
+      toast.success(data!.message)
+      navigate(data!.data.redirect)
       modal.close()
-      return
     }
 
-    toast.success(data!.message)
-    navigate(data!.data.redirect)
-    modal.close()
-  }
-
-  document.addEventListener('astro:page-load', () => {
     form.addEventListener('submit', deleteWorkspace)
   })
 </script>
