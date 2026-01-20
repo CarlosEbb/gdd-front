@@ -60,12 +60,12 @@ const documentsByWorkspace =
 const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 0
 ---
 
-<div class="absolute top-14 right-0 left-0 flex h-16 p-2">
-  <div class="grid w-full grid-cols-3 items-center gap-x-2 divide-x divide-gray-200 rounded-lg border border-gray-200 bg-white px-2">
-    <div class="flex items-center justify-around gap-x-2">
+<nav class="flex h-16 p-2">
+  <div class="grid w-full grid-cols-3 items-center gap-x-2 divide-x divide-gray-200 rounded-lg border border-gray-200 bg-white px-2 lg:grid-cols-6 xl:grid-cols-8">
+    <div class="flex items-center justify-around gap-x-2 col-span-2 lg:col-span-1 xl:col-span-3">
       {
         validateDocumentsByWorkspace ? (
-          <Dropdown buttonLabel={nameDocument} size="sm" shadow="none" border="none">
+          <Dropdown buttonLabel={nameDocument} size="sm" border="none" mobileIcon="FileText">
             {Object.entries(documentsByWorkspace).map(([workspaceName, documents]) => (
               <div class="mx-2 border-b border-gray-200 p-2.5 last:border-b-0">
                 <h3 class="text-sm font-medium text-gray-700">{workspaceName}</h3>
@@ -91,62 +91,115 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
       <Button type="button" size="sm" variant="ghost" id="btn-save-document" loadingText="Guardando..." data-uuid-template={uuid}>
         <span class="flex items-center gap-x-2">
           <Icon name="Save" class="size-4" stroke-width={1.5} />
-          Guardar
+          <span class="">Guardar</span>
         </span>
       </Button>
 
-      <Button type="button" size="sm" class="me-2" variant="ghost" id="btn-new-version-document" loadingText="Creando versión..." data-open-modal="new-version-document">
-        <span class="flex items-center gap-x-2">
-          <Icon name="GitBranch" class="size-4" stroke-width={1.5} />
-          Crear versión
-        </span>
-      </Button>
+      <div class="">
+        <Button type="button" size="sm" class="me-2" variant="ghost" id="btn-new-version-document" loadingText="Creando versión..." data-open-modal="new-version-document">
+          <span class="flex items-center gap-x-2">
+            <Icon name="GitBranch" class="size-4" stroke-width={1.5} />
+            <span class="hidden xl:block">Crear versión</span>
+          </span>
+        </Button>
+      </div>
     </div>
 
-    <div>
+    <div class="hidden lg:block col-span-3 xl:col-span-3 lg:col-span-3">
       <Button type="button" size="sm" variant="ghost" id="generatePdfBtn">
         <span class="flex items-center gap-x-2">
           <Icon name="FileText" class="size-4" stroke-width={1.5} />
           Visualizar
         </span>
       </Button>
-      <Button type="button" size="sm" variant="ghost" id="toggleFullscreenBtn">
-        <span class="flex items-center gap-x-2">
-          <Icon name="Expand" class="size-4" stroke-width={1.5} />
-          Pantalla completa
-        </span>
-      </Button>
-
-      <!-- Botón Cambiar BasePDF(Plantilla) -->
       <Button type="button" size="sm" variant="ghost" id="changeBasePdfBtn">
         <span class="flex items-center gap-x-2">
           <Icon name="FileInput" class="size-4" stroke-width={1.5} />
-          Insertar PDF
+          <span class="hidden lg:block">Insertar PDF</span>
+        </span>
+      </Button>
+      <Button type="button" size="sm" variant="ghost" id="toggleFullscreenBtn">
+        <span class="flex items-center gap-x-2">
+          <Icon name="Expand" class="size-4" stroke-width={1.5} />
+          <span class="hidden lg:block">Pantalla completa</span>
         </span>
       </Button>
     </div>
 
-    <div>
-      <Link href=`/config/documentation/${uuid}?build_number=${buildNumber}` size="sm" variant="ghost">
-        <span class="flex items-center gap-x-2">
-          <Icon name="FileInput" class="size-4" stroke-width={1.5} />
-          Documentación
-        </span>
-      </Link>
-      <Button type="button" size="sm" variant="destructive" data-open-modal="delete-document">
-        <span class="flex items-center gap-x-2">
-          <Icon name="Eraser" class="size-4" stroke-width={1.5} />
-          Eliminar
-        </span>
-      </Button>
+    <div class="flex items-center justify-end xl:gap-x-2 col-span-1 lg:col-span-1 xl:col-span-2">
+      <div class="hidden xl:flex xl:items-center xl:gap-x-1">
+        <Link href=`/config/documentation/${uuid}?build_number=${buildNumber}` size="sm" variant="ghost">
+          <span class="flex items-center gap-x-2">
+            <Icon name="FileInput" class="size-4" stroke-width={1.5} />
+            Documentación
+          </span>
+        </Link>
+        <Button type="button" size="sm" variant="destructive" data-open-modal="delete-document">
+          <span class="flex items-center gap-x-2">
+            <Icon name="Eraser" class="size-4" stroke-width={1.5} />
+            Eliminar
+          </span>
+        </Button>
+      </div>
+
+      <div class="xl:hidden">
+        <Dropdown buttonLabel="Más opciones" size="sm" position="right" mobileIcon="Ellipsis">
+          <div class="mx-2 border-b border-gray-200 p-2.5 lg:hidden">
+            <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Documento</h3>
+            <ul class="space-y-1">
+              <li class="md:hidden">
+                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="new-version">
+                  <Icon name="GitBranch" class="size-4" stroke-width={1.5} />
+                  Crear versión
+                </button>
+              </li>
+              <li>
+                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="generate-pdf">
+                  <Icon name="FileText" class="size-4" stroke-width={1.5} />
+                  Visualizar
+                </button>
+              </li>
+              <li>
+                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="fullscreen">
+                  <Icon name="Expand" class="size-4" stroke-width={1.5} />
+                  Pantalla completa
+                </button>
+              </li>
+              <li>
+                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="insert-pdf">
+                  <Icon name="FileInput" class="size-4" stroke-width={1.5} />
+                  Insertar PDF
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div class="mx-2 p-2.5">
+            <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 lg:hidden">Configuración</h3>
+            <ul class="space-y-1">
+              <li>
+                <a href={`/config/documentation/${uuid}?build_number=${buildNumber}`} class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
+                  <Icon name="FileInput" class="size-4" stroke-width={1.5} />
+                  Documentación
+                </a>
+              </li>
+              <li>
+                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-red-600 hover:bg-red-50" data-mobile-action="delete">
+                  <Icon name="Eraser" class="size-4" stroke-width={1.5} />
+                  Eliminar
+                </button>
+              </li>
+            </ul>
+          </div>
+        </Dropdown>
+      </div>
 
       <input type="file" id="uploadTemplateInput" accept=".json" class="hidden" />
       <input type="file" id="basePdfInput" class="hidden" accept="application/pdf" />
     </div>
   </div>
-</div>
+</nav>
 
-<div id="container" class="absolute top-[120px] right-0 left-0 h-[calc(100vh-120px)]"></div>
+<div id="container" class="w-full h-[calc(100vh-120px)]"></div>
 
 <Modal title="Crear versión" modalId="new-version-document">
   <form id="new-version-document-form">
@@ -331,9 +384,54 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
             toggleFullscreen()
           }
         })
+
+        // Event listeners para el dropdown móvil/tablet
+        setupMobileDropdownActions(designerInstance, plugins, fonts)
       } catch (error) {
         toast.error('Ah ocurrido un error al inicializar el editor. Por favor, intente nuevamente.')
       }
+    }
+
+    // Función para configurar las acciones del dropdown móvil
+    function setupMobileDropdownActions(designer: Designer | undefined, plugins: any, fonts: any) {
+      const mobileActions = document.querySelectorAll('[data-mobile-action]')
+      const modalNewVersionDocument = document.getElementById('new-version-document') as HTMLDialogElement
+      const modalDeleteDocument = document.getElementById('delete-document') as HTMLDialogElement
+      const basePdfInput = document.getElementById('basePdfInput') as HTMLInputElement
+
+      mobileActions.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const action = (btn as HTMLElement).dataset.mobileAction
+
+          switch (action) {
+            case 'new-version':
+              modalNewVersionDocument?.showModal()
+              break
+            case 'generate-pdf':
+              if (designer) {
+                await handleGeneratePdf(designer, getInputFromTemplate(designer.getTemplate()), plugins, fonts)
+              }
+              break
+            case 'fullscreen':
+              toggleFullscreen()
+              break
+            case 'insert-pdf':
+              basePdfInput?.click()
+              break
+            case 'delete':
+              modalDeleteDocument?.showModal()
+              break
+          }
+
+          // Cerrar el dropdown después de la acción
+          const dropdownMenu = btn.closest('[data-dropdown-menu]')
+          const dropdownContainer = btn.closest('[data-dropdown-container]')
+          if (dropdownMenu && dropdownContainer) {
+            dropdownMenu.classList.remove('is-open')
+            dropdownContainer.classList.remove('is-open')
+          }
+        })
+      })
     }
 
     const handleSave = async (uuidTemplate: string, templateData: any, nameVersion: string, btnId: string) => {
