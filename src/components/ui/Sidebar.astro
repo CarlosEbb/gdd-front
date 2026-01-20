@@ -1,5 +1,5 @@
 ---
-import { House, FileText, FolderOpen, User, type Icon as IconType, Bolt, CirclePlus } from '@lucide/astro'
+import { House, FileText, FolderOpen, User, type Icon as IconType, Bolt, CirclePlus, Menu, X } from '@lucide/astro'
 
 type MenuItem = {
   name: string
@@ -17,10 +17,32 @@ const OPTIONS_MENU: MenuItem[] = [
 const currentPath = Astro.url.pathname
 ---
 
-<div id="menu-overlay" class="fixed inset-0 z-40 hidden bg-black/50 lg:hidden"></div>
+<div id="menu-overlay" data-sidebar-overlay class="fixed inset-0 z-40 hidden bg-black/50 lg:hidden"></div>
 
-<aside id="menubar" class={`fixed left-0 bottom-0 z-40 h-[calc(100vh-56px)] w-16 md:w-24 bg-custom-blue3/10 shadow-md shadow-custom-blue3/20`}>
+<button
+  type="button"
+  data-sidebar-toggle
+  aria-controls="menubar"
+  aria-expanded="false"
+  class="fixed bottom-4 left-4 z-50 flex items-center justify-center rounded-full bg-custom-blue3 p-3 text-white shadow-lg transition-all duration-200 hover:shadow-xl lg:hidden"
+>
+  <Menu class="size-6" />
+  <span class="sr-only">Abrir menú</span>
+</button>
+
+<aside
+  id="menubar"
+  data-sidebar
+  class={`fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full bg-[#ebeafb] shadow-md shadow-custom-blue3/20 transition-transform duration-200 lg:bottom-0 lg:top-auto lg:h-[calc(100vh-56px)] lg:w-16 lg:translate-x-0 xl:w-24`}
+>
   <div class="flex flex-col">
+    <div class="flex w-full items-center justify-between p-2 lg:hidden">
+      <div class="px-2 text-sm font-semibold text-custom-blue3">Menú</div>
+      <button type="button" data-sidebar-close class="rounded-md p-2 text-custom-blue3/80 hover:bg-custom-blue3/20">
+        <X class="size-5" />
+        <span class="sr-only">Cerrar menú</span>
+      </button>
+    </div>
     <div class="flex w-full items-center justify-center p-2">
       <button
         data-open-modal="save-template"
@@ -38,13 +60,13 @@ const currentPath = Astro.url.pathname
             <li>
               <a
                 class:list={[
-                  'group flex flex-col items-center justify-center rounded-lg p-3 text-xs text-custom-blue3/80 transition-all duration-200 hover:bg-custom-blue3/30',
+                  'group flex items-center justify-start gap-2 rounded-lg p-3 text-xs text-custom-blue3/80 transition-all duration-200 hover:bg-custom-blue3/30 lg:flex-col lg:justify-center lg:gap-0',
                   { 'bg-custom-blue3/30 font-bold text-custom-blue3': option.href === currentPath },
                 ]}
                 href={option.href}
               >
                 <option.icon class="size-5 md:size-6" />
-                <span class="hidden md:block">{option.name}</span>
+                <span class="md:block lg:hidden xl:block">{option.name}</span>
               </a>
             </li>
           ))
@@ -59,3 +81,70 @@ const currentPath = Astro.url.pathname
     </div>
   </div>
 </aside>
+
+<script>
+  const initSidebarDrawer = () => {
+    const sidebar = document.querySelector('[data-sidebar]')
+    const overlay = document.querySelector('[data-sidebar-overlay]')
+    const toggle = document.querySelector('[data-sidebar-toggle]')
+    const closeBtn = document.querySelector('[data-sidebar-close]')
+
+    if (!sidebar || !overlay || !toggle) return
+
+    const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches
+
+    const open = () => {
+      if (isDesktop()) return
+      sidebar.classList.remove('-translate-x-full')
+      overlay.classList.remove('hidden')
+      toggle.setAttribute('aria-expanded', 'true')
+    }
+
+    const close = () => {
+      overlay.classList.add('hidden')
+      toggle.setAttribute('aria-expanded', 'false')
+      if (isDesktop()) return
+      sidebar.classList.add('-translate-x-full')
+    }
+
+    const isOpen = () => !sidebar.classList.contains('-translate-x-full')
+
+    // Estado inicial
+    close()
+
+    // Evita duplicar listeners entre navegaciones con view transitions
+    if (toggle.getAttribute('data-bound') === 'true') return
+    toggle.setAttribute('data-bound', 'true')
+
+    toggle.addEventListener('click', () => {
+      if (isOpen()) close()
+      else open()
+    })
+
+    overlay.addEventListener('click', close)
+    closeBtn?.addEventListener('click', close)
+
+    if (sidebar.getAttribute('data-links-bound') !== 'true') {
+      sidebar.setAttribute('data-links-bound', 'true')
+      sidebar.addEventListener('click', (e) => {
+        if (isDesktop()) return
+        const target = e.target
+        if (!(target instanceof Element)) return
+        const link = target.closest('a[href]')
+        if (!link) return
+        close()
+      })
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close()
+    })
+
+    // Si cambias de tamaño a desktop, cierra overlay y deja el layout estable
+    const onResize = () => close()
+    window.addEventListener('resize', onResize, { passive: true })
+  }
+
+  document.addEventListener('astro:page-load', initSidebarDrawer)
+  document.addEventListener('astro:after-swap', initSidebarDrawer)
+</script>
