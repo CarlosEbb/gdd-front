@@ -1,13 +1,18 @@
 ---
+import { icons } from '@lucide/astro'
+import Icon from './Icon.astro'
+
 interface Props {
   buttonLabel?: string
   withSearch?: boolean
   size?: 'default' | 'sm'
   shadow?: 'lg' | 'md' | 'sm' | 'none'
   border?: 'border' | 'none'
+  position?: 'left' | 'right' | 'default'
+  mobileIcon?: keyof typeof icons
 }
 
-const { buttonLabel = 'Seleccionar', withSearch = false, size = 'default', shadow = 'sm', border = 'border' } = Astro.props
+const { buttonLabel = 'Seleccionar', withSearch = false, size = 'default', shadow = 'sm', border = 'border', position = 'default', mobileIcon = 'Menu' } = Astro.props
 
 const sizeClasses = {
   default: 'px-4 py-3',
@@ -25,6 +30,12 @@ const borderClasses = {
   border: 'border border-gray-200',
   none: '',
 }
+
+const positionClasses = {
+  left: 'left-0',
+  right: 'right-0',
+  default: 'left-0',
+}
 ---
 
 <div class="relative inline-block w-full cursor-pointer text-left" data-dropdown-container>
@@ -37,7 +48,12 @@ const borderClasses = {
     ]}
     data-dropdown-toggle
   >
-    <span class="truncate">{buttonLabel}</span>
+    {mobileIcon && (
+      <span class="flex items-center justify-center md:hidden">
+        <Icon name={mobileIcon} class="h-5 w-5 text-gray-600" />
+      </span>
+    )}
+    <span class:list={['truncate', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>
     <svg
       width="16"
       height="16"
@@ -47,14 +63,21 @@ const borderClasses = {
       stroke-width="1.5"
       stroke-linecap="round"
       stroke-linejoin="round"
-      class="-mr-1 ml-2 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180"
+      class:list={[
+        '-mr-1 ml-2 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180',
+        mobileIcon && 'hidden md:block',
+      ]}
     >
       <path d="m6 9 6 6 6-6"></path>
     </svg>
   </button>
 
   <div
-    class="ring-opacity-5 invisible absolute left-0 z-10 mt-1 max-h-72 w-72 origin-top-right scale-95 transform overflow-y-auto rounded-lg bg-white opacity-0 shadow-lg ring-1 ring-gray-200 transition-all duration-150 ease-out focus:outline-none [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100"
+    class:list={[
+      'ring-opacity-5 invisible absolute z-10 mt-1 max-h-72  scale-95 transform overflow-y-auto rounded-lg bg-white opacity-0 shadow-lg ring-1 ring-gray-200 transition-all duration-150 ease-out focus:outline-none [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100',
+      positionClasses[position],
+      position === 'right' ? 'origin-top-right' : 'origin-top-left',
+    ]}
     data-dropdown-menu
   >
     {
