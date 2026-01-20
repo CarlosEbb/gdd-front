@@ -31,7 +31,7 @@ const request = data?.data
 
 <ConfigLayout title="Documentación">
   <div class="relative">
-    <div class="flex gap-x-6 md:gap-x-10">
+    <div class="flex gap-x-3 pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
         <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">1</div>
         <div class="-my-2 h-full w-0.5 bg-custom-blue3/60"></div>
@@ -67,7 +67,7 @@ const request = data?.data
       </div>
     </div>
 
-    <div class="flex gap-x-6 md:gap-x-10">
+    <div class="flex gap-x-3 pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
         <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">2</div>
         <div class="-my-2 h-full w-0.5 bg-custom-blue3/60"></div>
@@ -105,7 +105,7 @@ const request = data?.data
       </div>
     </div>
 
-    <div class="flex gap-x-6 md:gap-x-10">
+    <div class="flex gap-x-3 pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
         <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">3</div>
       </div>
@@ -133,7 +133,7 @@ const request = data?.data
       </div>
     </div>
 
-    <div class="flex gap-x-6 md:gap-x-10">
+    <div class="flex gap-x-3 md:gap-x-10">
       <div class="flex flex-col items-center">
         <div class="z-10 flex h-12 w-12 shrink-0"></div>
       </div>
@@ -143,7 +143,7 @@ const request = data?.data
         <p class="mb-6 leading-relaxed text-slate-600">Para importar la colección en Postman, haz clic en el botón de descarga y sigue las instrucciones.</p>
 
         <div class="overflow-hidden rounded-xl bg-orange-50 shadow-lg ring-1 ring-orange-800/60">
-          <div class="code-scroll code-container flex items-start justify-between overflow-x-auto p-4">
+          <div class="code-scroll code-container items-start justify-between overflow-x-auto p-4 md:flex">
             <ol class="space-y-1 text-left text-sm text-orange-800">
               <li class="flex items-start gap-2">
                 <span class="font-bold">1.</span>
@@ -164,7 +164,7 @@ const request = data?.data
             </ol>
 
             <button
-              class="postman-btn group flex items-center gap-3 rounded-xl bg-linear-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+              class="postman-btn group mt-4 flex items-center gap-3 rounded-xl bg-linear-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl md:mt-0"
             >
               <span>Descargar para Postman</span>
               <Icon name="Download" stroke-width={2} class="size-5 transition-transform group-hover:translate-y-1" />
