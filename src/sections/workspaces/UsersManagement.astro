@@ -78,57 +78,57 @@ const usersWithOutOwner = users.filter((user) => user.is_owner === false)
   import { toast } from '@/scripts/toast'
   import { callAction, setButtonLoading } from '@/scripts/utils'
 
-  const form = document.getElementById('delete-user-from-workspace-form') as HTMLFormElement
-  const userName = document.getElementById('user-name') as HTMLParagraphElement
-  const workspaceUuidInput = document.getElementById('workspace-uuid') as HTMLInputElement
-  const userEmailInput = document.getElementById('user-email') as HTMLInputElement
-  const modal = document.getElementById('delete-user-from-workspace') as HTMLDialogElement
-  const accessUsersList = document.getElementById('access-users-list') as HTMLUListElement
+  window.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('delete-user-from-workspace-form') as HTMLFormElement
+    const userName = document.getElementById('user-name') as HTMLParagraphElement
+    const workspaceUuidInput = document.getElementById('workspace-uuid') as HTMLInputElement
+    const userEmailInput = document.getElementById('user-email') as HTMLInputElement
+    const modal = document.getElementById('delete-user-from-workspace') as HTMLDialogElement
+    const accessUsersList = document.getElementById('access-users-list') as HTMLUListElement
 
-  const handleOpenModal = (e: Event) => {
-    e.preventDefault()
-    const target = e.target as HTMLElement
-    if (target.tagName === 'BUTTON' || target.tagName === 'svg') {
-      const workspaceUuid = (target as HTMLButtonElement).dataset.workspaceUuid as string
-      const userEmail = (target as HTMLButtonElement).dataset.userEmail as string
+    const handleOpenModal = (e: Event) => {
+      e.preventDefault()
+      const target = e.target as HTMLElement
+      if (target.tagName === 'BUTTON' || target.tagName === 'svg') {
+        const workspaceUuid = (target as HTMLButtonElement).dataset.workspaceUuid as string
+        const userEmail = (target as HTMLButtonElement).dataset.userEmail as string
 
-      userName.textContent = userEmail
-      workspaceUuidInput.value = workspaceUuid
-      userEmailInput.value = userEmail
-      modal.showModal()
+        userName.textContent = userEmail
+        workspaceUuidInput.value = workspaceUuid
+        userEmailInput.value = userEmail
+        modal.showModal()
+      }
     }
-  }
 
-  const deleteUserFromWorkspace = async (e: Event) => {
-    e.preventDefault()
-    const dataForm = new FormData(form)
-    const uuid = dataForm.get('workspace-uuid') as string
-    const email = dataForm.get('user-email') as string
-    setButtonLoading('#btn-delete-user-from-workspace', true)
-    const { data, error } = await callAction(actions.workspaces.unassignUser({ uuid, email }))
+    const deleteUserFromWorkspace = async (e: Event) => {
+      e.preventDefault()
+      const dataForm = new FormData(form)
+      const uuid = dataForm.get('workspace-uuid') as string
+      const email = dataForm.get('user-email') as string
+      setButtonLoading('#btn-delete-user-from-workspace', true)
+      const { data, error } = await callAction(actions.workspaces.unassignUser({ uuid, email }))
 
-    if (error) {
-      toast.error(error.message)
-      setButtonLoading('#btn-delete-user-from-workspace', false)
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-delete-user-from-workspace', false)
+        modal.close()
+        return
+      }
+
+      toast.success(data.message)
       modal.close()
-      return
+      updateUsersList(email)
+      setButtonLoading('#btn-delete-user-from-workspace', false)
     }
 
-    toast.success(data.message)
-    modal.close()
-    updateUsersList(email)
-    setButtonLoading('#btn-delete-user-from-workspace', false)
-  }
-
-  // actulizar la lista de usuarios con acceso al espacio de trabajo actulizando el DOM
-  const updateUsersList = (email: string) => {
-    const userList = document.getElementById(`user-list-${email}`) as HTMLLIElement
-    if (userList) {
-      userList.remove()
+    // actulizar la lista de usuarios con acceso al espacio de trabajo actulizando el DOM
+    const updateUsersList = (email: string) => {
+      const userList = document.getElementById(`user-list-${email}`) as HTMLLIElement
+      if (userList) {
+        userList.remove()
+      }
     }
-  }
 
-  window.addEventListener('DOMContentLoaded', () => {
     accessUsersList.addEventListener('click', handleOpenModal)
     form.addEventListener('submit', deleteUserFromWorkspace)
   })
