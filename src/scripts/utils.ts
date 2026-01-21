@@ -248,3 +248,37 @@ export const validateImage = (file: File): { valid: boolean; messages: string } 
   }
   return { valid: true, messages }
 }
+
+/**
+ * Comprime un objeto JSON usando gzip y lo convierte a Blob
+ * @param data - Objeto a comprimir
+ * @returns Blob comprimido con gzip
+ * @example
+ * const blob = await compressJson(templateData)
+ * formData.append('template_data', blob, 'template.json.gz')
+ */
+export async function compressJson(data: unknown): Promise<Blob> {
+  const jsonString = JSON.stringify(data)
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(encoder.encode(jsonString))
+      controller.close()
+    },
+  })
+  const compressedStream = stream.pipeThrough(new CompressionStream('gzip'))
+  return await new Response(compressedStream).blob()
+}
+
+/**
+ * Descomprime un Blob gzip y lo convierte a objeto JSON
+ * @param blob - Blob comprimido con gzip
+ * @returns Objeto JSON descomprimido
+ * @example
+ * const data = await decompressJson(compressedBlob)
+ */
+export async function decompressJson<T = unknown>(blob: Blob): Promise<T> {
+  const stream = blob.stream().pipeThrough(new DecompressionStream('gzip'))
+  const decompressedText = await new Response(stream).text()
+  return JSON.parse(decompressedText) as T
+}

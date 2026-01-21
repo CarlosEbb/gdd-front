@@ -62,7 +62,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
 
 <nav class="flex h-16 p-2">
   <div class="grid w-full grid-cols-3 items-center gap-x-2 divide-x divide-gray-200 rounded-lg border border-gray-200 bg-white px-2 lg:grid-cols-6 xl:grid-cols-8">
-    <div class="flex items-center justify-around gap-x-2 col-span-2 lg:col-span-1 xl:col-span-3">
+    <div class="col-span-2 flex items-center justify-around gap-x-2 lg:col-span-1 xl:col-span-3">
       {
         validateDocumentsByWorkspace ? (
           <Dropdown buttonLabel={nameDocument} size="sm" border="none" mobileIcon="FileText">
@@ -105,7 +105,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
       </div>
     </div>
 
-    <div class="hidden lg:block col-span-3 xl:col-span-3 lg:col-span-3">
+    <div class="col-span-3 hidden lg:col-span-3 lg:block xl:col-span-3">
       <Button type="button" size="sm" variant="ghost" id="generatePdfBtn">
         <span class="flex items-center gap-x-2">
           <Icon name="FileText" class="size-4" stroke-width={1.5} />
@@ -126,7 +126,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
       </Button>
     </div>
 
-    <div class="flex items-center justify-end xl:gap-x-2 col-span-1 lg:col-span-1 xl:col-span-2">
+    <div class="col-span-1 flex items-center justify-end lg:col-span-1 xl:col-span-2 xl:gap-x-2">
       <div class="hidden xl:flex xl:items-center xl:gap-x-1">
         <Link href=`/config/documentation/${uuid}?build_number=${buildNumber}` size="sm" variant="ghost">
           <span class="flex items-center gap-x-2">
@@ -145,7 +145,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
       <div class="xl:hidden">
         <Dropdown buttonLabel="Más opciones" size="sm" position="right" mobileIcon="Ellipsis">
           <div class="mx-2 border-b border-gray-200 p-2.5 lg:hidden">
-            <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Documento</h3>
+            <h3 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Documento</h3>
             <ul class="space-y-1">
               <li class="md:hidden">
                 <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="new-version">
@@ -174,7 +174,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
             </ul>
           </div>
           <div class="mx-2 p-2.5">
-            <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 lg:hidden">Configuración</h3>
+            <h3 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase lg:hidden">Configuración</h3>
             <ul class="space-y-1">
               <li>
                 <a href={`/config/documentation/${uuid}?build_number=${buildNumber}`} class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
@@ -199,7 +199,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
   </div>
 </nav>
 
-<div id="container" class="w-full h-[calc(100vh-120px)]"></div>
+<div id="container" class="h-[calc(100vh-120px)] w-full"></div>
 
 <Modal title="Crear versión" modalId="new-version-document">
   <form id="new-version-document-form">
@@ -232,7 +232,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
 
 <script type="application/json" id="schema-file-data" set:html={JSON.stringify(schemaFile)} />
 <script>
-  import { callAction, setButtonLoading } from '@/scripts/utils.js'
+  import { callAction, setButtonLoading, compressJson } from '@/scripts/utils.js'
   import { toast } from '@/scripts/toast'
   import { actions } from 'astro:actions'
   import { navigate } from 'astro:transitions/client'
@@ -438,7 +438,15 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
       try {
         setButtonLoading(btnId, true)
 
-        const { data, error } = await callAction(actions.documents.createNewVersion({ uuid_template: uuidTemplate, template_data: templateData, name_version: nameVersion }))
+        const compressedBlob = await compressJson(templateData)
+        const formData = new FormData()
+        formData.append('uuid_template', uuidTemplate)
+        formData.append('template_data', compressedBlob, 'template.json.gz')
+        if (nameVersion) {
+          formData.append('name_version', nameVersion)
+        }
+
+        const { data, error } = await callAction(actions.documents.createNewVersion(formData))
         if (error) {
           toast.error(error.message)
           setButtonLoading(btnId, false)

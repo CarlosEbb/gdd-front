@@ -87,10 +87,11 @@ export const documents = {
   }),
 
   createNewVersion: defineAction({
+    accept: 'form',
     input: z.object({
       uuid_template: z.string(),
       name_version: z.string().optional(),
-      template_data: z.any(),
+      template_data: z.instanceof(File),
     }),
     handler: async ({ uuid_template, name_version, template_data }, request) => {
       const hasToken = await request.session?.has('token')
@@ -102,10 +103,15 @@ export const documents = {
       }
 
       const token = (await request.session?.get('token')) as string
-      const payload = name_version ? { name_version, template_data } : { template_data }
+
+      const formData = new FormData()
+      formData.append('template_data', template_data)
+      if (name_version) {
+        formData.append('name_version', name_version)
+      }
 
       try {
-        const newVersion = await http.post<CreateNewVersion>(`/template/${uuid_template}/version`, token, payload)
+        const newVersion = await http.post<CreateNewVersion>(`/template/${uuid_template}/version`, token, formData)
         return newVersion
       } catch (error) {
         await handleApiError(error, request)
