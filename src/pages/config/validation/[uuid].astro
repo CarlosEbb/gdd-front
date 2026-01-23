@@ -15,6 +15,7 @@ import ConditionsList from './_components/ConditionsList.astro'
 import DebugPanel from './_components/DebugPanel.astro'
 import ValidationItemTemplate from './_components/ValidationItemTemplate.astro'
 import ConditionItemTemplate from './_components/ConditionItemTemplate.astro'
+import Button from '@/components/ui/Button.astro'
 
 const { uuid } = Astro.params
 const build_number = Astro.url.searchParams.get('build_number') as string
@@ -28,16 +29,21 @@ const { data } = await Astro.callAction(actions.documents.getRequestForDocument,
   build_number: build_number,
 })
 
-const request = data?.data || {}
+const request = data?.data.variables || {}
 const fields = Object.keys(request) as Array<string>
+const elements = data?.data.elementos || []
 ---
 
 <ConfigLayout title="Validaciones">
   <Tabs defaultValue="json">
-    <TabsList>
-      <TabsTrigger value="json">JSON</TabsTrigger>
-      <TabsTrigger value="documento">Documento</TabsTrigger>
-    </TabsList>
+    <div class="flex items-center justify-between">
+      <TabsList>
+        <TabsTrigger value="json">JSON</TabsTrigger>
+        <TabsTrigger value="documento">Documento</TabsTrigger>
+      </TabsList>
+
+      <Button>Guardar</Button>
+    </div>
 
     <TabsContent value="json">
       <div class="grid grid-cols-3 gap-x-3">
@@ -48,7 +54,7 @@ const fields = Object.keys(request) as Array<string>
 
     <TabsContent value="documento">
       <div class="grid grid-cols-3 gap-x-3">
-        <FieldsToHide />
+        <FieldsToHide elements={elements} />
         <ConditionForm />
         <ConditionsList />
       </div>

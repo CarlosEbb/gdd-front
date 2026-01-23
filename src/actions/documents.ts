@@ -274,4 +274,31 @@ export const documents = {
       }
     },
   }),
+
+  createValidationRules: defineAction({
+    input: z.object({
+      uuid_template: z.string(),
+      build_number: z.string(),
+      validation_rules: z.object({}),
+    }),
+    handler: async ({ uuid_template, build_number, validation_rules }, request) => {
+      const hasToken = await request.session?.has('token')
+
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
+      const url = `/documents/validate/variables/${uuid_template}/${build_number}`
+      try {
+        const response = await http.post(url, JSON.stringify(validation_rules), token)
+        return response
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
 }

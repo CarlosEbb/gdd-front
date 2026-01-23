@@ -48,5 +48,3 @@ export const TYPES_DATE: DateFormatItem[] = [
   { value: 'DD de MMMM de YYYY', label: 'DD de MMMM de YYYY (20 de diciembre de 2024)' },
   { value: 'custom', label: 'Personalizado' },
 ]
-
-export const PARTS_VALIDATION: string[] = ['Header', 'Body', 'Footer', 'Signature', 'Signatures', 'Attachments', 'Metadata', 'Custom', 'Other', 'All', 'None', 'Any']
