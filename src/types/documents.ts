@@ -93,4 +93,9 @@ export interface GeneratedDocument {
   status: Status
 }
 
+export interface RequestForDocument {
+  variables: Record<string, any>
+  elementos: string[]
+}
+
 type Status = 'active' | 'deleted'

@@ -1,7 +1,7 @@
 import { ActionError, defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
-import type { CreateDocument, CreateNewVersion, Document, GeneratedDocument, SchemaFile } from '@/types/documents'
+import type { CreateDocument, CreateNewVersion, Document, GeneratedDocument, RequestForDocument, SchemaFile } from '@/types/documents'
 
 export const documents = {
   getByWorkspaces: defineAction({
@@ -267,7 +267,7 @@ export const documents = {
       const token = (await request.session?.get('token')) as string
       const url = `/documents/variables/${uuid_template}/${build_number}`
       try {
-        const request = await http.get<Request>(url, token)
+        const request = await http.get<RequestForDocument>(url, token)
         return request
       } catch (error) {
         await handleApiError(error, request)

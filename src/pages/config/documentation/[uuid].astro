@@ -26,7 +26,7 @@ const responseExample = {
 
 const { data, error } = await Astro.callAction(actions.documents.getRequestForDocument, { uuid_template: uuid, build_number: build_number })
 
-const request = data?.data
+const request = data?.data.variables
 ---
 
 <ConfigLayout title="Documentación">
