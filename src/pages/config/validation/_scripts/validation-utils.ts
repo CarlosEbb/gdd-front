@@ -82,6 +82,20 @@ export function createDefaultRule(): ValidationRule {
   }
 }
 
+export function hasValidationContent(rule: ValidationRule): boolean {
+  return rule.required || rule.types.length > 0 || rule.customValidations.length > 0
+}
+
+export function filterEmptyRules(rules: ValidationRules): ValidationRules {
+  const filtered: ValidationRules = {}
+  for (const [field, rule] of Object.entries(rules)) {
+    if (hasValidationContent(rule)) {
+      filtered[field] = rule
+    }
+  }
+  return filtered
+}
+
 // ============================================
 // DEBUG PANEL
 // ============================================
@@ -91,7 +105,8 @@ export function getDebugContentElement(): HTMLElement | null {
 }
 
 export function updateDebugPanel(data: { validationRules?: ValidationRules; hiddenConditions?: HiddenCondition[] }): void {
-  validationPayload.validationRules = data.validationRules ?? validationPayload.validationRules ?? {}
+  const rawRules = data.validationRules ?? validationPayload.validationRules ?? {}
+  validationPayload.validationRules = filterEmptyRules(rawRules)
   validationPayload.hiddenConditions = data.hiddenConditions ?? validationPayload.hiddenConditions ?? []
 
   const debugContent = getDebugContentElement()
@@ -102,7 +117,7 @@ export function updateDebugPanel(data: { validationRules?: ValidationRules; hidd
 
 export function getValidationPayload(): ValidationPayload {
   return {
-    validationRules: validationPayload.validationRules,
+    validationRules: filterEmptyRules(validationPayload.validationRules),
     hiddenConditions: validationPayload.hiddenConditions,
   }
 }
