@@ -123,8 +123,9 @@ export const documents = {
     input: z.object({
       uuid_template: z.string(),
       build_number: z.string(),
+      compress: z.boolean().optional(),
     }),
-    handler: async ({ uuid_template, build_number }, request) => {
+    handler: async ({ uuid_template, build_number, compress }, request) => {
       const hasToken = await request.session?.has('token')
       if (!hasToken) {
         throw new ActionError({
@@ -134,7 +135,7 @@ export const documents = {
       }
 
       const token = (await request.session?.get('token')) as string
-      const url = `/template/file/${uuid_template}/${build_number}`
+      const url = `/template/file/${uuid_template}/${build_number}${compress ? '?compress=true' : ''}`
 
       try {
         const file = await http.get<SchemaFile>(url, token)

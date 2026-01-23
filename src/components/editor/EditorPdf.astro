@@ -21,7 +21,9 @@ const nameDocument = urlParams.get('name_document') as string
 let schemaFile: SchemaFile | null = null
 
 if (hasBuildNumber) {
-  const { data, error } = await Astro.callAction(actions.documents.getDocument, { uuid_template: uuid, build_number: buildNumber })
+  const { data, error } = await Astro.callAction(actions.documents.getDocument, { uuid_template: uuid, build_number: buildNumber, compress: true })
+
+  console.log(data)
 
   if (error) {
     console.error('Error al obtener el documento:', error)
