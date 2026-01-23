@@ -24,6 +24,16 @@ export type HiddenCondition = {
   logicalOperator: 'and' | 'or'
 }
 
+export type ValidationPayload = {
+  validationRules: ValidationRules
+  hiddenConditions: HiddenCondition[]
+}
+
+const validationPayload: ValidationPayload = {
+  validationRules: {},
+  hiddenConditions: [],
+}
+
 export type DocumentValidationState = {
   hiddenConditions: HiddenCondition[]
   selectedFieldsToHide: string[]
@@ -81,21 +91,18 @@ export function getDebugContentElement(): HTMLElement | null {
 }
 
 export function updateDebugPanel(data: { validationRules?: ValidationRules; hiddenConditions?: HiddenCondition[] }): void {
+  validationPayload.validationRules = data.validationRules ?? validationPayload.validationRules ?? {}
+  validationPayload.hiddenConditions = data.hiddenConditions ?? validationPayload.hiddenConditions ?? []
+
   const debugContent = getDebugContentElement()
-  if (!debugContent) return
-
-  // Obtener datos existentes y mergear
-  let existingData: { validationRules?: ValidationRules; hiddenConditions?: HiddenCondition[] } = {}
-  try {
-    existingData = JSON.parse(debugContent.textContent || '{}')
-  } catch {
-    // Ignorar errores de parsing
+  if (debugContent) {
+    debugContent.textContent = JSON.stringify(validationPayload, null, 2)
   }
+}
 
-  const mergedData = {
-    validationRules: data.validationRules ?? existingData.validationRules ?? {},
-    hiddenConditions: data.hiddenConditions ?? existingData.hiddenConditions ?? [],
+export function getValidationPayload(): ValidationPayload {
+  return {
+    validationRules: validationPayload.validationRules,
+    hiddenConditions: validationPayload.hiddenConditions,
   }
-
-  debugContent.textContent = JSON.stringify(mergedData, null, 2)
 }

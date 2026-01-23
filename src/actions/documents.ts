@@ -279,7 +279,7 @@ export const documents = {
     input: z.object({
       uuid_template: z.string(),
       build_number: z.string(),
-      validation_rules: z.object({}),
+      validation_rules: z.record(z.any()),
     }),
     handler: async ({ uuid_template, build_number, validation_rules }, request) => {
       const hasToken = await request.session?.has('token')
@@ -294,7 +294,7 @@ export const documents = {
       const token = (await request.session?.get('token')) as string
       const url = `/documents/validate/variables/${uuid_template}/${build_number}`
       try {
-        const response = await http.post(url, JSON.stringify(validation_rules), token)
+        const response = await http.post(url, token, validation_rules)
         return response
       } catch (error) {
         await handleApiError(error, request)

@@ -1,11 +1,20 @@
 ---
-
+interface Props {
+  show?: boolean
+}
+const { show = false } = Astro.props as Props
 ---
 
-<div id="debug-panel" class="fixed right-4 bottom-4 z-50 max-h-80 w-96 overflow-auto rounded-lg border border-gray-300 bg-gray-900 p-3 font-mono text-xs text-green-400 shadow-lg">
-  <div class="mb-2 flex items-center justify-between">
-    <span class="text-yellow-400">validationRules</span>
-    <button id="toggle-debug" class="text-gray-400 hover:text-white">−</button>
-  </div>
-  <pre id="debug-content" class="whitespace-pre-wrap"></pre>
-</div>
+{
+  show && (
+    <div id="debug-panel" class="fixed right-4 bottom-4 z-50 max-h-80 w-96 overflow-auto rounded-lg border border-gray-300 bg-gray-900 p-3 font-mono text-xs text-green-400 shadow-lg">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-yellow-400">validationRules</span>
+        <button id="toggle-debug" class="text-gray-400 hover:text-white">
+          −
+        </button>
+      </div>
+      <pre id="debug-content" class="whitespace-pre-wrap" />
+    </div>
+  )
+}

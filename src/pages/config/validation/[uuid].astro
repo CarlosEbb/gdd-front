@@ -42,7 +42,7 @@ const elements = data?.data.elementos || []
         <TabsTrigger value="documento">Documento</TabsTrigger>
       </TabsList>
 
-      <Button>Guardar</Button>
+      <Button id="btn-save-validation" loadingText="Guardando..." data-uuid-template={uuid} data-build-number={build_number}>Guardar</Button>
     </div>
 
     <TabsContent value="json">
@@ -61,7 +61,7 @@ const elements = data?.data.elementos || []
     </TabsContent>
   </Tabs>
 
-  <DebugPanel />
+  <DebugPanel show />
 
   <ValidationItemTemplate />
   <ConditionItemTemplate />
@@ -72,11 +72,60 @@ const elements = data?.data.elementos || []
 <script>
   import { initValidationSystem } from './_scripts/json-validation'
   import { initDocumentValidation, resetDocumentValidation } from './_scripts/document-validation'
+  import { getValidationPayload } from './_scripts/validation-utils'
+  import { setButtonLoading, callAction } from '@/scripts/utils'
+  import { toast } from '@/scripts/toast'
+  import { actions } from 'astro:actions'
+
+  function setupSaveValidation() {
+    const saveButton = document.getElementById('btn-save-validation') as HTMLButtonElement | null
+    if (!saveButton) return
+
+    if (saveButton.dataset.initialized === 'true') return
+    saveButton.dataset.initialized = 'true'
+
+    saveButton.addEventListener('click', async (event) => {
+      event.preventDefault()
+      const uuidTemplate = saveButton.dataset.uuidTemplate
+      const buildNumber = saveButton.dataset.buildNumber
+
+      if (!uuidTemplate || !buildNumber) {
+        toast.error('No se pudo obtener la información del documento.')
+        return
+      }
+
+      const validationPayload = getValidationPayload()
+
+      try {
+        setButtonLoading(saveButton, true)
+
+        const { data, error } = await callAction(
+          actions.documents.createValidationRules({
+            uuid_template: uuidTemplate,
+            build_number: buildNumber,
+            validation_rules: validationPayload,
+          })
+        )
+
+        if (error) {
+          toast.error(error.message)
+          return
+        }
+
+        toast.success(data?.message ?? 'Validaciones guardadas correctamente.')
+      } catch (error) {
+        toast.error('Ah ocurrido un error al guardar las validaciones. Por favor, intente nuevamente.')
+      } finally {
+        setButtonLoading(saveButton, false)
+      }
+    })
+  }
 
   document.addEventListener('astro:page-load', () => {
     resetDocumentValidation()
     initValidationSystem()
     initDocumentValidation()
+    setupSaveValidation()
   })
 </script>
 
