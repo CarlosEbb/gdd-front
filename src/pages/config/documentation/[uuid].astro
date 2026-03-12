@@ -1,6 +1,5 @@
 ---
-import ConfigLayout from '@/layouts/ConfigLayout.astro'
-import TitleForPage from '@/components/ui/TitleForPage.astro'
+import Layout from '../_components/Layout.astro'
 import { actions } from 'astro:actions'
 import { Code } from 'astro:components'
 import Icon from '@/components/ui/Icon.astro'
@@ -29,7 +28,7 @@ const { data, error } = await Astro.callAction(actions.documents.getRequestForDo
 const request = data?.data.variables
 ---
 
-<ConfigLayout title="Documentación">
+<Layout title="Documentación">
   <div class="relative">
     <div class="flex gap-x-3 pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
@@ -174,7 +173,7 @@ const request = data?.data.variables
       </div>
     </div>
   </div>
-</ConfigLayout>
+</Layout>
 
 <script>
   import { toast } from '@/scripts/toast'

@@ -1,5 +1,5 @@
 ---
-import ConfigLayout from '@/layouts/ConfigLayout.astro'
+import Layout from '../_components/Layout.astro'
 
 const { uuid } = Astro.params
 const build_number = Astro.url.searchParams.get('build_number') as string
@@ -9,8 +9,8 @@ if (!uuid || !build_number) {
 }
 ---
 
-<ConfigLayout title="Versión">
+<Layout title="Versión">
   <div class="relative">
     text {uuid}
   </div>
-</ConfigLayout>
+</Layout>

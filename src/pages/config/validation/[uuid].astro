@@ -1,5 +1,5 @@
 ---
-import ConfigLayout from '@/layouts/ConfigLayout.astro'
+import Layout from '../_components/Layout.astro'
 import Tabs from '@/components/tabs/Tabs.astro'
 import TabsList from '@/components/tabs/TabsList.astro'
 import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
@@ -34,7 +34,7 @@ const fields = Object.keys(request) as Array<string>
 const elements = data?.data.elementos || []
 ---
 
-<ConfigLayout title="Validaciones">
+<Layout title="Validaciones">
   <Tabs defaultValue="json">
     <div class="flex items-center justify-between">
       <TabsList>
@@ -65,7 +65,7 @@ const elements = data?.data.elementos || []
 
   <ValidationItemTemplate />
   <ConditionItemTemplate />
-</ConfigLayout>
+</Layout>
 
 <script type="application/json" id="json-input-data" set:html={JSON.stringify(request)} />
 
