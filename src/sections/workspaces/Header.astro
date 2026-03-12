@@ -81,7 +81,6 @@ const icon = (workspace?.icon as keyof typeof icons) ?? ''
   </form>
 </Modal>
 
-
 <!-- Editar un workspace -->
 <script>
   import { actions } from 'astro:actions'
@@ -92,8 +91,6 @@ const icon = (workspace?.icon as keyof typeof icons) ?? ''
   document.addEventListener('astro:page-load', () => {
     const form = document.getElementById('edit-workspace-form') as HTMLFormElement
     const modal = document.getElementById('edit-workspace') as HTMLDialogElement
-
-    if (!form || !modal) return
 
     // Evitar agregar múltiples listeners
     if (form.dataset.initialized) return
