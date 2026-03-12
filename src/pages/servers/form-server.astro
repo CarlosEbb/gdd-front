@@ -1,0 +1,102 @@
+---
+import Input from '@/components/form/Input.astro'
+import Button from '@/components/ui/Button.astro'
+import Container from '@/components/ui/Container.astro'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+import MainLayout from '@/layouts/MainLayout.astro'
+
+const isEdit = Astro.url.searchParams.get('edit') === 'true'
+const values: { ip: string; name: string; puerto: string; uuid?: string } = {
+  ip: '',
+  name: '',
+  puerto: '',
+  uuid: '',
+}
+
+if (isEdit) {
+  values.ip = Astro.url.searchParams.get('ip') || ''
+  values.name = Astro.url.searchParams.get('name') || ''
+  values.puerto = Astro.url.searchParams.get('puerto') || ''
+  values.uuid = Astro.url.searchParams.get('uuid') || ''
+}
+
+const btnText = isEdit ? 'Actualizar servidor' : 'Crear servidor'
+const titleText = isEdit ? 'Actualizar servidor' : 'Crear servidor'
+const loadingText = isEdit ? 'Actualizando servidor...' : 'Creando servidor...'
+---
+
+<MainLayout title="Servidores">
+  <Container>
+    <TitleForPage title={titleText} />
+    <form method="post" class="mb-10" id="form-server" data-is-edit={isEdit}>
+      <div class="rounded-lg border border-gray-200 bg-white p-6 shadow shadow-custom-blue3/20">
+        <div class="mb-5 border-b border-gray-200 pb-6">
+          <h2 class="text-lg font-semibold">Información del servidor</h2>
+        </div>
+        <div class="space-y-3">
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <Input
+                label="IP"
+                type="text"
+                pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+                name="ip"
+                data-error-required="La IP es obligatoria"
+                required
+                placeholder="192.168.1.1"
+                data-error-pattern="La IP no es válida Ej: 192.168.1.1"
+                value={isEdit ? values?.ip : ''}
+              />
+            </div>
+            <div>
+              <Input label="Nombre" type="text" name="name" data-error-required="El nombre es obligatorio" required placeholder="Servidor 1" value={isEdit ? values?.name || '' : ''} />
+            </div>
+            <div>
+              <Input label="Puerto" type="number" name="puerto" data-error-required="El puerto es obligatorio" required placeholder="3000" value={isEdit ? values?.puerto : ''} />
+              {isEdit && <input type="hidden" name="uuid" value={values?.uuid} />}
+            </div>
+          </div>
+        </div>
+        <div class="mt-7 border-t border-gray-200 pt-6">
+          <div class="flex justify-end">
+            <Button type="submit" size="sm" id="create-server-btn" loadingText={loadingText}> {btnText} </Button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </Container>
+</MainLayout>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import { navigate } from 'astro:transitions/client'
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('form-server') as HTMLFormElement
+    const isEdit = form.getAttribute('data-is-edit') === 'true'
+
+    const handleSubmit = async (e: Event) => {
+      e.preventDefault()
+
+      const dataForm = new FormData(form)
+
+      setButtonLoading('#create-server-btn', true)
+      const action = isEdit ? actions.servers.updated(dataForm) : actions.servers.register(dataForm)
+      const { data, error } = await callAction(action)
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#create-server-btn', false)
+        return
+      }
+
+      toast.success(data.message)
+      navigate(`/servers/${data.data.uuid}`)
+      setButtonLoading('#create-server-btn', true)
+    }
+
+    form.addEventListener('submit', handleSubmit)
+  })
+</script>

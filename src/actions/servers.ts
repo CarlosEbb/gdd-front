@@ -1,0 +1,158 @@
+import { ActionError, defineAction } from 'astro:actions'
+import { z } from 'astro:schema'
+import type { ApiResponse } from '@/types/response'
+import { handleApiError, http } from './http'
+import type { createServer, DetailsServer } from '@/types/servers'
+
+export const servers = {
+  register: defineAction({
+    accept: 'form',
+    input: z.object({
+      ip: z.string().ip(),
+      puerto: z.number(),
+      name: z.string(),
+    }),
+    handler: async (input, request) => {
+      const hasToken = await request.session?.has('token')
+
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
+      try {
+        const response: ApiResponse<createServer> = await http.post<createServer>(`/servers`, token, input)
+        return response
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  list: defineAction({
+    handler: async (_, request) => {
+      const hasToken = await request.session?.has('token')
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
+
+      try {
+        const servers = await http.get<DetailsServer[]>(`/servers`, token)
+
+        return servers
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  getByUuid: defineAction({
+    input: z.object({
+      uuid: z.string(),
+    }),
+    handler: async ({ uuid }, request) => {
+      const hasToken = await request.session?.has('token')
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
+
+      try {
+        const serverInfo = await http.get<DetailsServer>(`/servers/${uuid}`, token)
+
+        return serverInfo
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  updated: defineAction({
+    accept: 'form',
+    input: z.object({
+      uuid: z.string(),
+      ip: z.string().ip(),
+      puerto: z.string(),
+      name: z.string(),
+    }),
+    handler: async (input, request) => {
+      const hasToken = await request.session?.has('token')
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
+      try {
+        const response: ApiResponse<createServer> = await http.put<createServer>(`/servers/${input.uuid}`, token, input)
+        return response
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  delete: defineAction({
+    accept: 'form',
+    input: z.object({
+      uuid: z.string(),
+    }),
+    handler: async ({ uuid }, request) => {
+      const hasToken = await request.session?.has('token')
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
+      try {
+        const response: ApiResponse<null> = await http.del(`/servers/${uuid}`, token)
+        return {
+          code: response.code,
+          message: response.message,
+          data: {
+            redirect: '/servers',
+          },
+        }
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  getByIp: defineAction({
+    input: z.object({
+      ip: z.string(),
+    }),
+    handler: async ({ ip }, request) => {
+      const hasToken = await request.session?.has('token')
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
+
+      try {
+        const serverInfo = await http.get<DetailsServer[]>(`/servers/ip/${ip}`, token)
+
+        return serverInfo
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+}

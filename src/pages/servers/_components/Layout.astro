@@ -1,0 +1,19 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import TabsLayout from '@/layouts/TabsLayout.astro'
+
+interface Props {
+  title: string
+}
+
+const { title } = Astro.props
+
+const NAVIGATION = [
+  { href: `/servers`, label: 'Consultar' },
+  { href: `/servers/created`, label: 'Crear servidor' },
+]
+---
+
+<TabsLayout title={title} navigation={NAVIGATION} titleForPage="Gestionar servidores">
+  <slot />
+</TabsLayout>

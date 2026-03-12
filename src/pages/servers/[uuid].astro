@@ -1,0 +1,131 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import Container from '@/components/ui/Container.astro'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+import { Plug, Server } from '@lucide/astro'
+import { actions } from 'astro:actions'
+import type { Database } from '@/types/servers'
+import List from '@/components/ui/List.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Button from '@/components/ui/Button.astro'
+import Modal from '@/components/modal/Modal.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Link from '@/components/ui/Link.astro'
+
+const { uuid } = Astro.params
+
+const { data, error } = await Astro.callAction(actions.servers.getByUuid, { uuid: uuid! })
+
+const server = data?.data || null
+const dataBases = server?.databases || []
+const hasDatabases = dataBases.length > 0
+const selectedServer = {
+  name: server?.name || 'Servidor no encontrado',
+  ip: server?.ip || '0.0.0.0',
+  puerto: server?.puerto || 0,
+  status: 'online',
+}
+---
+
+<MainLayout title="Detalles del servidor">
+  <Container>
+    <TitleForPage title="Detalles del servidor" backHref="/servers" />
+    {
+      error ? (
+        <EmptyState title="Ah ocurrido un error" state="error" description={error.message} />
+      ) : (
+        <>
+          <div class="border-b border-custom-purple-light/20 bg-custom-purple-light/5 p-6">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-5">
+                <div class={`rounded-2xl p-3 shadow-sm ${selectedServer.status === 'online' ? 'bg-custom-purple-light/20 text-custom-purple-dark' : 'bg-slate-400 text-white'}`}>
+                  <Server size={24} />
+                </div>
+                <div>
+                  <h2 class="text-xl font-bold text-slate-800">{selectedServer.name}</h2>
+                  <div class="flex items-center gap-3 text-sm text-slate-500">
+                    <span class="rounded bg-slate-100 px-2 py-0.5 font-mono text-slate-600">{selectedServer.ip}</span>
+                    <span>•</span>
+                    <span class="flex items-center gap-1">
+                      <Plug size={14} /> {selectedServer.puerto}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <Link size="sm" variant="secondary" href={`/servers/form-server?edit=true&ip=${selectedServer.ip}&name=${selectedServer.name}&puerto=${selectedServer.puerto}&uuid=${uuid}`}>
+                  Editar
+                </Link>
+                <Button size="sm" variant="destructive" data-open-modal="delete-server">
+                  Eliminar
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div class="mt-8">
+            <h3 class="mb-4 text-lg font-semibold text-slate-800">Bases de datos</h3>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {hasDatabases ? (
+                dataBases.map((db: Database) => <List icon="Database" title={db.nameBd} subtitle={db.username} />)
+              ) : (
+                <div class="col-span-full">
+                  <EmptyState href="/servers" hrefText="Volver a servidores" title="No hay bases de datos" state="info" description="No se encontraron bases de datos para este servidor" />
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )
+    }
+  </Container>
+</MainLayout>
+
+<Modal modalId="delete-server" title="Eliminar servidor">
+  <form class="space-y-6" id="delete-server-form">
+    <div class="flex flex-col items-center justify-center py-5">
+      <Icon name="Trash" size={48} stroke-width={1.5} class="text-red-300" />
+      <p class="mt-4 mb-1 text-lg font-semibold text-gray-900">{selectedServer.ip}</p>
+      <p class="mb-4 text-center">¿Estás seguro de querer eliminar este servidor?</p>
+      <input type="hidden" name="uuid" value={server?.uuid} required readonly />
+    </div>
+    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" id="btn-delete-server" loadingText="Eliminando servidor...">Eliminar servidor</Button>
+    </div>
+  </form>
+</Modal>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('delete-server-form') as HTMLFormElement
+    const modal = document.getElementById('delete-server') as HTMLDialogElement
+
+    if (form.dataset.initialized) return
+    form.dataset.initialized = 'true'
+
+    async function deleteServer(e: Event) {
+      e.preventDefault()
+      const dataForm = new FormData(form)
+      setButtonLoading('#btn-delete-server', true)
+      const { data, error } = await callAction(actions.servers.delete(dataForm))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-delete-server', false)
+        modal.close()
+        return
+      }
+
+      toast.success(data!.message)
+      navigate(data!.data.redirect)
+      modal.close()
+    }
+
+    form.addEventListener('submit', deleteServer)
+  })
+</script>

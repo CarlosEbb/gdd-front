@@ -3,6 +3,7 @@ import { documents } from './documents'
 import { user } from './user'
 import { workspaces } from './workspace'
 import { templates } from './templates'
+import { servers } from './servers'
 
 export const server = {
   auth,
@@ -10,4 +11,5 @@ export const server = {
   documents,
   user,
   templates,
+  servers,
 }

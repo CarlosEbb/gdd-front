@@ -1,0 +1,50 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import { actions } from 'astro:actions'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import List from '@/components/ui/List.astro'
+import type { DetailsServer } from '@/types/servers'
+import Container from '@/components/ui/Container.astro'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Link from '@/components/ui/Link.astro'
+
+const currentPath = Astro.url.pathname
+const { data, error } = await Astro.callAction(actions.servers.list, {})
+
+const servers = data?.data || []
+const hasServers = servers.length > 0
+---
+
+<MainLayout title="Servidores">
+  <Container>
+    <div class="mb-6 flex items-center justify-between">
+      <TitleForPage class="mb-0" backHref="/home" title="Gestión de Servidores" />
+      <Link href="/servers/form-server" variant="gradient" size="sm">
+        <span class="flex items-center justify-center gap-2">
+          <span class="hidden md:block">Crear Servidor</span>
+          <Icon name="Plus" size={14} />
+        </span>
+      </Link>
+    </div>
+    {
+      hasServers ? (
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {servers.map((server: DetailsServer) => (
+            <List icon="Server" title={`Puerto: ${server.puerto}`} subtitle={`IP: ${server.ip}`}>
+              <div slot="actions">
+                <Link href={`/servers/${server.uuid}`} variant="ghost" size="icon">
+                  <Icon name="SquareArrowOutUpRight" size={16} />
+                </Link>
+              </div>
+            </List>
+          ))}
+        </div>
+      ) : error ? (
+        <EmptyState title="Error al cargar los servidores" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
+      ) : (
+        <EmptyState title="No hay servidores disponibles" description="No tienes ningún servidor registrado." href={currentPath} hrefText="Recargar" state="notFound" action="back" />
+      )
+    }
+  </Container>
+</MainLayout>
