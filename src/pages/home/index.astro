@@ -10,7 +10,7 @@ const name = user.name
 
 <MainLayout title="Inicio">
   <div class="mx-auto max-w-7xl">
-    <TitleForPage title={`¡Bienvenido, ${name}!`} />
+    <TitleForPage showBackButton={false} title={`¡Bienvenido, ${name}!`} />
 
     <ListLatestOpenid />
     <ListDocuments limit={7} />
