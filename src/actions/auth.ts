@@ -14,7 +14,7 @@ export const auth = {
     handler: async (input, request) => {
       try {
         const info: ApiResponse<User> = await http.post<User>(
-          `/auth/login`,
+          `/users/login`,
           '',
           {
             email: input.email,
