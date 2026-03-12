@@ -1,5 +1,5 @@
 ---
-import { House, FileText, FolderOpen, User, type Icon as IconType, Bolt, CirclePlus, Menu, X } from '@lucide/astro'
+import { House, FileText, FolderOpen, type Icon as IconType, CirclePlus, Menu, X, Users, CircleUser, Briefcase, Server } from '@lucide/astro'
 
 type MenuItem = {
   name: string
@@ -11,7 +11,10 @@ const OPTIONS_MENU: MenuItem[] = [
   { href: '/home', name: 'Inicio', icon: House },
   { href: '/documents', name: 'Documentos', icon: FolderOpen },
   { href: '/templates', name: 'Plantillas', icon: FileText },
-  { href: '/profile', name: 'Perfil', icon: User },
+  // { href: '/profile', name: 'Perfil', icon: CircleUser },
+  // { href: '/users', name: 'Usuarios', icon: Users },
+  // { href: '/clients', name: 'Clientes', icon: Briefcase },
+  { href: '/servers', name: 'Servidores', icon: Server },
 ]
 
 const currentPath = Astro.url.pathname
@@ -66,7 +69,7 @@ const currentPath = Astro.url.pathname
                 href={option.href}
               >
                 <option.icon class="size-5 md:size-6" />
-                <span class="md:block lg:hidden xl:block">{option.name}</span>
+                <span class="text-center md:block lg:hidden xl:block">{option.name}</span>
               </a>
             </li>
           ))
