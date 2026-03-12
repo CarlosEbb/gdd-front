@@ -4,13 +4,12 @@ import type { HTMLAttributes } from 'astro/types'
 export interface Props extends HTMLAttributes<'button'> {
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient'
   size?: 'default' | 'sm' | 'lg' | 'icon'
-  href?: string
   rounded?: 'default' | 'full'
   loadingText?: string
   showTextOnLoading?: boolean
 }
 
-const { variant = 'default', size = 'default', class: className, href, rounded = 'default', loadingText, showTextOnLoading = true, ...props } = Astro.props
+const { variant = 'default', size = 'default', class: className, rounded = 'default', loadingText, showTextOnLoading = true, ...props } = Astro.props
 
 const baseClasses =
   'inline-flex items-center justify-center whitespace-nowrap rounded-full font-semibold ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
