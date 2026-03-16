@@ -12,14 +12,14 @@ if (!uuid) {
 
 const build_number = Astro.url.searchParams.get('build_number') as string
 const url = `/documents/variables/${uuid}/${build_number}`
-const base_url = 'https://1xxz16z4-8300.use2.devtunnels.ms'
+const base_url = import.meta.env.PUBLIC_API_URL
 
 const responseExample = {
   status: 200,
   message: 'Documento guardado exitosamente',
   data: {
     uuid: 'c73bc0b8-ea3b-49b7-8974-f3f9553ad281',
-    url: 'https://1xxz16z4-8300.use2.devtunnels.ms/documents/viewPDF/c73bc0b8-ea3b-49b7-8974-f3f9553ad281',
+    url: `${base_url}/documents/viewPDF/c73bc0b8-ea3b-49b7-8974-f3f9553ad281`,
   },
 }
 
