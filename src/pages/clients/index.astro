@@ -37,7 +37,7 @@ const hasClients = clients.length > 0
 
       {
         clients.map((client: DetailsClient) => (
-          <List icon="Building2" title={client.name} subtitle={`RIF: ${client.rif}`}>
+          <List icon="Building2" title={client.name} subtitle={`RIF: ${client.rif}`} img={client.logo}>
             <div slot="actions">
               <Link href={`/clients/${client.uuid}`} variant="ghost" size="icon">
                 <Icon name="ChevronRight" stroke-width={1.5} size={16} />
