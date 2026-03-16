@@ -12,6 +12,7 @@ import FormPageLayout from '@/layouts/FormPageLayout.astro'
 import FormBlock from '@/components/ui/FormBlock.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import InputWithPrefix from '@/components/form/InputWithPrefix.astro'
+import { rifOptions } from '@/constants/rif'
 
 const isEdit = Astro.url.searchParams.get('edit') === 'true'
 
@@ -45,7 +46,7 @@ const rifRaw = clientData?.data.rif || ''
 const rifParts = rifRaw.split('-')
 const rifPrefixCandidate = rifParts.length > 1 ? rifParts[0] : ''
 const rifNumber = rifParts.length > 1 ? rifParts.slice(1).join('-') : rifRaw
-const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixCandidate : 'J'
+const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixCandidate : undefined
 ---
 
 <MainLayout title={titleText}>
@@ -70,12 +71,7 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
             <InputWithPrefix
               idPrefix="typeRif"
               namePrefix="typeRif"
-              optionsPrefix={[
-                { value: 'J', label: 'J' },
-                { value: 'G', label: 'G' },
-                { value: 'V', label: 'V' },
-                { value: 'E', label: 'E' },
-              ]}
+              optionsPrefix={rifOptions}
               idInput="rif"
               nameInput="rif"
               label="RIF"
@@ -83,6 +79,13 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
               valuePrefix={rifPrefix}
               valueInput={rifNumber}
               requiredInput
+              typeInput="text"
+              patternInput="^\\d{8}-\\d$"
+              minlengthInput={10}
+              maxlengthInput={10}
+              placeholderPrefix="Tipo"
+              inputmode="numeric"
+              data-error-input-pattern="El formato del RIF debe ser J-12345678-9"
             />
           </div>
 
@@ -171,6 +174,25 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
   document.addEventListener('astro:page-load', () => {
     const form = document.getElementById('form-client') as HTMLFormElement
     const isEdit = form.getAttribute('data-is-edit') === 'true'
+    const rifInput = document.getElementById('rif') as HTMLInputElement | null
+
+    const formatRifNumber = (value: string) => {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 9)
+
+      if (digitsOnly.length <= 8) {
+        return digitsOnly
+      }
+
+      return `${digitsOnly.slice(0, 8)}-${digitsOnly.slice(8, 9)}`
+    }
+
+    if (rifInput) {
+      rifInput.value = formatRifNumber(rifInput.value)
+
+      rifInput.addEventListener('input', () => {
+        rifInput.value = formatRifNumber(rifInput.value)
+      })
+    }
 
     const handleSubmit = async (e: Event) => {
       e.preventDefault()
@@ -201,7 +223,7 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
 
       toast.success(data.message)
       navigate(`/clients/${data.data.uuid}`)
-      setButtonLoading('#form-client-submit', false)
+      setButtonLoading('#form-client-submit', true)
     }
 
     form.addEventListener('submit', handleSubmit)
@@ -210,7 +232,7 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
 
 <!-- Update imagen profile -->
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('astro:page-load', function () {
     const logoUpload = document.getElementById('logo-upload') as HTMLInputElement
     const logoPreview = document.getElementById('logo-preview')
     const uploadText = document.getElementById('upload-text')
