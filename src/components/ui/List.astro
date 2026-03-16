@@ -6,17 +6,22 @@ import Icon from './Icon.astro'
 interface Props extends HTMLAttributes<'div'> {
   icon: keyof typeof icons
   title?: string
+  img?: string
   subtitle?: string
   status?: 'online' | 'offline' | string
   showStatus?: boolean
 }
 
-const { icon, title, subtitle, status, showStatus = false, class: className, ...rest } = Astro.props
+const { icon, title, subtitle, img, status, showStatus = false, class: className, ...rest } = Astro.props
 
 const hasIcon = !!icon
+const hasImage = !!img
 const hasTitle = !!title
 const hasSubtitle = !!subtitle
 const hasActionsSlot = Astro.slots.has('actions')
+
+const baseUrl = import.meta.env.PROJECT_URL
+const urlImage = hasImage ? `${baseUrl}${img}` : undefined
 ---
 
 <div
@@ -25,12 +30,29 @@ const hasActionsSlot = Astro.slots.has('actions')
 >
   <div class="flex items-center gap-5">
     {
-      hasIcon && (
-        <div
-          class={`flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${status === 'online' ? 'bg-custom-purple-light/20 text-custom-purple-dark' : 'bg-slate-100 text-slate-400'}`}
-        >
-          <Icon name={icon} stroke-width={1.5} size={24} />
+      hasImage ? (
+        <div class="relative h-14 w-14 overflow-hidden rounded-2xl bg-slate-100">
+          <img
+            src={urlImage}
+            alt={title ? `Logo de ${title}` : 'Logo'}
+            class="h-full w-full object-cover"
+            loading="lazy"
+            onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden')"
+          />
+          {hasIcon && (
+            <div class="hidden h-full w-full items-center justify-center text-slate-400">
+              <Icon name={icon} stroke-width={1.5} size={24} />
+            </div>
+          )}
         </div>
+      ) : (
+        hasIcon && (
+          <div
+            class={`flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${status === 'online' ? 'bg-custom-purple-light/20 text-custom-purple-dark' : 'bg-slate-100 text-slate-400'}`}
+          >
+            <Icon name={icon} stroke-width={1.5} size={24} />
+          </div>
+        )
       )
     }
     {
