@@ -17,7 +17,6 @@ const isEdit = Astro.url.searchParams.get('edit') === 'true'
 let clientData = null
 let serversByClient: any[] = []
 let error: ActionError | null = null
-
 if (isEdit) {
   const { data, error: clientError } = await Astro.callAction(actions.clients.getByUuid, { uuid: Astro.url.searchParams.get('uuid') as string })
   clientData = data
@@ -146,7 +145,7 @@ const loadingText = isEdit ? 'Actualizando cliente...' : 'Creando cliente...'
 
   document.addEventListener('astro:page-load', () => {
     const form = document.getElementById('form-client') as HTMLFormElement
-    const isEdit = form.getAttribute('data-is-edit') === 'true'
+    const isEdit = form.getAttribute('data-is-edit') === 'true' || 'false'
 
     const handleSubmit = async (e: Event) => {
       e.preventDefault()
