@@ -4,6 +4,7 @@ import { user } from './user'
 import { workspaces } from './workspace'
 import { templates } from './templates'
 import { servers } from './servers'
+import { clients } from './clients'
 
 export const server = {
   auth,
@@ -12,4 +13,5 @@ export const server = {
   user,
   templates,
   servers,
+  clients,
 }
