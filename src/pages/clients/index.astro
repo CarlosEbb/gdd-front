@@ -1,0 +1,51 @@
+---
+import Container from '@/components/ui/Container.astro'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+import MainLayout from '@/layouts/MainLayout.astro'
+import Link from '@/components/ui/Link.astro'
+import Icon from '@/components/ui/Icon.astro'
+import { actions } from 'astro:actions'
+import DataGrid from '@/components/ui/DataGrid.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import List from '@/components/ui/List.astro'
+import type { DetailsClient } from '@/types/clients'
+
+const currentPath = Astro.url.pathname
+const { data, error } = await Astro.callAction(actions.clients.list, {})
+
+const clients = data?.data || []
+const hasClients = clients.length > 0
+---
+
+<MainLayout title="Clientes">
+  <Container>
+    <div class="mb-6 flex items-center justify-between">
+      <TitleForPage title="Gestión de clientes" />
+
+      <Link href="/clients/form-client" variant="gradient" size="sm">
+        <span class="flex items-center justify-center gap-2">
+          <span class="hidden md:block">Crear Cliente</span>
+          <Icon name="Plus" size={14} />
+        </span>
+      </Link>
+    </div>
+
+    <DataGrid hasData={hasClients} isError={error}>
+      <EmptyState slot="error-state" title="Error al cargar los clientes" description="Intenta nuevamente." href={currentPath} state="error" />
+
+      <EmptyState slot="empty-state" title="No hay clientes disponibles" description="No tienes ningún cliente registrado." href={currentPath} state="notFound" />
+
+      {
+        clients.map((client: DetailsClient) => (
+          <List icon="Building2" title={client.name} subtitle={`RIF: ${client.rif}`}>
+            <div slot="actions">
+              <Link href={`/clients/${client.uuid}`} variant="ghost" size="icon">
+                <Icon name="ChevronRight" stroke-width={1.5} size={16} />
+              </Link>
+            </div>
+          </List>
+        ))
+      }
+    </DataGrid>
+  </Container>
+</MainLayout>

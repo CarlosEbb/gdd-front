@@ -1,0 +1,172 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import Container from '@/components/ui/Container.astro'
+import Input from '@/components/form/Input.astro'
+import TitleForPage from '@/components/ui/TitleForPage.astro'
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Link from '@/components/ui/Link.astro'
+import { actions } from 'astro:actions'
+import SelectionCard from '@/components/form/SelectionCard.astro'
+
+const { data, error } = await Astro.callAction(actions.servers.list, {})
+const servers = data?.data || []
+const hasServers = servers.length > 0
+---
+
+<MainLayout title="Crear cliente">
+  <Container>
+    <TitleForPage title="Crear cliente" />
+    <form method="post" class="space-y-8" id="form-client">
+      <div class="space-y-4">
+        <h3 class="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-800 uppercase">
+          <Icon name="FileText" size={16} class="text-indigo-500" /> Información General
+        </h3>
+        <div class="grid grid-cols-1 gap-6 rounded-2xl border border-slate-100 bg-white p-10 shadow-sm md:grid-cols-2">
+          <div>
+            <Input required type="text" placeholder="ej. Empresa Tecnológica C.A." name="name" data-error-required="El nombre es obligatorio" label="Nombre / Razón Social" />
+          </div>
+          <div>
+            <Input required type="text" label="RIF" placeholder="ej. J-12345678-9" name="rif" data-error-required="El RIF es obligatorio" />
+          </div>
+
+          <div class="space-y-2 md:col-span-2">
+            <label class="ml-1 text-sm font-semibold text-slate-700">Logo de la Empresa (Opcional)</label>
+            <div class="flex items-center gap-4">
+              <div id="logo-preview" class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-200 bg-white">
+                <Icon name="FileImage" class="text-slate-300" size={24} />
+              </div>
+              <div class="relative flex-1">
+                <Input type="file" accept="image/*" id="logo-upload" name="logo" class="hidden" />
+                <label
+                  for="logo-upload"
+                  class="group flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white px-4 py-3 transition-all hover:border-indigo-300 hover:bg-indigo-50/50"
+                >
+                  <div class="flex items-center gap-2 text-sm font-medium text-slate-600 group-hover:text-indigo-600">
+                    <Icon name="Upload" size={18} class="text-slate-400 group-hover:text-indigo-500" />
+                    <span id="upload-text">Haz clic para subir una imagen</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-800 uppercase">
+          <Icon name="LayoutDashboard" size={16} class="text-indigo-500" /> Límites del Sistema
+        </h3>
+        <div class="grid grid-cols-1 gap-6 rounded-2xl border border-slate-100 bg-white p-10 shadow-sm md:grid-cols-2">
+          <div class="space-y-2">
+            <Input label="Máximo de documentos" required type="number" min="1" name="nroDocumentsMax" data-error-required="El número de documentos es obligatorio" />
+          </div>
+          <div class="space-y-2">
+            <Input
+              label="Máximo de espacios de trabajo"
+              placeholder="Ej: 10"
+              data-error-required="El número de espacios de trabajo es obligatorio"
+              required
+              type="number"
+              min="1"
+              name="nroWorkspacesMax"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="flex items-center gap-x-2 text-sm font-bold tracking-wider text-slate-800 uppercase">
+          <Icon name="Server" size={16} class="text-indigo-500" /> Asignar Servidores Iniciales
+        </h3>
+        <p class="ml-1 text-xs text-slate-500">Selecciona los servidores de infraestructura a los que este cliente tendrá acceso.</p>
+        <div class="rounded-2xl border border-slate-100 bg-white p-10 shadow-sm">
+          <div class="custom-scrollbar grid max-h-62.5 grid-cols-1 gap-3 overflow-y-auto pr-2 md:grid-cols-2">
+            {servers.map((server) => <SelectionCard name="serverUuids" type="checkbox" value={server.uuid} label={`${server.name || 'Sin nombre'} - ${server.ip}:${server.puerto}`} icon="Server" />)}
+          </div>
+        </div>
+      </div>
+
+      <div class="h-48"></div>
+
+      <div class="fixed right-0 bottom-0 left-0 z-10 flex items-center border-t border-slate-100 bg-slate-50 py-4 shadow-lg lg:ml-16 xl:ml-24">
+        <div class="mx-auto flex w-full max-w-6xl justify-end gap-4">
+          <Link href="/clients" variant="secondary"> Cancelar </Link>
+          <Button type="submit" id="create-client-btn">
+            <span class="flex items-center gap-2">
+              <Icon name="Save" size={18} />
+              Guardar cliente
+            </span>
+          </Button>
+        </div>
+      </div>
+    </form>
+  </Container>
+</MainLayout>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import { navigate } from 'astro:transitions/client'
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('form-client') as HTMLFormElement
+    const isEdit = form.getAttribute('data-is-edit') === 'true'
+
+    const handleSubmit = async (e: Event) => {
+      e.preventDefault()
+
+      const dataForm = new FormData(form)
+      setButtonLoading('#create-client-btn', true)
+      const action = actions.clients.register(dataForm)
+      const { data, error } = await callAction(action)
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#create-client-btn', false)
+        return
+      }
+
+      toast.success(data.message)
+      navigate(`/clients/${data.data.uuid}`)
+      setButtonLoading('#create-server-btn', true)
+    }
+
+    form.addEventListener('submit', handleSubmit)
+  })
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const logoUpload = document.getElementById('logo-upload') as HTMLInputElement
+    const logoPreview = document.getElementById('logo-preview')
+    const uploadText = document.getElementById('upload-text')
+
+    if (!logoUpload || !logoPreview || !uploadText) return
+
+    logoUpload.addEventListener('change', function (e) {
+      const target = e.target as HTMLInputElement
+      const file = target.files?.[0]
+
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader()
+
+        reader.onload = function (e) {
+          if (logoPreview && uploadText) {
+            logoPreview.innerHTML = `<img src="${e.target?.result}" alt="Vista previa" class="w-full h-full object-cover" />`
+            uploadText.textContent = 'Cambiar imagen'
+          }
+        }
+
+        reader.readAsDataURL(file)
+      } else {
+        if (logoPreview && uploadText) {
+          logoPreview.innerHTML =
+            '<svg class="text-slate-300" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>'
+          uploadText.textContent = 'Haz clic para subir una imagen'
+        }
+      }
+    })
+  })
+</script>
