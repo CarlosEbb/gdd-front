@@ -69,7 +69,21 @@ export const clients = {
       const token = (await request.session?.get('token')) as string
 
       try {
-        const client = await http.post<DetailsClient>(`/clients`, token, input)
+        const payload = new FormData()
+        payload.set('name', input.name)
+        payload.set('rif', input.rif)
+        payload.set('nroWorkspacesMax', String(input.nroWorkspacesMax))
+        payload.set('nroDocumentsMax', String(input.nroDocumentsMax))
+
+        input.serverUuids.forEach((uuid) => {
+          payload.append('serverUuids', uuid)
+        })
+
+        if (input.logo instanceof File && input.logo.size > 0) {
+          payload.set('logo', input.logo)
+        }
+
+        const client = await http.post<DetailsClient>(`/clients`, token, payload)
 
         return client
       } catch (error) {
