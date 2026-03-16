@@ -6,6 +6,8 @@ import EmptyState from '@/components/ui/EmptyState.astro'
 import Icon from '@/components/ui/Icon.astro'
 import { actions } from 'astro:actions'
 import type { Document } from '@/types/documents'
+import DataGrid from '@/components/ui/DataGrid.astro'
+import type { ActionError } from 'astro:actions'
 
 interface Props {
   limit?: number | null
@@ -16,7 +18,7 @@ const { limit = 7, uuidWorkspace = null } = Astro.props
 
 let documents: Document[] | null = null
 let hasDocuments = false
-let error = null
+let error: ActionError | undefined = undefined
 
 let grid = ''
 
@@ -24,32 +26,36 @@ if (uuidWorkspace) {
   const { data, error: errorDocuments } = await Astro.callAction(actions.documents.getByWorkspaces, { uuid: uuidWorkspace })
   documents = data?.data ?? []
   hasDocuments = documents.length > 0 || false
-  error = errorDocuments ?? null
+  error = errorDocuments ?? undefined
   grid = 'xs:grid-cols-2 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-3'
 } else {
   const { data, error: errorDocuments } = await Astro.callAction(actions.documents.getByUser, { limit })
   documents = data?.data ?? []
   hasDocuments = documents.length > 0 || false
-  error = errorDocuments ?? null
+  error = errorDocuments ?? undefined
   grid = 'grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
 }
 
 const currentPath = Astro.url.pathname
 ---
 
-{
-  hasDocuments ? (
-    <div class={`mb-10 grid ${grid}`} data-documents-container>
-      {documents.map((document) => (
-        <CardDocument document={document} />
-      ))}
-    </div>
-  ) : error ? (
-    <EmptyState title="Error al cargar los documentos" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
-  ) : (
-    <EmptyState title="Documentos no encontrados" description="Crea un nuevo documento para empezar a trabajar." modalId="save-template" hrefText="Crear documento" state="notFound" action="create" />
-  )
-}
+<DataGrid hasData={hasDocuments} isError={error}>
+  <EmptyState slot="error-state" title="Error al cargar los documentos" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
+
+  <EmptyState
+    slot="empty-state"
+    title="Documentos no encontrados"
+    description="Crea un nuevo documento para empezar a trabajar."
+    modalId="save-template"
+    hrefText="Crear documento"
+    state="notFound"
+    action="create"
+  />
+
+  <div class={`mb-10 grid ${grid}`} data-documents-container>
+    {documents.map((document) => <CardDocument document={document} />)}
+  </div>
+</DataGrid>
 
 <Modal modalId="modal-details" title="Detalles del documento">
   <div>
