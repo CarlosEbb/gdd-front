@@ -17,6 +17,7 @@ const isEdit = Astro.url.searchParams.get('edit') === 'true'
 let clientData = null
 let serversByClient: any[] = []
 let error: ActionError | null = null
+
 if (isEdit) {
   const { data, error: clientError } = await Astro.callAction(actions.clients.getByUuid, { uuid: Astro.url.searchParams.get('uuid') as string })
   clientData = data
