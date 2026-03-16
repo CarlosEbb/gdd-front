@@ -11,6 +11,7 @@ import EmptyState from '@/components/ui/EmptyState.astro'
 import FormPageLayout from '@/layouts/FormPageLayout.astro'
 import FormBlock from '@/components/ui/FormBlock.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
+import InputWithPrefix from '@/components/form/InputWithPrefix.astro'
 
 const isEdit = Astro.url.searchParams.get('edit') === 'true'
 
@@ -47,6 +48,7 @@ const loadingText = isEdit ? 'Actualizando cliente...' : 'Creando cliente...'
     <StateSwitch hasError={error !== null}>
       <FormPageLayout formId="form-client" submitText={btnText} loadingText={loadingText} cancelHref="/clients" isEdit={isEdit}>
         <FormBlock title="Información General" icon="FileText" cols={2}>
+          {isEdit && <input type="hidden" name="uuid" value={clientData?.data.uuid} />}
           <div>
             <Input
               required
@@ -60,6 +62,22 @@ const loadingText = isEdit ? 'Actualizando cliente...' : 'Creando cliente...'
           </div>
           <div>
             <Input required type="text" label="RIF" placeholder="ej. J-12345678-9" name="rif" data-error-required="El RIF es obligatorio" value={clientData?.data.rif || ''} />
+
+            <!-- <InputWithPrefix
+              idPrefix="typeRif"
+              namePrefix="typeRif"
+              optionsPrefix={[
+                { value: 'J', label: 'J' },
+                { value: 'G', label: 'G' },
+                { value: 'V', label: 'V' },
+                { value: 'E', label: 'E' },
+              ]}
+              idInput="rif"
+              nameInput="rif"
+              label="RIF"
+              placeholderInput="1234567-8"
+              requiredInput
+            /> -->
           </div>
 
           <div class="space-y-2 md:col-span-2">
@@ -146,7 +164,7 @@ const loadingText = isEdit ? 'Actualizando cliente...' : 'Creando cliente...'
 
   document.addEventListener('astro:page-load', () => {
     const form = document.getElementById('form-client') as HTMLFormElement
-    const isEdit = form.getAttribute('data-is-edit') === 'true' || 'false'
+    const isEdit = form.getAttribute('data-is-edit') === 'true'
 
     const handleSubmit = async (e: Event) => {
       e.preventDefault()
