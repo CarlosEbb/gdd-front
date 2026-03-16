@@ -40,6 +40,12 @@ const hasServers = servers.length > 0
 const btnText = isEdit ? 'Actualizar cliente' : 'Crear cliente'
 const titleText = isEdit ? 'Actualizar cliente' : 'Crear cliente'
 const loadingText = isEdit ? 'Actualizando cliente...' : 'Creando cliente...'
+
+const rifRaw = clientData?.data.rif || ''
+const rifParts = rifRaw.split('-')
+const rifPrefixCandidate = rifParts.length > 1 ? rifParts[0] : ''
+const rifNumber = rifParts.length > 1 ? rifParts.slice(1).join('-') : rifRaw
+const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixCandidate : 'J'
 ---
 
 <MainLayout title={titleText}>
@@ -61,9 +67,7 @@ const loadingText = isEdit ? 'Actualizando cliente...' : 'Creando cliente...'
             />
           </div>
           <div>
-            <Input required type="text" label="RIF" placeholder="ej. J-12345678-9" name="rif" data-error-required="El RIF es obligatorio" value={clientData?.data.rif || ''} />
-
-            <!-- <InputWithPrefix
+            <InputWithPrefix
               idPrefix="typeRif"
               namePrefix="typeRif"
               optionsPrefix={[
@@ -75,9 +79,11 @@ const loadingText = isEdit ? 'Actualizando cliente...' : 'Creando cliente...'
               idInput="rif"
               nameInput="rif"
               label="RIF"
-              placeholderInput="1234567-8"
+              placeholderInput="1234567"
+              valuePrefix={rifPrefix}
+              valueInput={rifNumber}
               requiredInput
-            /> -->
+            />
           </div>
 
           <div class="space-y-2 md:col-span-2">
@@ -170,6 +176,19 @@ const loadingText = isEdit ? 'Actualizando cliente...' : 'Creando cliente...'
       e.preventDefault()
 
       const dataForm = new FormData(form)
+      const rifType = String(dataForm.get('typeRif') || '')
+        .trim()
+        .toUpperCase()
+      const rifNumber = String(dataForm.get('rif') || '')
+        .trim()
+        .replace(/\s+/g, '')
+
+      if (rifType && rifNumber) {
+        dataForm.set('rif', `${rifType}-${rifNumber}`)
+      }
+
+      dataForm.delete('typeRif')
+
       setButtonLoading('#form-client-submit', true)
       const action = isEdit ? actions.clients.update(dataForm) : actions.clients.register(dataForm)
       const { data, error } = await callAction(action)
