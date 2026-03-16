@@ -1,0 +1,10 @@
+---
+interface Props {
+  hasError?: boolean
+  isEmpty?: boolean
+}
+
+const { hasError = false, isEmpty = false } = Astro.props
+---
+
+{hasError ? <slot name="error" /> : isEmpty ? <slot name="empty" /> : <slot />}

@@ -13,6 +13,7 @@ import TabsContent from '@/components/tabs/TabsContent.astro'
 import List from '@/components/ui/List.astro'
 import { actions } from 'astro:actions'
 import EmptyState from '@/components/ui/EmptyState.astro'
+import Modal from '@/components/modal/Modal.astro'
 
 const { uuid } = Astro.params
 
@@ -142,3 +143,53 @@ const selectedClient = {
     </section>
   </Container>
 </MainLayout>
+
+<Modal modalId="delete-client" title="Eliminar cliente">
+  <form class="space-y-6" id="delete-client-form">
+    <div class="flex flex-col items-center justify-center py-5">
+      <Icon name="Trash" size={48} stroke-width={1.5} class="text-red-300" />
+      <p class="mt-4 mb-1 text-lg font-semibold text-gray-900">{selectedClient.name}</p>
+      <p class="mb-4 text-center">¿Estás seguro de querer eliminar este cliente?</p>
+      <input type="hidden" name="uuid" value={selectedClient.uuid} required readonly />
+    </div>
+    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" variant="destructive" id="btn-delete-client" loadingText="Eliminando cliente...">Eliminar cliente</Button>
+    </div>
+  </form>
+</Modal>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('delete-client-form') as HTMLFormElement
+    const modal = document.getElementById('delete-client') as HTMLDialogElement
+
+    if (form.dataset.initialized) return
+    form.dataset.initialized = 'true'
+
+    async function deleteClient(e: Event) {
+      e.preventDefault()
+      const dataForm = new FormData(form)
+      setButtonLoading('#btn-delete-client', true)
+      const { data, error } = await callAction(actions.clients.delete(dataForm))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-delete-client', false)
+        modal.close()
+        return
+      }
+
+      toast.success(data!.message)
+      navigate(data!.data.redirect)
+      modal.close()
+    }
+
+    form.addEventListener('submit', deleteClient)
+  })
+</script>

@@ -1,0 +1,30 @@
+---
+import type { icons } from '@lucide/astro'
+import Icon from './Icon.astro'
+
+interface Props {
+  title: string
+  icon?: keyof typeof icons
+  cols?: 1 | 2 | 3
+  description?: string
+}
+
+const { title, icon = 'LayoutDashboard', cols = 2, description } = Astro.props
+
+const colsClass = {
+  1: 'grid-cols-1',
+  2: 'grid-cols-1 md:grid-cols-2',
+  3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
+}
+---
+
+<div class="space-y-4">
+  <h3 class="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-800 uppercase">
+    <Icon name={icon} size={16} class="text-indigo-500" />
+    {title}
+  </h3>
+  {description && <p class="ml-1 text-xs text-slate-500">{description}</p>}
+  <div class={`grid gap-6 rounded-2xl border border-slate-100 bg-white p-10 shadow-sm ${colsClass[cols]}`}>
+    <slot />
+  </div>
+</div>
