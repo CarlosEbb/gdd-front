@@ -11,7 +11,7 @@ if (!uuid) {
 }
 
 const build_number = Astro.url.searchParams.get('build_number') as string
-const url = `/documents/variables/${uuid}/${build_number}`
+const url = `/documents/${uuid}/${build_number}`
 const { API_URL: base_url, PROJECT_URL: project_url } = import.meta.env
 
 const responseExample = {
