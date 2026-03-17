@@ -161,7 +161,7 @@ const request = data?.data.variables
                 <span>Selecciona el archivo descargado</span>
               </li>
             </ol>
-
+            <input type="text" value={base_url} id="url_base" hidden />
             <button
               class="postman-btn group mt-4 flex items-center gap-3 rounded-xl bg-linear-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl md:mt-0"
             >
@@ -221,9 +221,8 @@ const request = data?.data.variables
         const url = window.location.pathname
         const uuid = url.split('/').pop()
         const buildNumber = new URLSearchParams(window.location.search).get('build_number')
-
-        const baseUrl = 'https://1xxz16z4-8300.use2.devtunnels.ms'
-        const endpoint = `/documents/variables/${uuid}/${buildNumber}`
+        const baseUrl = document.getElementById('url_base') as HTMLInputElement
+        const endpoint = `/documents/${uuid}/${buildNumber}`
 
         const copyBtn = document.querySelector('.copy-btn[data-content*="{"]') as HTMLElement
         const requestBody = copyBtn?.getAttribute('data-content') || '{}'
@@ -255,9 +254,9 @@ const request = data?.data.variables
                   },
                 },
                 url: {
-                  raw: baseUrl + endpoint,
+                  raw: baseUrl.value + endpoint,
                   protocol: 'https',
-                  host: [baseUrl.replace('https://', '').replace('http://', '')],
+                  host: [baseUrl.value.replace('https://', '').replace('http://', '')],
                   path: endpoint.split('/').filter(Boolean),
                 },
                 description: 'Endpoint para crear un nuevo documento con las variables especificadas',
