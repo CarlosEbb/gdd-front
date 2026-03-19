@@ -9,9 +9,9 @@ import { TYPES_DATE } from '../_constants'
   <div class="">
     {
       TYPES_DATE.map((type) => (
-        <label class="flex cursor-pointer justify-between border-b border-gray-200 p-2 text-xs transition-all duration-200 last:border-b-0 hover:border-custom-blue3 hover:bg-custom-blue3/10 hover:text-custom-blue3 has-checked:bg-custom-blue3/10 has-checked:text-custom-blue3 has-checked:ring-custom-blue3">
+        <label class="flex cursor-pointer justify-between border-b border-gray-200 p-2 text-xs transition-all duration-200 last:border-b-0 hover:border-blue-muted hover:bg-blue-muted/10 hover:text-blue-muted has-checked:bg-blue-muted/10 has-checked:text-blue-muted has-checked:ring-blue-muted">
           <span class="px-2">{type.label}</span>
-          <input type="radio" name="date-format" data-date-format-radio value={type.value} class="block accent-custom-blue3 checked:border-indigo-500" />
+          <input type="radio" name="date-format" data-date-format-radio value={type.value} class="block accent-blue-muted checked:border-indigo-500" />
         </label>
       ))
     }

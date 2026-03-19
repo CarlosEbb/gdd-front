@@ -59,21 +59,21 @@ const iconColorClass = StateIconColor[state]
 const iconAction = IconForAction[action] as keyof typeof icons
 ---
 
-<div class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-custom-purple-light/10 bg-custom-purple-light/5 py-8">
+<div class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-purple-light/10 bg-purple-light/5 py-8">
   <Icon name={selectedIcon} size={56} stroke-width={1.5} class={`mb-3 ${iconColorClass}`} />
   <p class="mb-2 text-lg font-semibold text-gray-900">{title}</p>
   <p class="text-center">{description}</p>
 
   {
     modalId && !hiddenAction ? (
-      <button data-open-modal={modalId} class="mt-4 flex items-center gap-x-2 rounded-lg bg-custom-blue-light/10 px-4 py-2 text-sm text-custom-blue-light hover:text-custom-blue-dark">
+      <button data-open-modal={modalId} class="mt-4 flex items-center gap-x-2 rounded-lg bg-blue-light/10 px-4 py-2 text-sm text-blue-light hover:text-blue-dark">
         {action === 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
         <span>{hrefText}</span>
         {action !== 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
       </button>
     ) : (
       !hiddenAction && (
-        <a href={href} class="mt-4 flex items-center gap-x-2 rounded-lg bg-custom-blue-light/10 px-4 py-2 text-sm text-custom-blue-light hover:text-custom-blue-dark">
+        <a href={href} class="mt-4 flex items-center gap-x-2 rounded-lg bg-blue-light/10 px-4 py-2 text-sm text-blue-light hover:text-blue-dark">
           {action === 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
           <span>{hrefText}</span>
           {action !== 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}

@@ -35,10 +35,10 @@ const selectedServer = {
         <EmptyState title="Ah ocurrido un error" state="error" description={error.message} />
       ) : (
         <>
-          <div class="border-b border-custom-purple-light/20 py-8">
+          <div class="border-b border-purple-light/20 py-8">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-5">
-                <div class={`rounded-2xl p-3 shadow-sm ${selectedServer.status === 'online' ? 'bg-custom-purple-light/20 text-custom-purple-dark' : 'bg-slate-400 text-white'}`}>
+                <div class={`rounded-2xl p-3 shadow-sm ${selectedServer.status === 'online' ? 'bg-purple-light/20 text-purple-dark' : 'bg-slate-400 text-white'}`}>
                   <Server size={24} />
                 </div>
                 <div>

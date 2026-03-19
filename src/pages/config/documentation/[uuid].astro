@@ -32,8 +32,8 @@ const request = data?.data.variables
   <div class="relative">
     <div class="flex gap-x-3 pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">1</div>
-        <div class="-my-2 h-full w-0.5 bg-custom-blue3/60"></div>
+        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-blue-muted text-xl font-bold text-white shadow-lg">1</div>
+        <div class="-my-2 h-full w-0.5 bg-blue-muted/60"></div>
       </div>
 
       <div class="w-full pt-2 pb-16">
@@ -42,16 +42,16 @@ const request = data?.data.variables
           Todas las peticiones deben realizarse a través de HTTPS. Para crear un nuevo documento, utiliza el endpoint de documentos. Asegúrate de incluir tu API Key en los headers.
         </p>
 
-        <div class="overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
-          <div class="flex items-center justify-between border-b border-custom-blue3/60 bg-custom-blue3/40 px-4 py-3">
+        <div class="overflow-hidden rounded-xl bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
+          <div class="flex items-center justify-between border-b border-blue-muted/60 bg-blue-muted/40 px-4 py-3">
             <div class="flex space-x-2">
               <div class="h-3 w-3 rounded-full bg-red-500"></div>
               <div class="h-3 w-3 rounded-full bg-yellow-500"></div>
               <div class="h-3 w-3 rounded-full bg-green-500"></div>
             </div>
             <div class="flex items-center gap-2">
-              <span class="font-mono text-xs text-custom-blue3">POST Request</span>
-              <button class="copy-btn p-1 text-custom-blue3 transition-colors hover:text-white" title="Copiar URL" data-content={base_url + url}>
+              <span class="font-mono text-xs text-blue-muted">POST Request</span>
+              <button class="copy-btn p-1 text-blue-muted transition-colors hover:text-white" title="Copiar URL" data-content={base_url + url}>
                 <Icon name="Copy" stroke-width={1.5} class="size-4" />
               </button>
             </div>
@@ -59,7 +59,7 @@ const request = data?.data.variables
           <div class="code-scroll overflow-x-auto p-6 font-mono text-sm">
             <div class="flex items-center gap-3">
               <span class="bg-brand-500/20 text-brand-400 rounded px-2 py-1 text-xs font-bold tracking-wider uppercase">POST</span>
-              <span class="text-custom-blue3">{base_url}<span class="text-brand-400">{url}</span></span>
+              <span class="text-blue-muted">{base_url}<span class="text-brand-400">{url}</span></span>
             </div>
           </div>
         </div>
@@ -68,8 +68,8 @@ const request = data?.data.variables
 
     <div class="flex gap-x-3 pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">2</div>
-        <div class="-my-2 h-full w-0.5 bg-custom-blue3/60"></div>
+        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-blue-muted text-xl font-bold text-white shadow-lg">2</div>
+        <div class="-my-2 h-full w-0.5 bg-blue-muted/60"></div>
       </div>
 
       <div class="w-full pt-2 pb-16">
@@ -90,10 +90,10 @@ const request = data?.data.variables
           </li>
         </ul>
 
-        <div class="overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
-          <div class="flex items-center justify-between border-b border-custom-blue3/60 bg-custom-blue3/40 px-4 py-2">
-            <span class="font-mono text-xs text-custom-blue3">body.json</span>
-            <button class="copy-btn p-1 text-custom-blue3 transition-colors hover:text-white" title="Copiar código" data-content={JSON.stringify(request, null, 2)}>
+        <div class="overflow-hidden rounded-xl bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
+          <div class="flex items-center justify-between border-b border-blue-muted/60 bg-blue-muted/40 px-4 py-2">
+            <span class="font-mono text-xs text-blue-muted">body.json</span>
+            <button class="copy-btn p-1 text-blue-muted transition-colors hover:text-white" title="Copiar código" data-content={JSON.stringify(request, null, 2)}>
               <Icon name="Copy" stroke-width={1.5} class="size-4" />
             </button>
           </div>
@@ -106,7 +106,7 @@ const request = data?.data.variables
 
     <div class="flex gap-x-3 pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">3</div>
+        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-blue-muted text-xl font-bold text-white shadow-lg">3</div>
       </div>
 
       <div class="w-full pt-2 pb-16">
@@ -115,11 +115,11 @@ const request = data?.data.variables
           Si todo es correcto, recibirás un código <code>200 OK</code>. La respuesta incluirá un <code>uuid</code> único de documento que deberás y la url para ver el documento.
         </p>
 
-        <div class="overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
-          <div class="flex items-center justify-between border-b border-custom-blue3/60 bg-custom-blue3/40 px-4 py-2">
+        <div class="overflow-hidden rounded-xl bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
+          <div class="flex items-center justify-between border-b border-blue-muted/60 bg-blue-muted/40 px-4 py-2">
             <div class="flex items-center gap-2">
-              <span class="flex h-2 w-2 rounded-full bg-custom-blue3"></span>
-              <span class="font-mono text-xs font-bold text-custom-blue3">200 OK</span>
+              <span class="flex h-2 w-2 rounded-full bg-blue-muted"></span>
+              <span class="font-mono text-xs font-bold text-blue-muted">200 OK</span>
             </div>
             <button class="copy-btn p-1 text-slate-400 transition-colors hover:text-white" title="Copiar código" data-content={JSON.stringify(responseExample, null, 2)}>
               <Icon name="Copy" stroke-width={1.5} class="size-4" />

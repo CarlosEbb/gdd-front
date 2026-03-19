@@ -23,7 +23,7 @@ const currentPath = pathname + Astro.url.search
         {
           navigation.map((item) => (
             <li>
-              <a href={item.href} class:list={['text-sm', { 'border-b border-custom-blue3 text-custom-blue3': currentPath === item.href }]}>
+              <a href={item.href} class:list={['text-sm', { 'border-b border-blue-muted text-blue-muted': currentPath === item.href }]}>
                 {item.label}
               </a>
             </li>
