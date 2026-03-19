@@ -9,13 +9,15 @@ import CreateDocumentModal from '@/components/modal/CreateDocumentModal.astro'
 import Button from '@/components/ui/Button.astro'
 import Icon from '@/components/ui/Icon.astro'
 
+const { PUBLIC_NAME_PROJECT } = import.meta.env
+
 interface Props {
   title?: string
   class?: string
 }
 
 const { title = null, class: className = 'px-4 pt-20' } = Astro.props
-const optionalTitle = title === null ? 'GDD' : `${title} | GDD`
+const optionalTitle = title === null ? PUBLIC_NAME_PROJECT : `${title} | ${PUBLIC_NAME_PROJECT}`
 ---
 
 <!doctype html>
