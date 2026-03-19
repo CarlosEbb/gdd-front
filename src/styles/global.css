@@ -2,25 +2,28 @@
 @import "toastify-js/src/toastify.css";
 
 @theme {
+    /* Colores primarios del proyecto */
+  --color-primary: #093cb1;
+  --color-primary-bright: #0000ff;
+  --color-primary-dark: #181838;
+
     /* Azules */
-  --color-custom-blue-light: #3686ce;
-  --color-custom-blue-dark: #034f9e;
-  --color-custom-blue: #5580f9;
-  --color-custom-blue2: #2c62db;
-  --color-custom-blue3: #6165d7;
- /* Morados */
-  --color-custom-purple-light: #8576f4;
-  --color-custom-purple-dark: #8576f4;
- /* Verde azulado */
-  --color-custom-cyan: #3686ce;
- /* Grises claros */
-  --color-custom-gray-light: #f0f2f7;
-  --color-custom-gray-medium: #e6e8ef;
-  --color-custom-gray-dark: #d7d7d7;
- /* Grises oscuros llamados: Lucky gray */
-  --color-custom-lucky-gray-light: #777777;
-  --color-custom-lucky-gray-medium: #595959;
-  --color-custom-lucky-gray-dark: #494949;
+  --color-blue-light: #3686ce;
+  --color-blue-dark: #034f9e;
+  --color-blue-primary: #5580f9;
+  --color-blue-accent: #2c62db;
+  --color-blue-muted: #6165d7;
+  --color-cyan: #3686ce;
+
+  /* Morados */
+  --color-purple-light: #8576f4;
+  --color-purple-dark: #8576f4;
+
+ /* Grises */
+  --color-gray-light: #f0f2f7;
+  --color-gray-dark: #d7d7d7;
+  --color-gray-mid: #777777;
+  --color-gray-deep: #595959;
 }
 
 /* Animación para el spinner del toast de loading */
