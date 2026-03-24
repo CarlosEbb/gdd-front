@@ -2,7 +2,7 @@
 import '@/styles/global.css'
 
 import bgAuth from '@/assets/images/img-login.jpg'
-import logo from '@/assets/images/creadocs.png'
+import logo from '@/assets/images/imagotipo.png'
 import { ClientRouter } from 'astro:transitions'
 
 const { PUBLIC_NAME_PROJECT } = import.meta.env
@@ -25,18 +25,18 @@ const optionalTitle = titleTabBrowser === null ? PUBLIC_NAME_PROJECT : `${titleT
     <title>{optionalTitle}</title>
     <ClientRouter />
   </head>
-  <body class="flex min-h-screen items-center justify-center bg-white from-gray-50 via-blue-50 to-gray-100 md:bg-linear-to-br">
-    <div class="flex min-h-[calc(100vh-186px)] w-full max-w-none flex-col overflow-hidden bg-transparent md:max-w-xl md:rounded-2xl md:bg-white md:shadow-2xl lg:max-w-5xl lg:flex-row">
+  <body class="flex min-h-screen items-center justify-center bg-foreground">
+    <div class="flex min-h-[calc(100vh-186px)] w-full max-w-none flex-col overflow-hidden bg-transparent md:max-w-xl md:rounded-main md:bg-white md:shadow-2xl lg:max-w-5xl lg:flex-row">
       <div class="relative hidden h-64 overflow-hidden lg:block lg:h-auto lg:w-1/2 lg:bg-none">
         <div class="absolute h-full w-full rotate-0 pe-2">
-          <img src={bgAuth.src} alt="Decorative gradient" class="h-full w-64 rounded-xl object-cover lg:w-full" />
+          <img src={bgAuth.src} alt="Decorative gradient" class="h-full w-64 rounded-main object-cover lg:w-full" />
         </div>
       </div>
 
-      <div class="relative flex flex-1 flex-col justify-center overflow-hidden p-8 md:bg-white">
+      <div class="relative flex flex-1 flex-col justify-center overflow-hidden p-8 md:bg-background">
         <header class="flex flex-col items-center">
           <img src={logo.src} transition:animate="initial" alt="CreaDocs" class="mb-12 aspect-auto w-64 object-cover md:w-64 lg:w-72 xl:w-80" />
-          <h1 transition:animate="fade" class="mt-3 text-center text-lg font-semibold text-gray-mid md:mt-5">
+          <h1 transition:animate="fade" class="mt-3 text-center text-lg font-semibold text-heading md:mt-5">
             {titleCardAuth}
           </h1>
         </header>
@@ -44,7 +44,7 @@ const optionalTitle = titleTabBrowser === null ? PUBLIC_NAME_PROJECT : `${titleT
           <slot />
         </main>
         <footer>
-          <p class="text-center text-base text-gray-mid">
+          <p class="text-center text-base text-subheading">
             <span class="mt-1 block">© Made by Soluciones Laser 2025</span>
           </p>
         </footer>
