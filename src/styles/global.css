@@ -10,7 +10,7 @@
     --subheading: #4d4d4d;
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.488 0.243 264.376);
+    --primary: oklch(0.452 0.3132 264.05);
     --primary-foreground: oklch(0.97 0.014 254.604);
     --secondary: oklch(0.967 0.001 286.375);
     --secondary-foreground: oklch(0.21 0.006 285.885);
@@ -47,49 +47,28 @@
 }
 
 @theme inline {
-    /* Colores primarios del proyecto */
-
-  --color-primary-bright: #0000ff;
-  --color-primary-dark: #181838;
-
-    /* Azules */
-  --color-blue-light: #3686ce;
-  --color-blue-dark: #034f9e;
-  --color-blue-primary: #5580f9;
   --color-blue-accent: #2c62db;
   --color-blue-muted: #6165d7;
-  --color-cyan: #3686ce;
 
-  /* Morados */
-  --color-purple-light: #8576f4;
-  --color-purple-dark: #8576f4;
-
- /* Grises */
-  --color-gray-light: #f0f2f7;
-  --color-gray-dark: #d7d7d7;
-  --color-gray-mid: #777777;
-  --color-gray-deep: #595959;
-
-  /* Nuevos colores */
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --color-heading: var(--heading);
-    --color-subheading: var(--subheading);
-    --radius-main: calc(var(--radius));
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-heading: var(--heading);
+  --color-subheading: var(--subheading);
+  --radius-main: calc(var(--radius));
 }
 
 /* Animación para el spinner del toast de loading */
