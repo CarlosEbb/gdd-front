@@ -114,12 +114,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
           Visualizar
         </span>
       </Button>
-      <Button type="button" size="sm" variant="ghost" id="changeBasePdfBtn">
-        <span class="flex items-center gap-x-2">
-          <Icon name="FileInput" class="size-4" stroke-width={1.5} />
-          <span class="hidden lg:block">Insertar PDF</span>
-        </span>
-      </Button>
+
       <Button type="button" size="sm" variant="ghost" id="toggleFullscreenBtn">
         <span class="flex items-center gap-x-2">
           <Icon name="Expand" class="size-4" stroke-width={1.5} />
@@ -130,7 +125,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
 
     <div class="col-span-1 flex items-center justify-end lg:col-span-1 xl:col-span-2 xl:gap-x-2">
       <div class="hidden xl:flex xl:items-center xl:gap-x-1">
-        <Link href=`/config/documentation/${uuid}?build_number=${buildNumber}` size="sm" variant="ghost">
+        <Link href=`/config/documentation/${uuid}?build_number=${buildNumber}` id="documentationLink" size="sm" variant="ghost">
           <span class="flex items-center gap-x-2">
             <Icon name="FileInput" class="size-4" stroke-width={1.5} />
             Documentación
@@ -246,6 +241,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
 
   function initializePage() {
     const domContainer = document.getElementById('container') as HTMLElement
+    const documentationLink = document.getElementById('documentationLink') as HTMLAnchorElement
     const formNewVersionDocument = document.getElementById('new-version-document-form') as HTMLFormElement
     const formDeleteDocument = document.getElementById('delete-document-form') as HTMLFormElement
     const modalNewVersionDocument = document.getElementById('new-version-document') as HTMLDialogElement
@@ -320,13 +316,13 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
         }
 
         // Evento: Cambiar Base PDF
-        const changeBasePdfBtn = document.getElementById('changeBasePdfBtn')
+        // const changeBasePdfBtn = document.getElementById('changeBasePdfBtn')
         const basePdfInput = document.getElementById('basePdfInput')
 
-        if (changeBasePdfBtn && basePdfInput) {
-          changeBasePdfBtn.addEventListener('click', () => {
-            basePdfInput.click()
-          })
+        if (basePdfInput) {
+          // changeBasePdfBtn.addEventListener('click', () => {
+          //   basePdfInput.click()
+          // })
 
           basePdfInput.addEventListener('change', (e) => {
             handleBasePdfChange(e, designerInstance)
@@ -457,8 +453,10 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
 
         nameVersion && modalNewVersionDocument.close()
         toast.success(data.message)
-        console.log(data)
-        updateUrlWithNewVersion(data.data.version.build_number)
+        const newVersion = data.data.version.build_number
+
+        documentationLink.href = `/config/documentation/${uuidTemplate}?build_number=${newVersion}`
+        updateUrlWithNewVersion(newVersion)
       } catch (error) {
         toast.error('Ah ocurrido un error al guardar la plantilla. Por favor, intente nuevamente.')
       } finally {
