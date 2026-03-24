@@ -36,20 +36,20 @@ const currentPath = Astro.url.pathname
 <aside
   id="menubar"
   data-sidebar
-  class={`fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full bg-[#ebeafb] shadow-md shadow-blue-muted/20 transition-transform duration-200 lg:bottom-0 lg:top-auto lg:h-[calc(100vh-56px)] lg:w-16 lg:translate-x-0 xl:w-24`}
+  class={`fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full bg-background border-r border-sidebar-border transition-transform duration-200 lg:bottom-0 lg:top-auto lg:h-[calc(100vh-57px)] lg:w-16 lg:translate-x-0 xl:w-24`}
 >
   <div class="flex flex-col">
     <div class="flex w-full items-center justify-between p-2 lg:hidden">
       <div class="px-2 text-sm font-semibold text-blue-muted">Menú</div>
-      <button type="button" data-sidebar-close class="rounded-md p-2 text-blue-muted/80 hover:bg-blue-muted/20">
+      <button type="button" data-sidebar-close class="rounded-main p-2 text-blue-muted/80 hover:bg-blue-muted/20">
         <X class="size-5" />
         <span class="sr-only">Cerrar menú</span>
       </button>
     </div>
-    <div class="flex w-full items-center justify-center p-2">
+    <div class="mt-4 flex w-full items-center justify-center p-2">
       <button
         data-open-modal="save-template"
-        class="group haver:scale-105 flex w-full cursor-pointer flex-col items-center justify-center rounded-lg bg-blue-muted p-3 text-xs text-white shadow-md transition-all duration-200 hover:shadow-lg"
+        class="group haver:scale-105 flex w-full cursor-pointer flex-col items-center justify-center rounded-main bg-primary p-3 text-xs text-white shadow-md transition-all duration-200 hover:shadow-lg"
       >
         <CirclePlus />
         Crear
@@ -63,12 +63,12 @@ const currentPath = Astro.url.pathname
             <li>
               <a
                 class:list={[
-                  'group flex items-center justify-start gap-2 rounded-lg p-3 text-xs text-blue-muted/80 transition-all duration-200 hover:bg-blue-muted/30 lg:flex-col lg:justify-center lg:gap-0',
-                  { 'cursor-pointer bg-blue-muted/30 font-bold text-blue-muted': option.href === currentPath },
+                  'group flex items-center justify-start gap-2 rounded-main p-3 text-xs text-heading transition-all duration-200 hover:bg-primary-foreground hover:shadow-sm lg:flex-col lg:justify-center lg:gap-0',
+                  { 'cursor-pointer bg-primary-foreground font-semibold text-primary shadow-sm': option.href === currentPath },
                 ]}
                 href={option.href}
               >
-                <option.icon class="size-5 md:size-6" />
+                <option.icon class="size-5 md:size-6" stroke-width="1.5" />
                 <span class="text-center md:block lg:hidden xl:block">{option.name}</span>
               </a>
             </li>
@@ -77,7 +77,7 @@ const currentPath = Astro.url.pathname
       </ul>
     </nav>
     <div class="flex items-center justify-center p-2">
-      <!-- <a href="/config" id="logout" class="group flex w-full flex-col items-center justify-center rounded-lg p-3 text-xs text-blue-muted/80 transition-all duration-200 hover:bg-blue-muted/30">
+      <!-- <a href="/config" id="logout" class="group flex w-full flex-col items-center justify-center rounded-main p-3 text-xs text-blue-muted/80 transition-all duration-200 hover:bg-blue-muted/30">
         <Bolt class="size-5 md:size-6" />
         <span class="hidden md:block">Configuración</span>
       </a> -->
