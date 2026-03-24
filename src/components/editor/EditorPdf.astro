@@ -130,7 +130,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
 
     <div class="col-span-1 flex items-center justify-end lg:col-span-1 xl:col-span-2 xl:gap-x-2">
       <div class="hidden xl:flex xl:items-center xl:gap-x-1">
-        <Link href=`/config/documentation/${uuid}?build_number=${buildNumber}` size="sm" variant="ghost">
+        <Link href=`/config/documentation/${uuid}?build_number=${buildNumber}` id="documentation-link" size="sm" variant="ghost">
           <span class="flex items-center gap-x-2">
             <Icon name="FileInput" class="size-4" stroke-width={1.5} />
             Documentación
@@ -252,6 +252,8 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
     const modalDeleteDocument = document.getElementById('delete-document') as HTMLDialogElement
     const saveDocumentButton = document.getElementById('btn-save-document') as HTMLButtonElement
     const schemaFileData = document.getElementById('schema-file-data') as HTMLScriptElement
+    const documentationLink = document.getElementById('documentation-link') as HTMLAnchorElement
+
     const schemaFile = schemaFileData ? JSON.parse(schemaFileData.textContent || '{}') : {}
 
     if (!domContainer) {
@@ -457,7 +459,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
 
         nameVersion && modalNewVersionDocument.close()
         toast.success(data.message)
-        console.log(data)
+        documentationLink.href = `/config/documentation/${uuidTemplate}?build_number=${data.data.version.build_number}`
         updateUrlWithNewVersion(data.data.version.build_number)
       } catch (error) {
         toast.error('Ah ocurrido un error al guardar la plantilla. Por favor, intente nuevamente.')
