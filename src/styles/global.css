@@ -1,9 +1,54 @@
 @import "tailwindcss";
 @import "toastify-js/src/toastify.css";
 
-@theme {
+@custom-variant dark (&:is(.dark *));
+
+:root {
+    --background: #ffffff;
+    --foreground: #fafafa;
+    --heading: #171717;
+    --subheading: #4d4d4d;
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.488 0.243 264.376);
+    --primary-foreground: oklch(0.97 0.014 254.604);
+    --secondary: oklch(0.967 0.001 286.375);
+    --secondary-foreground: oklch(0.21 0.006 285.885);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --radius: 6px;
+}
+
+.dark {
+    --background: #0a0a0a;
+    --foreground: #000000;
+    --heading: #ededed;
+    --subheading: #a1a1a1;
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.424 0.199 265.638);
+    --primary-foreground: oklch(0.97 0.014 254.604);
+    --secondary: oklch(0.274 0.006 286.033);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+}
+
+@theme inline {
     /* Colores primarios del proyecto */
-  --color-primary: #093cb1;
+
   --color-primary-bright: #0000ff;
   --color-primary-dark: #181838;
 
@@ -24,6 +69,27 @@
   --color-gray-dark: #d7d7d7;
   --color-gray-mid: #777777;
   --color-gray-deep: #595959;
+
+  /* Nuevos colores */
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --color-heading: var(--heading);
+    --color-subheading: var(--subheading);
+    --radius-main: calc(var(--radius));
 }
 
 /* Animación para el spinner del toast de loading */
@@ -34,4 +100,16 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    }
 }
