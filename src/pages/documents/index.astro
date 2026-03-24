@@ -20,10 +20,10 @@ const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id,
     <section class="">
       <div class="flex flex-col flex-wrap items-center gap-x-3 gap-y-2 md:gap-y-0 lg:flex-row">
         <div class="flex-1">
-          <Input name="title" type="search" placeholder="buscar por título" />
+          <Input name="filter-title" type="search" placeholder="buscar por título" />
         </div>
         <div class="">
-          <Input name="date" type="date" placeholder="buscar por fecha de creación" />
+          <Input name="filter-date" type="date" placeholder="buscar por fecha de creación" />
         </div>
         <div class="">
           <Select name="workspace" options={workspacesOptions} placeholder="filtrar por espacio de trabajo" />
@@ -58,8 +58,8 @@ const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id,
 </MainLayout>
 <script>
   function initDocumentFilter() {
-    const titleInput = document.querySelector('input[name="title"]') as HTMLInputElement
-    const dateInput = document.querySelector('input[name="date"]') as HTMLInputElement
+    const titleInput = document.querySelector('input[name="filter-title"]') as HTMLInputElement
+    const dateInput = document.querySelector('input[name="filter-date"]') as HTMLInputElement
     const workspaceSelect = document.querySelector('select[name="workspace"]') as HTMLSelectElement
     const resetButton = document.getElementById('reset-filters') as HTMLElement
     const sortButton = document.getElementById('sort-button') as HTMLButtonElement
