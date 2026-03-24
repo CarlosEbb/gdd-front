@@ -44,7 +44,7 @@ const urlImage = hasImage ? `${baseUrl}${img}` : undefined
         </div>
       ) : (
         hasIcon && (
-          <div class={`flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${status === 'online' ? 'bg-purple-light/20 text-purple-dark' : 'bg-slate-100 text-slate-400'}`}>
+          <div class={`flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${status === 'online' ? 'bg-primary-foreground text-primary' : 'bg-slate-100 text-slate-400'}`}>
             <Icon name={icon} stroke-width={1.5} size={24} />
           </div>
         )
