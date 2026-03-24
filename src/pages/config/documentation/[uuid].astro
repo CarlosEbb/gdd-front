@@ -11,7 +11,7 @@ if (!uuid) {
 }
 
 const build_number = Astro.url.searchParams.get('build_number') as string
-const url = `/documents/variables/${uuid}/${build_number}`
+const url = `/variables/${uuid}/${build_number}`
 const { API_URL: base_url, PROJECT_URL: project_url } = import.meta.env
 
 const responseExample = {
@@ -42,7 +42,7 @@ const request = data?.data.variables
           Todas las peticiones deben realizarse a través de HTTPS. Para crear un nuevo documento, utiliza el endpoint de documentos. Asegúrate de incluir tu API Key en los headers.
         </p>
 
-        <div class="overflow-hidden rounded-xl bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
+        <div class="overflow-hidden rounded-main bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
           <div class="flex items-center justify-between border-b border-blue-muted/60 bg-blue-muted/40 px-4 py-3">
             <div class="flex space-x-2">
               <div class="h-3 w-3 rounded-full bg-red-500"></div>
@@ -90,7 +90,7 @@ const request = data?.data.variables
           </li>
         </ul>
 
-        <div class="overflow-hidden rounded-xl bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
+        <div class="overflow-hidden rounded-main bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
           <div class="flex items-center justify-between border-b border-blue-muted/60 bg-blue-muted/40 px-4 py-2">
             <span class="font-mono text-xs text-blue-muted">body.json</span>
             <button class="copy-btn p-1 text-blue-muted transition-colors hover:text-white" title="Copiar código" data-content={JSON.stringify(request, null, 2)}>
@@ -115,7 +115,7 @@ const request = data?.data.variables
           Si todo es correcto, recibirás un código <code>200 OK</code>. La respuesta incluirá un <code>uuid</code> único de documento que deberás y la url para ver el documento.
         </p>
 
-        <div class="overflow-hidden rounded-xl bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
+        <div class="overflow-hidden rounded-main bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
           <div class="flex items-center justify-between border-b border-blue-muted/60 bg-blue-muted/40 px-4 py-2">
             <div class="flex items-center gap-2">
               <span class="flex h-2 w-2 rounded-full bg-blue-muted"></span>
@@ -141,7 +141,7 @@ const request = data?.data.variables
         <h3 class="mb-3 text-2xl font-bold text-slate-900">Cómo importar en Postman:</h3>
         <p class="mb-6 leading-relaxed text-slate-600">Para importar la colección en Postman, haz clic en el botón de descarga y sigue las instrucciones.</p>
 
-        <div class="overflow-hidden rounded-xl bg-orange-50 shadow-lg ring-1 ring-orange-800/60">
+        <div class="overflow-hidden rounded-main bg-orange-50 shadow-lg ring-1 ring-orange-800/60">
           <div class="code-scroll code-container items-start justify-between overflow-x-auto p-4 md:flex">
             <ol class="space-y-1 text-left text-sm text-orange-800">
               <li class="flex items-start gap-2">
@@ -163,7 +163,7 @@ const request = data?.data.variables
             </ol>
 
             <button
-              class="postman-btn group mt-4 flex items-center gap-3 rounded-xl bg-linear-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl md:mt-0"
+              class="postman-btn group mt-4 flex items-center gap-3 rounded-main bg-linear-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl md:mt-0"
             >
               <span>Descargar para Postman</span>
               <Icon name="Download" stroke-width={2} class="size-5 transition-transform group-hover:translate-y-1" />
@@ -177,6 +177,7 @@ const request = data?.data.variables
 
 <script>
   import { toast } from '@/scripts/toast'
+  import { PROJECT_URL, PUBLIC_NAME_PROJECT } from 'astro:env/client'
 
   function setupCopyButtons() {
     const buttons = document.querySelectorAll('.copy-btn')
@@ -222,15 +223,14 @@ const request = data?.data.variables
         const uuid = url.split('/').pop()
         const buildNumber = new URLSearchParams(window.location.search).get('build_number')
 
-        const baseUrl = 'https://1xxz16z4-8300.use2.devtunnels.ms'
-        const endpoint = `/documents/variables/${uuid}/${buildNumber}`
+        const endpoint = `/documents/${uuid}/${buildNumber}`
 
         const copyBtn = document.querySelector('.copy-btn[data-content*="{"]') as HTMLElement
         const requestBody = copyBtn?.getAttribute('data-content') || '{}'
 
         const postmanCollection = {
           info: {
-            name: `GDD - Documento ${uuid}`,
+            name: `${PUBLIC_NAME_PROJECT} - Documento ${uuid}`,
             description: 'Colección generada automáticamente para crear documentos.',
             schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
           },
@@ -255,9 +255,9 @@ const request = data?.data.variables
                   },
                 },
                 url: {
-                  raw: baseUrl + endpoint,
+                  raw: PROJECT_URL + endpoint,
                   protocol: 'https',
-                  host: [baseUrl.replace('https://', '').replace('http://', '')],
+                  host: [PROJECT_URL.replace('https://', '').replace('http://', '')],
                   path: endpoint.split('/').filter(Boolean),
                 },
                 description: 'Endpoint para crear un nuevo documento con las variables especificadas',
@@ -275,7 +275,7 @@ const request = data?.data.variables
 
         const downloadLink = document.createElement('a')
         downloadLink.href = blobUrl
-        downloadLink.download = `GDD-Documento-${uuid}.postman_collection.json`
+        downloadLink.download = `${PUBLIC_NAME_PROJECT}-Documento-${uuid}.postman_collection.json`
         downloadLink.style.display = 'none'
         document.body.appendChild(downloadLink)
 
