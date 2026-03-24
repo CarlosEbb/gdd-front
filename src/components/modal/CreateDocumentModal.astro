@@ -21,25 +21,24 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
     </div>
 
     <div>
-      <Input label="Nombre" name="title" placeholder="Ingrese el nombre del documento" required />
+      <Input label="Nombre" name="title" placeholder="Carta de presentación" required />
     </div>
 
     <div>
-      <Input label="Descripción" name="description" placeholder="Ingrese la descripción del documento" required />
+      <Input label="Descripción" name="description" placeholder="Carta de presentación para la posición de gerente de proyecto" required />
     </div>
 
-    <div class="hidden" id="prompt-container">
-      <Input label="Crear documento con IA" name="prompt" placeholder="Ingrese un prompt para crear el documento con IA" />
-      <p class="text-sm text-gray-500">Ingrese el prompt para crear el documento con IA.</p>
-    </div>
-
-    <div class="mt-2 w-full">
-      <Button variant="gradient" size="sm" id="btn-generate-with-ia" type="button">
-        <span class="flex items-center">
-          <Icon name="Sparkles" class="me-2 size-4" stroke-width={1.5} />
-          <span class="text-sm">Generar con IA</span>
-        </span>
-      </Button>
+    <label class="mt-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-main border border-primary bg-primary-foreground p-3 text-primary hover:bg-primary-foreground/60">
+      <div class="flex items-center gap-2">
+        <Icon name="Sparkles" size={18} />
+        <span>Crear documento con IA</span>
+      </div>
+      <input type="checkbox" name="generate_with_ai" id="generate_with_ai" />
+    </label>
+    <div class="hidden rounded-main bg-foreground p-4 shadow-sm" id="prompt-container">
+      <label for="prompt" class="block text-sm font-medium text-heading">Describe el documento que deseas generar</label>
+      <textarea name="prompt" placeholder="Crea un documento sobre..." class="field-sizing-content w-full rounded-main border border-border bg-background p-2"></textarea>
+      <p class="text-sm text-subheading">Ingrese el prompt para crear el documento con IA.</p>
     </div>
 
     <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
@@ -58,7 +57,7 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
   function initializeCreateDocumentModal() {
     const modalSaveTemplate = document.getElementById('save-template') as HTMLDialogElement
     const form = document.getElementById('save-template-form') as HTMLFormElement
-    const btnGenerateWithIA = document.getElementById('btn-generate-with-ia') as HTMLButtonElement
+    const btnGenerateWithIA = document.getElementById('generate_with_ai') as HTMLInputElement
     const promptContainer = document.getElementById('prompt-container') as HTMLDivElement
 
     if (!form) return
@@ -102,7 +101,7 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
       promptContainer.classList.toggle('hidden')
     }
 
-    btnGenerateWithIA.addEventListener('click', handleGenerateWithIA)
+    btnGenerateWithIA.addEventListener('change', handleGenerateWithIA)
 
     form.addEventListener('submit', handleSaveTemplate)
   }
