@@ -10,7 +10,7 @@ import Button from '@/components/ui/Button.astro'
       <Input label="Correo" name="email" placeholder="correo@dominio.com" type="email" required />
     </div>
     <div class="space-y-4">
-      <Button id="btn-send-email" variant="gradient" class="w-full" loadingText="Enviando correo..."> Enviar correo </Button>
+      <Button id="btn-send-email" class="w-full" loadingText="Enviando correo..."> Enviar correo </Button>
       <div class="relative">
         <div class="absolute inset-0 flex items-center">
           <span class="w-full border-t border-gray-200"></span>
@@ -20,9 +20,9 @@ import Button from '@/components/ui/Button.astro'
         </div>
       </div>
       <div class="pt-2 text-center">
-        <p class="text-sm">
+        <p class="text-sm text-subheading">
           ¿Ya tienes una cuenta?
-          <a href="/" class="font-medium text-blue-600 hover:text-blue-700 hover:underline"> Inicia sesión </a>
+          <a href="/" class="font-medium text-primary hover:text-primary/90 hover:underline"> Inicia sesión </a>
         </p>
       </div>
     </div>
