@@ -1,6 +1,8 @@
 ---
+import Button from './Button.astro'
 import Icon from './Icon.astro'
 import { icons } from '@lucide/astro'
+import Link from './Link.astro'
 
 interface Props {
   title?: string
@@ -26,11 +28,11 @@ const {
 } = Astro.props
 
 const StateIconColor = {
-  info: 'text-yellow-300',
-  error: 'text-red-300',
-  success: 'text-green-300',
-  warning: 'text-orange-300',
-  notFound: 'text-neutral-700',
+  info: 'text-neutral-400',
+  error: 'text-neutral-400',
+  success: 'text-neutral-400',
+  warning: 'text-neutral-400',
+  notFound: 'text-neutral-400',
 }
 
 const selectedIconForState = {
@@ -55,29 +57,30 @@ const IconForAction = {
 }
 
 const selectedIcon = selectedIconForState[state] as keyof typeof icons
-const iconColorClass = StateIconColor[state]
 const iconAction = IconForAction[action] as keyof typeof icons
 ---
 
-<div class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-purple-light/10 bg-purple-light/5 py-8">
-  <Icon name={selectedIcon} size={56} stroke-width={1.5} class={`mb-3 ${iconColorClass}`} />
-  <p class="mb-2 text-lg font-semibold text-gray-900">{title}</p>
-  <p class="text-center">{description}</p>
+<div class="flex flex-col items-center justify-center rounded-main border-2 border-dashed border-border bg-background py-8">
+  <div class="mb-4 rounded-main border border-border p-4">
+    <Icon name={selectedIcon} size={38} stroke-width={1.5} class={`text-subheading`} />
+  </div>
+  <p class="text-lg font-semibold text-heading">{title}</p>
+  <p class="mb-4 text-center text-heading">{description}</p>
 
   {
     modalId && !hiddenAction ? (
-      <button data-open-modal={modalId} class="mt-4 flex items-center gap-x-2 rounded-lg bg-blue-light/10 px-4 py-2 text-sm text-blue-light hover:text-blue-dark">
+      <Button data-open-modal={modalId} size="sm">
         {action === 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
         <span>{hrefText}</span>
         {action !== 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
-      </button>
+      </Button>
     ) : (
       !hiddenAction && (
-        <a href={href} class="mt-4 flex items-center gap-x-2 rounded-lg bg-blue-light/10 px-4 py-2 text-sm text-blue-light hover:text-blue-dark">
+        <Link href={href} size="sm" variant="secondary" class="gap-2">
           {action === 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
           <span>{hrefText}</span>
           {action !== 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
-        </a>
+        </Link>
       )
     )
   }
