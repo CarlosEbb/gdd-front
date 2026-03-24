@@ -28,18 +28,26 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
       <Input label="Descripción" name="description" placeholder="Ingrese la descripción del documento" required />
     </div>
 
-    <div class="hidden" id="prompt-container">
-      <Input label="Crear documento con IA" name="prompt" placeholder="Ingrese un prompt para crear el documento con IA" />
-      <p class="text-sm text-gray-500">Ingrese el prompt para crear el documento con IA.</p>
+    <div class="mt-2 w-full">
+      <label
+        for="generate-with-ia-checkbox"
+        class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-custom-blue3 bg-custom-blue3/10 p-4 transition-all hover:shadow-md"
+      >
+        <div class="flex items-center gap-2">
+          <Icon name="Sparkles" class="size-5 text-gray-600" stroke-width={1.5} />
+          <span class="text-sm font-medium text-gray-700">Generar con IA</span>
+        </div>
+        <input
+          type="checkbox"
+          id="generate-with-ia-checkbox"
+          class="size-5 cursor-pointer rounded border-gray-300 text-custom-blue accent-custom-blue focus:ring-2 focus:ring-custom-blue focus:ring-offset-0"
+        />
+      </label>
     </div>
 
-    <div class="mt-2 w-full">
-      <Button variant="gradient" size="sm" id="btn-generate-with-ia" type="button">
-        <span class="flex items-center">
-          <Icon name="Sparkles" class="me-2 size-4" stroke-width={1.5} />
-          <span class="text-sm">Generar con IA</span>
-        </span>
-      </Button>
+    <div class="hidden" id="prompt-container">
+      <Input label="Crear documento con IA" name="prompt" placeholder="Genera un documento sobre..." />
+      <p class="text-sm text-gray-500">Ingrese el prompt para crear el documento con IA.</p>
     </div>
 
     <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
@@ -58,7 +66,7 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
   function initializeCreateDocumentModal() {
     const modalSaveTemplate = document.getElementById('save-template') as HTMLDialogElement
     const form = document.getElementById('save-template-form') as HTMLFormElement
-    const btnGenerateWithIA = document.getElementById('btn-generate-with-ia') as HTMLButtonElement
+    const checkboxGenerateWithIA = document.getElementById('generate-with-ia-checkbox') as HTMLInputElement
     const promptContainer = document.getElementById('prompt-container') as HTMLDivElement
 
     if (!form) return
@@ -98,11 +106,16 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
       }
     }
 
-    const handleGenerateWithIA = async (e: Event) => {
-      promptContainer.classList.toggle('hidden')
+    const handleGenerateWithIA = (e: Event) => {
+      const target = e.target as HTMLInputElement
+      if (target.checked) {
+        promptContainer.classList.remove('hidden')
+      } else {
+        promptContainer.classList.add('hidden')
+      }
     }
 
-    btnGenerateWithIA.addEventListener('click', handleGenerateWithIA)
+    checkboxGenerateWithIA.addEventListener('change', handleGenerateWithIA)
 
     form.addEventListener('submit', handleSaveTemplate)
   }
