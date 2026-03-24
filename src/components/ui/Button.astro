@@ -12,15 +12,15 @@ export interface Props extends HTMLAttributes<'button'> {
 const { variant = 'default', size = 'default', class: className, rounded = 'default', loadingText, showTextOnLoading = true, ...props } = Astro.props
 
 const baseClasses =
-  'inline-flex items-center justify-center whitespace-nowrap rounded-full font-semibold ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+  'inline-flex items-center cursor-pointer justify-center whitespace-nowrap rounded-main font-semibold ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
 
 const variantClasses = {
-  default: 'bg-purple-light text-white hover:bg-blue-muted',
-  destructive: 'bg-red-500/30 text-red-500 hover:bg-red-500/40',
-  outline: 'border border-purple-light bg-purple-light/10 hover:purple-light hover:text-purple-light',
-  secondary: 'bg-purple-light/30 text-purple-light hover:bg-purple-light/40',
-  ghost: 'hover:bg-purple-light/10 hover:text-purple-light',
-  gradient: 'bg-gradient-to-r from-purple-light to-blue-muted hover:bg-gradient-to-r hover:from-blue-primary hover:to-purple-light text-white',
+  default: 'bg-primary text-white hover:bg-primary/80',
+  destructive: 'bg-destructive/30 text-destructive hover:bg-destructive/20',
+  outline: 'border border-border bg-foreground hover:bg-background text-heading',
+  secondary: 'bg-primary-foreground text-primary hover:bg-primary-foreground/60',
+  ghost: 'hover:bg-background bg-foreground text-heading',
+  gradient: 'bg-gradient-to-r from-primary via-primary/80 to-primary/60 hover:bg-gradient-to-r hover:from-primary/90 hover:via-primary/70 hover:to-primary/50 text-white transition-color',
 }
 
 const sizeClasses = {
@@ -31,7 +31,7 @@ const sizeClasses = {
 }
 
 const roundedClasses = {
-  default: 'rounded-lg',
+  default: 'rounded-main',
   full: 'rounded-full',
 }
 ---
