@@ -32,7 +32,7 @@ const usersWithOutOwner = users.filter((user) => user.is_owner === false)
       {
         hasUsers ? (
           usersWithOutOwner.map((user) => (
-            <li class="flex items-center justify-between rounded-lg border border-gray-200 bg-white/80 p-3 transition-colors hover:border-gray-300" id={`user-list-${user.email}`}>
+            <li class="flex items-center justify-between rounded-main border border-gray-200 bg-white/80 p-3 transition-colors hover:border-gray-300" id={`user-list-${user.email}`}>
               <UserLists user={user as WorkspaceByUser} workspaceUuid={workspace.uuid} />
             </li>
           ))

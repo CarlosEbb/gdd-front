@@ -60,7 +60,7 @@ const currentPath = Astro.url.pathname
               type="text"
               id="search-input"
               placeholder="Buscar plantillas"
-              class="w-full rounded-lg border border-blue-muted/40 bg-white py-4 pr-14 pl-12 text-xl text-neutral-950 placeholder-gray-500 shadow-lg focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              class="w-full rounded-main border border-blue-muted/40 bg-white py-4 pr-14 pl-12 text-xl text-neutral-950 placeholder-gray-500 shadow-lg focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
             <div class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400"></div>
           </div>
@@ -73,8 +73,8 @@ const currentPath = Astro.url.pathname
     <div id="categories-sticky" class="sticky top-14 z-10 -mt-10 flex snap-x items-center gap-2 overflow-x-auto transition-colors duration-300 md:justify-center md:gap-3">
       {
         AssignedCategories.map((item, idx) => (
-          <a href={`#${item.name}`} class="group flex snap-start flex-col items-center gap-2 rounded-lg px-2 py-1 whitespace-nowrap transition-all duration-100 hover:bg-white/30 md:px-4 md:py-2">
-            <div class={`size-10 rounded-lg md:size-14 ${item.color} flex items-center justify-center text-xl group-hover:scale-105`}>
+          <a href={`#${item.name}`} class="group flex snap-start flex-col items-center gap-2 rounded-main px-2 py-1 whitespace-nowrap transition-all duration-100 hover:bg-white/30 md:px-4 md:py-2">
+            <div class={`size-10 rounded-main md:size-14 ${item.color} flex items-center justify-center text-xl group-hover:scale-105`}>
               <item.icon class="size-5 group-hover:animate-bounce md:size-8" stroke-width={1.5} />
             </div>
             <span class="text-xs font-medium text-gray-700">{item.name}</span>

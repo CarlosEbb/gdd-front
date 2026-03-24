@@ -152,13 +152,13 @@ if (iconSelected) {
 ---
 
 <p class="mb-1 block text-sm font-medium text-gray-700">Seleccione un icono</p>
-<div class="w-full max-w-lg rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
+<div class="w-full max-w-lg rounded-main border border-gray-200 bg-white p-2 shadow-sm">
   <div class="grid h-72 grid-cols-5 gap-2 overflow-y-auto p-2">
     {
       iconList.map((icon) => (
         <label
           title={icon.name}
-          class="has-checked:text-blue-60 peer flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg p-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-blue-600 has-checked:bg-gray-100 has-checked:text-blue-600"
+          class="has-checked:text-blue-60 peer flex aspect-square cursor-pointer flex-col items-center justify-center rounded-main p-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-blue-600 has-checked:bg-gray-100 has-checked:text-blue-600"
         >
           <icon.component class="h-6 w-6" />
           <span class="mt-1 truncate text-xs peer-has-checked:text-blue-600">{icon.name}</span>

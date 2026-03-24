@@ -31,7 +31,7 @@ const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
   <div class="mx-auto max-w-7xl">
     <TitleForPage title="Consultar información del perfil" />
     <div>
-      <section class="mb-10 rounded-lg bg-white p-6 shadow shadow-blue-muted/20">
+      <section class="mb-10 rounded-main bg-white p-6 shadow shadow-blue-muted/20">
         <div class="mb-5 border-b border-gray-200 pb-6">
           <h2 class="text-lg font-semibold">Foto de Perfil</h2>
         </div>
@@ -54,14 +54,14 @@ const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
 
           <div class="w-11/12 overflow-hidden md:w-auto">
             <div class="flex items-center gap-2">
-              <label class="black cursor-pointer rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">
+              <label class="black cursor-pointer rounded-main bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">
                 <span class="sr-only">Cambiar foto</span>
                 <input type="file" form="form-profile" accept="image/jpeg, image/png" name="img_profile_file" class="cursor-pointer" />
               </label>
               <button
                 type="button"
                 id="remove-photo-btn"
-                class={`rounded-lg bg-red-50 px-2 py-2 text-red-600 transition-colors hover:bg-red-100 ${isHiddenPhoto ? 'hidden' : ''}`}
+                class={`rounded-main bg-red-50 px-2 py-2 text-red-600 transition-colors hover:bg-red-100 ${isHiddenPhoto ? 'hidden' : ''}`}
                 title="Eliminar foto"
               >
                 <Icon name="Trash" class="size-5" stroke-width={1.5} />
@@ -78,7 +78,7 @@ const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
       </section>
 
       <form class="mb-10" id="form-profile">
-        <div class="rounded-lg border border-gray-200 bg-white p-6 shadow shadow-blue-muted/20">
+        <div class="rounded-main border border-gray-200 bg-white p-6 shadow shadow-blue-muted/20">
           <div class="mb-5 border-b border-gray-200 pb-6">
             <h2 class="text-lg font-semibold">Información personal</h2>
           </div>
@@ -114,7 +114,7 @@ const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
       </form>
 
       <form class="mb-10" id="form-reset-password">
-        <div class="rounded-lg border border-gray-200 bg-white p-6 shadow shadow-blue-muted/20">
+        <div class="rounded-main border border-gray-200 bg-white p-6 shadow shadow-blue-muted/20">
           <div class="mb-5 border-b border-gray-200 pb-6">
             <h2 class="text-lg font-semibold">Cambiar contraseña</h2>
           </div>
