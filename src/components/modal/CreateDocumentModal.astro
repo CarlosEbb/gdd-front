@@ -107,12 +107,18 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
     }
 
     const handleGenerateWithIA = (e: Event) => {
+      const promptInput = form.querySelector('input[name="prompt"]') as HTMLInputElement
+
       const target = e.target as HTMLInputElement
+
       if (target.checked) {
         promptContainer.classList.remove('hidden')
       } else {
         promptContainer.classList.add('hidden')
       }
+
+      const action = target.checked ? 'setAttribute' : 'removeAttribute'
+      promptInput[action]('name', 'prompt')
     }
 
     checkboxGenerateWithIA.addEventListener('change', handleGenerateWithIA)
