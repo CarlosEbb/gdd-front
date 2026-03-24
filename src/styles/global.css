@@ -32,3 +32,24 @@
     transform: rotate(360deg);
   }
 }
+
+/* Contenedor de toasts que usa popover para aparecer sobre dialogs */
+#toast-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483647;
+}
+
+#toast-container:popover-open {
+  display: block;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+}
+
+#toast-container .toastify {
+  pointer-events: auto;
+}

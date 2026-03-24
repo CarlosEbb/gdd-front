@@ -2,6 +2,19 @@ import Toastify from 'toastify-js'
 
 export type ToastType = 'info' | 'success' | 'warn' | 'error' | 'loading' | (string & {})
 
+// Crear contenedor de toasts con popover para aparecer sobre dialogs
+function getToastContainer(): HTMLElement {
+  let container = document.getElementById('toast-container')
+  if (!container) {
+    container = document.createElement('div')
+    container.id = 'toast-container'
+    container.setAttribute('popover', 'manual')
+    document.body.appendChild(container)
+    container.showPopover()
+  }
+  return container
+}
+
 export interface ToastPreset {
   textPrefix?: string
   htmlPrefix?: string
@@ -103,7 +116,8 @@ class Toaster {
   }
 
   show(type: ToastType, text: string, override?: Partial<Toastify.Options>) {
-    const opts = resolveOptions(type, text, override, this.presets)
+    const container = getToastContainer()
+    const opts = resolveOptions(type, text, { ...override, selector: container }, this.presets)
     const instance = Toastify(opts)
     instance.showToast()
     return instance
