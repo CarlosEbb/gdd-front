@@ -1,6 +1,7 @@
 ---
 import { Eye, EyeOff } from '@lucide/astro'
 import type { HTMLAttributes } from 'astro/types'
+import Icon from '../ui/Icon.astro'
 
 interface Props extends HTMLAttributes<'input'> {
   label?: string
@@ -21,7 +22,7 @@ const stateClasses = serverError
 <>
   {
     label && (
-      <label class="mb-1 block text-sm font-medium text-gray-700" for={rest.id ?? name}>
+      <label class="mb-1 block text-sm font-medium text-heading" for={rest.id ?? name}>
         {label}
       </label>
     )
@@ -37,12 +38,21 @@ const stateClasses = serverError
         aria-describedby={errorId}
         aria-invalid={!!serverError}
         class:list={[
-          'w-full rounded-lg border bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 read-only:cursor-not-allowed read-only:bg-gray-100 read-only:opacity-50 focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+          'w-full rounded-main border border-border bg-background p-2 text-heading backdrop-blur-sm transition duration-200 placeholder:text-subheading read-only:cursor-not-allowed read-only:bg-gray-100 read-only:opacity-50 focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+          rest.type === 'search' && 'pl-10',
           stateClasses,
           rest.class,
         ]}
         {...rest}
       />
+
+      {
+        rest.type === 'search' && (
+          <div class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-400">
+            <Icon name="Search" size={20} />
+          </div>
+        )
+      }
 
       {
         rest.type === 'password' && (

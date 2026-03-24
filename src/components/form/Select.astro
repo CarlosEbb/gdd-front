@@ -20,7 +20,7 @@ const stateClasses = serverError
 <>
   {
     label && (
-      <label for={rest.id ?? name} class="mb-1 block text-sm font-medium text-gray-700">
+      <label for={rest.id ?? name} class="mb-1 block text-sm font-medium text-heading">
         {label}
       </label>
     )
@@ -33,7 +33,7 @@ const stateClasses = serverError
       aria-describedby={errorId}
       aria-invalid={!!serverError}
       class:list={[
-        'w-full rounded-lg border bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+        'w-full rounded-main border border-border bg-white/80 px-3 py-2 text-subheading backdrop-blur-sm transition duration-200 placeholder:text-subheading focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
         stateClasses,
         rest.class,
       ]}
@@ -41,7 +41,7 @@ const stateClasses = serverError
     >
       {
         placeholder && !rest.value && (
-          <option class="block font-sans text-base font-medium text-neutral-400 disabled:text-neutral-400" disabled selected value="">
+          <option class="block font-sans text-base font-medium text-subheading disabled:text-neutral-400" disabled selected value="">
             {placeholder}
           </option>
         )
