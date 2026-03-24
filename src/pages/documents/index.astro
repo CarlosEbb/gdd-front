@@ -25,7 +25,7 @@ const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id,
               <Input label="Fecha de creación" name="date" type="date" placeholder="buscar por fecha de creación" />
             </div>
             <div class="w-full md:w-auto">
-              <Input label="Título" name="title" type="text" placeholder="buscar por título" />
+              <Input label="Título" name="title" id="filter-title" type="text" placeholder="buscar por título" />
             </div>
             <div class="w-full md:w-auto">
               <Select label="Espacio de trabajo" name="workspace" options={workspacesOptions} placeholder="filtrar por espacio de trabajo" />
@@ -62,7 +62,7 @@ const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id,
 
   <script>
     function initDocumentFilter() {
-      const titleInput = document.querySelector('input[name="title"]') as HTMLInputElement
+      const titleInput = document.getElementById('filter-title') as HTMLInputElement
       const dateInput = document.querySelector('input[name="date"]') as HTMLInputElement
       const workspaceSelect = document.querySelector('select[name="workspace"]') as HTMLSelectElement
       const resetButton = document.getElementById('reset-filters') as HTMLElement
