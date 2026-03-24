@@ -28,9 +28,9 @@ const loadingText = isEdit ? 'Actualizando servidor...' : 'Creando servidor...'
 
 <MainLayout title={titleText}>
   <Container>
-    <TitleForPage title={titleText} />
+    <TitleForPage title={titleText} class="mb-6" />
     <FormPageLayout formId="form-server" submitText={btnText} loadingText={loadingText} cancelHref="/servers" isEdit={isEdit}>
-      <FormBlock title="Información del servidor" icon="Server" cols={2}>
+      <FormBlock title="Información del servidor" description="Complete los campos para crear un nuevo servidor" cols={2}>
         <div>
           <Input
             label="IP"
