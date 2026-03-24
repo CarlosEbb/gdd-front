@@ -35,14 +35,14 @@ const selectedServer = {
         <EmptyState title="Ah ocurrido un error" state="error" description={error.message} />
       ) : (
         <>
-          <div class="border-b border-purple-light/20 py-8">
+          <div class="border-b border-border py-8">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-5">
-                <div class={`rounded-2xl p-3 shadow-sm ${selectedServer.status === 'online' ? 'bg-purple-light/20 text-purple-dark' : 'bg-slate-400 text-white'}`}>
-                  <Server size={24} />
+                <div class="rounded-main bg-primary-foreground p-4 text-primary">
+                  <Icon name="Server" size={32} />
                 </div>
                 <div>
-                  <h2 class="text-xl font-bold text-slate-800">{selectedServer.name}</h2>
+                  <h2 class="text-xl font-bold text-heading">{selectedServer.name}</h2>
                   <div class="flex items-center gap-3 text-sm text-slate-500">
                     <span class="rounded bg-slate-100 px-2 py-0.5 font-mono text-slate-600">{selectedServer.ip}</span>
                     <span>•</span>
@@ -53,7 +53,7 @@ const selectedServer = {
                 </div>
               </div>
               <div class="flex gap-2">
-                <Link size="sm" variant="secondary" href={`/servers/form-server?edit=true&ip=${selectedServer.ip}&name=${selectedServer.name}&puerto=${selectedServer.puerto}&uuid=${uuid}`}>
+                <Link size="sm" href={`/servers/form-server?edit=true&ip=${selectedServer.ip}&name=${selectedServer.name}&puerto=${selectedServer.puerto}&uuid=${uuid}`}>
                   Editar
                 </Link>
                 <Button size="sm" variant="destructive" data-open-modal="delete-server">
@@ -63,7 +63,7 @@ const selectedServer = {
             </div>
           </div>
           <div class="mt-8">
-            <h3 class="mb-4 text-lg font-semibold text-slate-800">Bases de datos</h3>
+            <h3 class="mb-4 text-lg font-semibold text-heading">Bases de datos</h3>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {hasDatabases ? (
                 dataBases.map((db: Database) => <List icon="Database" title={db.nameBd} subtitle={db.username} />)
