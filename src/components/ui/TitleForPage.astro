@@ -7,12 +7,13 @@ interface Props {
   backHref?: string
   class?: string
   showBackButton?: boolean
+  subtitle?: string | null
 }
 
-const { title, class: className, backHref = undefined, showBackButton = true } = Astro.props
+const { title, class: className, backHref = undefined, showBackButton = true, subtitle = null } = Astro.props
 ---
 
-<div class="mb-6 flex items-center gap-4">
+<div class="flex items-start gap-4">
   {
     showBackButton && (
       <Button type="button" data-history-back data-fallback-href={backHref} variant="ghost" title="Volver a la página anterior" size="sm" aria-label="Volver a la página anterior">
@@ -21,9 +22,12 @@ const { title, class: className, backHref = undefined, showBackButton = true } =
     )
   }
 
-  <h1 class="text-2xl font-bold text-gray-900 md:text-3xl" class:list={[className]} transition:animate="fade" transition:name="title">
-    {title}
-  </h1>
+  <div>
+    <h1 class="text-xl font-semibold text-heading md:text-2xl" class:list={[className]} transition:animate="fade" transition:name="title">
+      {title}
+    </h1>
+    {subtitle && <p class="text-sm text-subheading">{subtitle}</p>}
+  </div>
 </div>
 
 <script>
