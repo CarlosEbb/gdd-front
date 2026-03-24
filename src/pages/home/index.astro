@@ -11,9 +11,9 @@ const name = user.name
 
 <MainLayout title="Inicio">
   <Container>
-    <TitleForPage showBackButton={false} title={`¡Bienvenido, ${name}!`} />
+    <TitleForPage class="mb-6" showBackButton={false} title={`¡Bienvenido, ${name}!`} />
 
     <ListLatestOpenid />
-    <ListDocuments limit={7} />
+    <ListDocuments title="Últimos documentos" limit={7} />
   </Container>
 </MainLayout>
