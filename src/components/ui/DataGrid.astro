@@ -25,9 +25,12 @@ const optionsGrid = {
     ) : !hasData ? (
       <slot name="empty-state" />
     ) : (
-      <div class={`grid ${optionsGrid[grid]}`}>
-        <slot />
-      </div>
+      <>
+        <slot name="header" />
+        <div class={`grid ${optionsGrid[grid]}`}>
+          <slot />
+        </div>
+      </>
     )
   }
 </div>
