@@ -8,7 +8,7 @@ interface Props {
   uuidWorkspace?: string | null
 }
 
-const { title = 'Documentos recientes', limit = null, uuidWorkspace = null } = Astro.props
+const { title = null, limit = null, uuidWorkspace = null } = Astro.props
 let grid = ''
 
 if (uuidWorkspace) {
@@ -19,7 +19,7 @@ if (uuidWorkspace) {
 ---
 
 <section class="mb-10">
-  <h2 class="mb-4 text-lg font-semibold text-gray-700">{title}</h2>
+  {title && <h2 class="mb-4 text-lg font-semibold text-heading">{title}</h2>}
   <ListDocuments limit={limit} uuidWorkspace={uuidWorkspace} server:defer>
     <div class={`mb-10 grid ${grid}`} slot="fallback">
       <SCardDocument number={limit ?? 7} />
