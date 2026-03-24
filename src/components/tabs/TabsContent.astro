@@ -8,7 +8,7 @@ const { value, class: className } = Astro.props
 ---
 
 <div
-  class:list={['mt-4 focus-visible:ring-2 focus-visible:ring-purple-light focus-visible:ring-offset-2 focus-visible:outline-none', 'data-[state=inactive]:hidden', className]}
+  class:list={['mt-4 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none', 'data-[state=inactive]:hidden', className]}
   role="tabpanel"
   data-tabs-content={value}
   data-state="inactive"
