@@ -8,18 +8,18 @@ const documents = data?.data ?? []
 ---
 
 <div class="relative" id="search-container">
-  <div class="pointer-events-none absolute inset-y-0 start-0 z-10 flex items-center ps-4">
+  <div class="pointer-events-none absolute inset-y-0 start-0 z-10 flex items-center ps-4 text-subheading">
     <Icon name="Search" stroke-width={1.5} size={16} />
   </div>
   <input
     type="search"
     id="input-search"
-    class="h-full w-full rounded-lg border border-gray-dark bg-white p-2 ps-11 text-sm focus:ring-1 focus:ring-gray-mid focus:outline-none"
+    class="h-full w-full rounded-main border border-border bg-background p-2 ps-11 text-sm text-heading placeholder:text-subheading focus:ring-1 focus:ring-primary focus:outline-none"
     placeholder="Buscar documentos..."
     autocomplete="off"
   />
 
-  <div id="search-results" class="absolute top-full z-50 mt-2 hidden max-h-96 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+  <div id="search-results" class="absolute top-full z-50 mt-2 hidden max-h-96 w-full overflow-y-auto rounded-main border border-border bg-white shadow-lg">
     <div id="results-list" class="py-2">
       <!-- Los resultados se insertarán aquí dinámicamente -->
     </div>
