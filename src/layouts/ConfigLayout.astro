@@ -16,7 +16,7 @@ const build_number = Astro.url.searchParams.get('build_number') as string
 
 const NAVIGATION = [
   { href: `/config/documentation/${uuid}?build_number=${build_number}`, label: 'Documentación' },
-  { href: `/config/validation/${uuid}?build_number=${build_number}`, label: 'Validaciones' },
+  // { href: `/config/validation/${uuid}?build_number=${build_number}`, label: 'Validaciones' },
   // { href: `/config/security/${uuid}?build_number=${build_number}`, label: 'Seguridad' },
   // { href: `/config/version/${uuid}?build_number=${build_number}`, label: 'Versiones' },
 ]
