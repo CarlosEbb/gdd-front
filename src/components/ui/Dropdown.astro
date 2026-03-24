@@ -41,18 +41,20 @@ const positionClasses = {
 <div class="relative inline-block w-full cursor-pointer text-left" data-dropdown-container>
   <button
     class:list={[
-      'inline-flex w-full cursor-pointer items-center justify-between gap-x-1.5 rounded-lg bg-white/80 backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+      'inline-flex w-full cursor-pointer items-center justify-between gap-x-1.5 rounded-main bg-white/80 backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
       sizeClasses[size],
       shadowClasses[shadow],
       borderClasses[border],
     ]}
     data-dropdown-toggle
   >
-    {mobileIcon && (
-      <span class="flex items-center justify-center md:hidden">
-        <Icon name={mobileIcon} class="h-5 w-5 text-gray-600" />
-      </span>
-    )}
+    {
+      mobileIcon && (
+        <span class="flex items-center justify-center md:hidden">
+          <Icon name={mobileIcon} class="h-5 w-5 text-gray-600" />
+        </span>
+      )
+    }
     <span class:list={['truncate', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>
     <svg
       width="16"
@@ -63,10 +65,7 @@ const positionClasses = {
       stroke-width="1.5"
       stroke-linecap="round"
       stroke-linejoin="round"
-      class:list={[
-        '-mr-1 ml-2 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180',
-        mobileIcon && 'hidden md:block',
-      ]}
+      class:list={['-mr-1 ml-2 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180', mobileIcon && 'hidden md:block']}
     >
       <path d="m6 9 6 6 6-6"></path>
     </svg>
@@ -74,7 +73,7 @@ const positionClasses = {
 
   <div
     class:list={[
-      'ring-opacity-5 invisible absolute z-10 mt-1 max-h-72  scale-95 transform overflow-y-auto rounded-lg bg-white opacity-0 shadow-lg ring-1 ring-gray-200 transition-all duration-150 ease-out focus:outline-none [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100',
+      'ring-opacity-5 invisible absolute z-10 mt-1 max-h-72 scale-95 transform overflow-y-auto rounded-main bg-white opacity-0 shadow-lg ring-1 ring-gray-200 transition-all duration-150 ease-out focus:outline-none [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100',
       positionClasses[position],
       position === 'right' ? 'origin-top-right' : 'origin-top-left',
     ]}
@@ -85,7 +84,7 @@ const positionClasses = {
         <div class="border-b border-gray-100 p-2">
           <input
             type="text"
-            class="block w-full rounded-lg border border-gray-200 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
+            class="block w-full rounded-main border border-gray-200 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
             placeholder="Buscar..."
             data-dropdown-search
           />

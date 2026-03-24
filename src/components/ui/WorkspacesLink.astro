@@ -26,10 +26,10 @@ const { workspace, index } = Astro.props
 ---
 
 <a
-  class={`flex h-20 md:h-24 cursor-pointer items-center gap-3 rounded-lg border border-gray-200 bg-linear-to-br from-white ${GRADIENTS[index].gradientBg} p-3 md:p-4 text-center shadow-sm transition-all hover:border-purple-300 hover:shadow-md`}
+  class={`flex h-20 md:h-24 cursor-pointer items-center gap-3 rounded-main border border-gray-200 bg-linear-to-br from-white ${GRADIENTS[index].gradientBg} p-3 md:p-4 text-center shadow-sm transition-all hover:border-purple-300 hover:shadow-md`}
   href={`/workspaces/${workspace.uuid}`}
 >
-  <div class={`rounded-lg ${GRADIENTS[index].bgIcon} p-2 md:p-3`}>
+  <div class={`rounded-main ${GRADIENTS[index].bgIcon} p-2 md:p-3`}>
     <Icon name={workspace.icon} class={`size-6 md:size-8 ${GRADIENTS[index].colorIcon}`} stroke-width={1.5} />
   </div>
   <div class="flex flex-col items-start justify-start">
