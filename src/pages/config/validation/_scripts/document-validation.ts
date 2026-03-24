@@ -222,7 +222,7 @@ function updateSelectedFieldsDisplay(): void {
   // Agregar badges de campos seleccionados
   state.selectedFieldsToHide.forEach((field) => {
     const badge = document.createElement('span')
-    badge.className = 'rounded-lg bg-blue-muted/20 px-3 py-1.5 text-sm font-medium text-gray-700'
+    badge.className = 'rounded-main bg-blue-muted/20 px-3 py-1.5 text-sm font-medium text-gray-700'
     badge.textContent = field
     elements?.selectedFieldsDisplay?.appendChild(badge)
   })
