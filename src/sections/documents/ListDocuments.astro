@@ -36,7 +36,7 @@ if (uuidWorkspace) {
   grid = 'grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
 }
 
-const currentPath = Astro.url.pathname
+const currentPath = '/home'
 ---
 
 <DataGrid hasData={hasDocuments} isError={error}>
@@ -56,12 +56,6 @@ const currentPath = Astro.url.pathname
     {documents.map((document) => <CardDocument document={document} />)}
   </div>
 </DataGrid>
-
-<Modal modalId="modal-details" title="Detalles del documento">
-  <div>
-    <h2>Detalles del documento</h2>
-  </div>
-</Modal>
 
 <Modal modalId="modal-delete" title="Eliminar documento">
   <form class="space-y-6" id="delete-document-form">
