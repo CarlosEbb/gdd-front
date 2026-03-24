@@ -98,7 +98,11 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
     }
 
     const handleGenerateWithIA = async (e: Event) => {
+      const promptTextarea = form.querySelector('textarea[name="prompt"]') as HTMLTextAreaElement
       promptContainer.classList.toggle('hidden')
+
+      const action = btnGenerateWithIA.checked ? 'setAttribute' : 'removeAttribute'
+      promptTextarea[action]('name', 'prompt')
     }
 
     btnGenerateWithIA.addEventListener('change', handleGenerateWithIA)
