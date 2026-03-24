@@ -9,6 +9,7 @@ import TitleForPage from '@/components/ui/TitleForPage.astro'
 import Icon from '@/components/ui/Icon.astro'
 import Link from '@/components/ui/Link.astro'
 import DataGrid from '@/components/ui/DataGrid.astro'
+import Input from '@/components/form/Input.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.servers.list, {})
@@ -19,25 +20,29 @@ const hasServers = servers.length > 0
 
 <MainLayout title="Servidores">
   <Container>
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-10 flex items-center justify-between">
       <TitleForPage class="mb-0" title="Gestión de servidores" />
-      <Link href="/servers/form-server" variant="gradient" size="sm">
+      <Link href="/servers/form-server" size="sm">
         <span class="flex items-center justify-center gap-2">
           <span class="hidden md:block">Crear servidor</span>
           <Icon name="Plus" size={14} />
         </span>
       </Link>
     </div>
+
     <DataGrid hasData={hasServers} isError={error}>
       <EmptyState slot="error-state" title="Error al cargar los servidores" description="Intenta nuevamente." href={currentPath} state="error" />
 
       <EmptyState slot="empty-state" title="No hay servidores disponibles" description="No tienes ningún servidor registrado." href={currentPath} state="notFound" />
 
+      <div slot="header" class="mb-4">
+        <Input name="search" type="search" placeholder="Buscar servidor..." />
+      </div>
       {
         servers.map((server: DetailsServer) => (
           <List icon="Server" title={`Puerto: ${server.puerto}`} subtitle={`IP: ${server.ip}`}>
             <div slot="actions">
-              <Link href={`/servers/${server.uuid}`} variant="ghost" size="icon">
+              <Link href={`/servers/${server.uuid}`} variant="secondary" size="icon">
                 <Icon name="ChevronRight" stroke-width={1.5} size={16} />
               </Link>
             </div>

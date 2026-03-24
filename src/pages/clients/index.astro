@@ -9,20 +9,22 @@ import DataGrid from '@/components/ui/DataGrid.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import List from '@/components/ui/List.astro'
 import type { DetailsClient } from '@/types/clients'
+import Input from '@/components/form/Input.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.clients.list, {})
 
 const clients = data?.data || []
 const hasClients = clients.length > 0
+const totalClients = clients.length
 ---
 
 <MainLayout title="Clientes">
   <Container>
     <div class="mb-6 flex items-center justify-between">
-      <TitleForPage title="Gestión de clientes" />
+      <TitleForPage title="Gestión de clientes" subtitle={`Total: ${totalClients} clientes`} />
 
-      <Link href="/clients/form-client" variant="gradient" size="sm">
+      <Link href="/clients/form-client" size="sm">
         <span class="flex items-center justify-center gap-2">
           <span class="hidden md:block">Crear Cliente</span>
           <Icon name="Plus" size={14} />
@@ -35,11 +37,14 @@ const hasClients = clients.length > 0
 
       <EmptyState slot="empty-state" title="No hay clientes disponibles" description="No tienes ningún cliente registrado." href={currentPath} state="notFound" />
 
+      <div slot="header" class="mb-4">
+        <Input name="search" type="search" placeholder="Buscar cliente..." />
+      </div>
       {
         clients.map((client: DetailsClient) => (
           <List icon="Building2" title={client.name} subtitle={`RIF: ${client.rif}`} img={client.logo}>
             <div slot="actions">
-              <Link href={`/clients/${client.uuid}`} variant="ghost" size="icon">
+              <Link href={`/clients/${client.uuid}`} variant="secondary" size="icon">
                 <Icon name="ChevronRight" stroke-width={1.5} size={16} />
               </Link>
             </div>
