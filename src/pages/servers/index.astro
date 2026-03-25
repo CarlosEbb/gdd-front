@@ -42,7 +42,7 @@ const hasServers = servers.length > 0
         servers.map((server: DetailsServer) => (
           <List icon="Server" title={`Puerto: ${server.puerto}`} subtitle={`IP: ${server.ip}`}>
             <div slot="actions">
-              <Link href={`/servers/${server.uuid}`} variant="secondary" size="icon">
+              <Link href={`/servers/${server.uuid}`} variant="transparent" size="icon">
                 <Icon name="ChevronRight" stroke-width={1.5} size={16} />
               </Link>
             </div>
