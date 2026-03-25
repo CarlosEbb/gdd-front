@@ -166,10 +166,13 @@ export async function handleGeneratePdf(designer, jsonContent, plugins, fonts) {
     }
 
     // Llamar a la función solo si existen width y height, de lo contrario usar valores por defecto
-    if (width !== undefined && height !== undefined) {
-      updatedTemplate = await agregarImageSandbox(updatedTemplate, width - 10, height - 10);
-    } else {
-      updatedTemplate = await agregarImageSandbox(updatedTemplate);
+    console.log(import.meta.env.PUBLIC_IS_SANDBOX);
+    if (import.meta.env.PUBLIC_IS_SANDBOX === 'true') {
+      if (width !== undefined && height !== undefined) {
+        updatedTemplate = await agregarImageSandbox(updatedTemplate, width - 10, height - 10);
+      } else {
+        updatedTemplate = await agregarImageSandbox(updatedTemplate);
+      }
     }
 
     //agregar input de imagen sandbox
