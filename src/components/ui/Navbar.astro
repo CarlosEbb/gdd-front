@@ -3,13 +3,20 @@ import gddLogo from '@/assets/images/creadocs.png'
 import Button from './Button.astro'
 import Icon from './Icon.astro'
 import Search from './Search.astro'
+
+const { PUBLIC_IS_SANDBOX } = import.meta.env
 ---
 
 <nav class="fixed top-0 z-20 flex w-full items-center justify-between bg-[#e8eafa] px-2 py-2">
   <div id="progress-bar" class="pointer-events-none fixed top-0 left-0 z-50 h-[3px] w-0 bg-custom-blue3 opacity-0 transition-all duration-200 ease-out"></div>
   <div class="flex h-full items-center justify-center">
-    <a href="/home">
+    <a href="/home" class="relative flex items-center justify-center gap-1">
       <img src={gddLogo.src} alt="logo gdd" class="aspect-auto h-10 max-w-24 object-contain md:max-w-32" />
+      {
+        PUBLIC_IS_SANDBOX === 'true' && (
+          <span class="absolute -top-1 -right-10 rotate-12 rounded-full bg-amber-100 px-2 py-1 text-[10px] leading-none font-semibold text-amber-700 uppercase shadow-sm md:text-xs">Sandbox</span>
+        )
+      }
     </a>
   </div>
 
