@@ -138,7 +138,7 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
         </FormBlock>
 
         <FormBlock title="Asignar Servidores Iniciales" cols={1} description="Selecciona los servidores de infraestructura a los que este cliente tendrá acceso.">
-          <div class="custom-scrollbar grid max-h-62.5 grid-cols-1 gap-3 overflow-y-auto pr-2 md:grid-cols-2">
+          <div class="custom-scrollbar grid max-h-62.5 grid-cols-1 gap-3 overflow-y-auto pr-2 md:grid-cols-3">
             <StateSwitch hasError={!!serversError} isEmpty={!hasServers}>
               {
                 servers.map((server) => (
