@@ -10,6 +10,7 @@ import EmptyState from '@/components/ui/EmptyState.astro'
 import List from '@/components/ui/List.astro'
 import type { DetailsClient } from '@/types/clients'
 import Input from '@/components/form/Input.astro'
+import { formatDate } from '@/scripts/utils'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.clients.list, {})
@@ -32,7 +33,7 @@ const totalClients = clients.length
       </Link>
     </div>
 
-    <DataGrid hasData={hasClients} isError={error}>
+    <DataGrid hasData={hasClients} isError={error} grid="x1">
       <EmptyState slot="error-state" title="Error al cargar los clientes" description="Intenta nuevamente." href={currentPath} state="error" />
 
       <EmptyState slot="empty-state" title="No hay clientes disponibles" description="No tienes ningún cliente registrado." href={currentPath} state="notFound" />
@@ -43,8 +44,9 @@ const totalClients = clients.length
       {
         clients.map((client: DetailsClient) => (
           <List icon="Building2" title={client.name} subtitle={`RIF: ${client.rif}`} img={client.logo}>
-            <div slot="actions">
-              <Link href={`/clients/${client.uuid}`} variant="secondary" size="icon">
+            <div slot="actions" class="flex items-center gap-4">
+              <span class="block text-sm text-subheading">Creado: {formatDate(client.createdAt as string)}</span>
+              <Link href={`/clients/${client.uuid}`} variant="transparent" size="icon">
                 <Icon name="ChevronRight" stroke-width={1.5} size={16} />
               </Link>
             </div>
