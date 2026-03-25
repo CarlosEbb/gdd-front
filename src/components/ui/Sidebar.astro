@@ -63,12 +63,12 @@ const currentPath = Astro.url.pathname
             <li>
               <a
                 class:list={[
-                  'group flex items-center justify-start gap-2 rounded-main p-3 text-xs text-heading transition-all duration-200 hover:bg-primary-foreground hover:shadow-sm lg:flex-col lg:justify-center lg:gap-0',
-                  { 'cursor-pointer bg-primary-foreground font-semibold text-primary shadow-sm': option.href === currentPath },
+                  'group flex items-center justify-start gap-2 rounded-main p-3 text-xs text-subheading transition-all duration-200 hover:bg-foreground lg:flex-col lg:justify-center lg:gap-0',
+                  { 'cursor-pointer border border-border bg-foreground font-semibold text-primary': option.href === currentPath },
                 ]}
                 href={option.href}
               >
-                <option.icon class="size-5 md:size-6" stroke-width="1.5" />
+                <option.icon class="size-5 md:size-5" stroke-width="1.5" />
                 <span class="text-center md:block lg:hidden xl:block">{option.name}</span>
               </a>
             </li>
