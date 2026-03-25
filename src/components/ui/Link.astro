@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from 'astro/types'
 
 export interface Props extends HTMLAttributes<'a'> {
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient'
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient' | 'transparent'
   size?: 'default' | 'sm' | 'lg' | 'icon'
   href?: string
   rounded?: 'default' | 'full'
@@ -21,6 +21,7 @@ const variantClasses = {
   secondary: 'bg-primary-foreground text-primary hover:bg-primary-foreground/60',
   ghost: 'hover:bg-background bg-foreground text-heading',
   gradient: 'bg-gradient-to-r from-primary via-primary/80 to-primary/60 hover:bg-gradient-to-r hover:from-primary/90 hover:via-primary/70 hover:to-primary/50 text-white transition-color',
+  transparent: 'bg-transparent text-heading hover:bg-foreground',
 }
 
 const sizeClasses = {
