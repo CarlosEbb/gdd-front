@@ -24,11 +24,11 @@ const baseUrl = import.meta.env.PROJECT_URL
 const urlImage = hasImage ? `${baseUrl}${img}` : undefined
 ---
 
-<div class={`group flex items-center justify-between rounded-main border border-border bg-background p-5 transition-all hover:border-primary ${className || ''}`} {...rest}>
-  <div class="flex items-center gap-5">
+<div class={`group flex items-center justify-between rounded-main border border-border bg-background py-3 px-4 transition-all ${className || ''}`} {...rest}>
+  <div class="flex items-center gap-4">
     {
       hasImage ? (
-        <div class="relative h-14 w-14 overflow-hidden rounded-2xl bg-slate-100">
+        <div class="relative size-8 overflow-hidden rounded-2xl">
           <img
             src={urlImage}
             alt={title ? `Logo de ${title}` : 'Logo'}
@@ -37,15 +37,15 @@ const urlImage = hasImage ? `${baseUrl}${img}` : undefined
             onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden')"
           />
           {hasIcon && (
-            <div class="hidden h-full w-full items-center justify-center text-slate-400">
-              <Icon name={icon} stroke-width={1.5} size={24} />
+            <div class="flex hidden size-8 items-center justify-center text-heading">
+              <Icon name={icon} stroke-width={1.6} size={18} />
             </div>
           )}
         </div>
       ) : (
         hasIcon && (
-          <div class={`flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${status === 'online' ? 'bg-primary-foreground text-primary' : 'bg-slate-100 text-slate-400'}`}>
-            <Icon name={icon} stroke-width={1.5} size={24} />
+          <div class={`flex size-8 items-center justify-center rounded-2xl transition-colors ${status === 'online' ? 'bg-primary-foreground text-primary' : 'text-heading'}`}>
+            <Icon name={icon} stroke-width={1.6} size={18} />
           </div>
         )
       )
@@ -53,8 +53,8 @@ const urlImage = hasImage ? `${baseUrl}${img}` : undefined
     {
       (hasTitle || hasSubtitle) && (
         <div class="space-y-1">
-          {hasTitle && <h3 class="leading-none font-semibold tracking-tight text-slate-800">{title}</h3>}
-          {hasSubtitle && <p class="font-mono text-xs text-slate-500">{subtitle}</p>}
+          {hasTitle && <h3 class="leading-none font-medium tracking-tight text-heading">{title}</h3>}
+          {hasSubtitle && <p class="font-mono text-xs text-subheading">{subtitle}</p>}
         </div>
       )
     }
