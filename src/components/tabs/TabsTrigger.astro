@@ -9,11 +9,11 @@ const { value, class: className } = Astro.props
 
 <button
   class:list={[
-    'inline-flex cursor-pointer items-center justify-center rounded-main px-4 py-2 text-sm font-medium whitespace-nowrap text-heading transition-all duration-200',
-    'hover:text-primary',
+    'inline-flex cursor-pointer items-center justify-center rounded-main px-4 py-2 text-sm font-medium whitespace-nowrap text-subheading transition-all duration-200',
+    'hover:text-heading',
     'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none',
     'disabled:pointer-events-none disabled:opacity-50',
-    'data-[state=active]:bg-primary-foreground data-[state=active]:text-primary data-[state=active]:shadow-sm',
+    'data-[state=active]:bg-muted data-[state=active]:text-heading',
     className,
   ]}
   role="tab"
