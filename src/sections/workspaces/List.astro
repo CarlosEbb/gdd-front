@@ -14,15 +14,15 @@ const hasWorkSpaces = workspaces.length > 0
 ---
 
 <section class="mb-10">
-  <header class="mb-2 flex items-center justify-between">
+  <header class="mb-5 flex items-center justify-between">
     <div>
       <h2 class="text-lg font-semibold text-heading">Espacios de trabajo</h2>
-      <p class="text-sm text-subheading">{hasWorkSpaces ? 'Aún no tienes espacios de trabajo' : `Tienes ${workspaces.length} espacios de trabajo`}</p>
+      <p class="text-sm text-subheading">{hasWorkSpaces ? `${workspaces.length} espacios de trabajo` : 'Aún no tienes espacios de trabajo'}</p>
     </div>
 
     <div class="flex items-center gap-2">
       <Button size="sm" data-open-modal="create-workspace">Crear nuevo</Button>
-      <Link size="sm" variant="outline" href="/workspaces">Ver todos</Link>
+      <Link size="sm" variant="secondary" href="/workspaces">Ver todos</Link>
     </div>
   </header>
 
