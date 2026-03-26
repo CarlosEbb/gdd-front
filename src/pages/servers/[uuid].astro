@@ -2,7 +2,6 @@
 import MainLayout from '@/layouts/MainLayout.astro'
 import Container from '@/components/ui/Container.astro'
 import TitleForPage from '@/components/ui/TitleForPage.astro'
-import { Plug, Server } from '@lucide/astro'
 import { actions } from 'astro:actions'
 import type { Database } from '@/types/servers'
 import List from '@/components/ui/List.astro'
@@ -11,6 +10,7 @@ import Button from '@/components/ui/Button.astro'
 import Modal from '@/components/modal/Modal.astro'
 import Icon from '@/components/ui/Icon.astro'
 import Link from '@/components/ui/Link.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
 
 const { uuid } = Astro.params
 
@@ -25,58 +25,66 @@ const selectedServer = {
   puerto: server?.puerto || 0,
   status: 'online',
 }
+
+const urlEditServer = `/servers/form-server?edit=true&ip=${selectedServer.ip}&name=${selectedServer.name}&puerto=${selectedServer.puerto}&uuid=${uuid}`
 ---
 
 <MainLayout title="Detalles del servidor">
   <Container>
-    <TitleForPage title="Detalles del servidor" backHref="/servers" />
-    {
-      error ? (
-        <EmptyState title="Ah ocurrido un error" state="error" description={error.message} />
-      ) : (
-        <>
-          <div class="border-b border-border py-8">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-5">
-                <div class="rounded-main bg-primary-foreground p-4 text-primary">
-                  <Icon name="Server" size={32} />
+    <TitleForPage title="Detalles del servidor" backHref="/servers" class="mb-6" />
+    <StateSwitch hasError={!!error}>
+      <>
+        <div class="overflow-hidden rounded-main border border-border bg-background shadow-base">
+          <div class="flex h-14 flex-row items-center justify-between border-b border-border py-3 pr-3 pl-4">
+            <h1 class="text-base font-medium text-heading">Detalles server</h1>
+
+            <div class="flex items-center gap-3">
+              <Link size="sm" href={urlEditServer}> Editar </Link>
+              <Button size="sm" variant="destructive" data-open-modal="delete-server"> Eliminar </Button>
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-6 p-6">
+            <div class="flex items-center gap-5">
+              <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl text-heading shadow-inner">
+                <div class="bg-primary-foreground p-4 text-primary">
+                  <Icon name="Server" size={28} stroke-width={1.5} />
                 </div>
-                <div>
-                  <h2 class="text-xl font-bold text-heading">{selectedServer.name}</h2>
-                  <div class="flex items-center gap-3 text-sm text-slate-500">
-                    <span class="rounded bg-slate-100 px-2 py-0.5 font-mono text-slate-600">{selectedServer.ip}</span>
-                    <span>•</span>
-                    <span class="flex items-center gap-1">
-                      <Plug size={14} /> {selectedServer.puerto}
-                    </span>
+              </div>
+              <div>
+                <div class="grid">
+                  <h2 class="mb-2 text-xl font-semibold tracking-tight text-heading">{selectedServer.name}</h2>
+
+                  <div class="grid gap-4 sm:grid-cols-3">
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs font-semibold tracking-wide text-subheading">Ip:</span>
+                      <span class="text-sm font-medium text-heading">{selectedServer.ip}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs font-semibold tracking-wide text-subheading">Puerto:</span>
+                      <span class="text-sm font-medium text-heading">{selectedServer.puerto}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="flex gap-2">
-                <Link size="sm" href={`/servers/form-server?edit=true&ip=${selectedServer.ip}&name=${selectedServer.name}&puerto=${selectedServer.puerto}&uuid=${uuid}`}>
-                  Editar
-                </Link>
-                <Button size="sm" variant="destructive" data-open-modal="delete-server">
-                  Eliminar
-                </Button>
-              </div>
             </div>
           </div>
-          <div class="mt-8">
-            <h3 class="mb-4 text-lg font-semibold text-heading">Bases de datos</h3>
+        </div>
+        <div class="mt-8">
+          <h3 class="mb-4 text-lg font-semibold text-heading">Bases de datos</h3>
+          <StateSwitch isEmpty={!hasDatabases}>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {hasDatabases ? (
-                dataBases.map((db: Database) => <List icon="Database" title={db.nameBd} subtitle={db.username} />)
-              ) : (
-                <div class="col-span-full">
-                  <EmptyState href="/servers" hrefText="Volver a servidores" title="No hay bases de datos" state="info" description="No se encontraron bases de datos para este servidor" />
-                </div>
-              )}
+              {dataBases.map((db: Database) => <List icon="Database" title={db.nameBd} subtitle={db.username} />)}
             </div>
-          </div>
-        </>
-      )
-    }
+            <div slot="empty">
+              <EmptyState href="/servers" title="No hay bases de datos" state="info" description="No se encontraron bases de datos para este servidor" hiddenAction={true} />
+            </div>
+          </StateSwitch>
+        </div>
+      </>
+      <div slot="error">
+        <EmptyState title="Ah ocurrido un error" state="error" description={error?.message ?? 'Ocurrió un error inesperado'} />
+      </div>
+    </StateSwitch>
   </Container>
 </MainLayout>
 
