@@ -11,15 +11,10 @@ if (!uuid) {
 }
 
 const build_number = Astro.url.searchParams.get('build_number') as string
-const token = Astro.url.searchParams.get('token') as string
 
 const url = `/documents/${uuid}/${build_number}`
 const { PUBLIC_PROJECT_URL: base_url, PUBLIC_PROJECT_URL: project_url } = import.meta.env
 console.log(base_url, project_url)
-const bearerToken = token ?? 'tu_token'
-const authorizationHeader = {
-  Authorization: `Bearer ${bearerToken}`,
-}
 
 const responseExample = {
   status: 201,
@@ -32,81 +27,92 @@ const responseExample = {
 
 const { data, error } = await Astro.callAction(actions.documents.getRequestForDocument, { uuid_template: uuid, build_number: build_number })
 
+const token = data?.data.template.jwt_token
+const bearerToken = token ?? 'tu_token'
+const authorizationHeader = {
+  Authorization: `Bearer ${bearerToken}`,
+}
 const request = data?.data.variables
 ---
 
 <ConfigLayout title="Documentación">
-  <div class="relative">
-    <div class="flex gap-x-3 pe-5 md:gap-x-10">
+  <div class="relative w-full max-w-full overflow-x-hidden">
+    <div class="flex w-full max-w-full min-w-0 items-stretch gap-x-2 pe-0 sm:gap-x-3 sm:pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">1</div>
+        <div class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-base font-bold text-white shadow-lg sm:h-12 sm:w-12 sm:text-xl">
+          1
+        </div>
         <div class="-my-2 h-full w-0.5 bg-custom-blue3/60"></div>
       </div>
 
-      <div class="w-full pt-2 pb-16">
-        <h3 class="mb-3 text-2xl font-bold text-slate-900">Endpoint (URL)</h3>
+      <div class="w-full max-w-full min-w-0 pt-2 pb-16">
+        <h3 class="mb-3 text-xl font-bold text-slate-900 sm:text-2xl">Endpoint (URL)</h3>
         <p class="mb-6 leading-relaxed text-slate-600">
           Todas las peticiones deben realizarse a través de HTTPS. Para crear un nuevo documento, utiliza el endpoint de documentos. Asegúrate de incluir tu API Key en los headers.
         </p>
 
-        <div class="overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
-          <div class="flex items-center justify-between border-b border-custom-blue3/60 bg-custom-blue3/40 px-4 py-3">
+        <div class="w-full max-w-full overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
+          <div class="flex w-full min-w-0 flex-col items-start justify-between gap-3 border-b border-custom-blue3/60 bg-custom-blue3/40 px-3 py-3 sm:flex-row sm:items-center sm:px-4">
             <div class="flex space-x-2">
               <div class="h-3 w-3 rounded-full bg-red-500"></div>
               <div class="h-3 w-3 rounded-full bg-yellow-500"></div>
               <div class="h-3 w-3 rounded-full bg-green-500"></div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex min-w-0 items-center gap-2">
               <span class="font-mono text-xs text-custom-blue3">POST Request</span>
               <button class="copy-btn p-1 text-custom-blue3 transition-colors hover:text-white" title="Copiar URL" data-content={base_url + url}>
                 <Icon name="Copy" stroke-width={1.5} class="size-4" />
               </button>
             </div>
           </div>
-          <div class="code-scroll overflow-x-auto p-6 font-mono text-sm">
-            <div class="flex items-center gap-3">
+          <div class="code-scroll w-full max-w-full overflow-hidden p-4 font-mono text-sm sm:p-6">
+            <div class="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center">
               <span class="bg-brand-500/20 text-brand-400 rounded px-2 py-1 text-xs font-bold tracking-wider uppercase">POST</span>
-              <span class="text-custom-blue3">{base_url}<span class="text-brand-400">{url}</span></span>
+              <span class="min-w-0 break-all text-custom-blue3">{base_url}<span class="text-brand-400">{url}</span></span>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="flex gap-x-3 pe-5 md:gap-x-10">
+    <div class="flex w-full max-w-full min-w-0 items-stretch gap-x-2 pe-0 sm:gap-x-3 sm:pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">2</div>
+        <div class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-base font-bold text-white shadow-lg sm:h-12 sm:w-12 sm:text-xl">
+          2
+        </div>
         <div class="-my-2 h-full w-0.5 bg-custom-blue3/60"></div>
       </div>
 
-      <div class="w-full pt-2 pb-16">
-        <h3 class="mb-3 text-2xl font-bold text-slate-900">Autenticación</h3>
+      <div class="w-full max-w-full min-w-0 pt-2 pb-16">
+        <h3 class="mb-3 text-xl font-bold text-slate-900 sm:text-2xl">Autenticación</h3>
         <p class="mb-6 leading-relaxed text-slate-600">
           Debes enviar tu token de acceso en los headers de la petición usando el esquema <code>Bearer</code> para autorizar la creación del documento.
         </p>
 
-        <div class="overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
-          <div class="flex items-center justify-between border-b border-custom-blue3/60 bg-custom-blue3/40 px-4 py-2">
+        <div class="w-full max-w-full overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
+          <div class="flex w-full min-w-0 items-center justify-between gap-3 border-b border-custom-blue3/60 bg-custom-blue3/40 px-3 py-2 sm:px-4">
             <span class="font-mono text-xs text-custom-blue3">headers</span>
             <button class="copy-btn p-1 text-custom-blue3 transition-colors hover:text-white" title="Copiar token" data-copy-type="token" data-content={bearerToken}>
               <Icon name="Copy" stroke-width={1.5} class="size-4" />
             </button>
           </div>
-          <div class="code-scroll code-container overflow-x-auto p-4">
+          <div class="code-scroll code-container w-full max-w-full overflow-hidden p-3 sm:p-4">
             <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(authorizationHeader, null, 2)} />
           </div>
         </div>
       </div>
     </div>
 
-    <div class="flex gap-x-3 pe-5 md:gap-x-10">
+    <div class="flex w-full max-w-full min-w-0 items-stretch gap-x-2 pe-0 sm:gap-x-3 sm:pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">3</div>
+        <div class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-base font-bold text-white shadow-lg sm:h-12 sm:w-12 sm:text-xl">
+          3
+        </div>
         <div class="-my-2 h-full w-0.5 bg-custom-blue3/60"></div>
       </div>
 
-      <div class="w-full pt-2 pb-16">
-        <h3 class="mb-3 text-2xl font-bold text-slate-900">Petición</h3>
+      <div class="w-full max-w-full min-w-0 pt-2 pb-16">
+        <h3 class="mb-3 text-xl font-bold text-slate-900 sm:text-2xl">Petición</h3>
         <p class="mb-4 leading-relaxed text-slate-600">Envía un objeto JSON en el cuerpo de la petición. todos los campos son obligatorios para iniciar el proceso.</p>
         <ul class="mb-6 space-y-2">
           <li class="flex items-center gap-2 text-sm text-slate-600">
@@ -123,33 +129,35 @@ const request = data?.data.variables
           </li>
         </ul>
 
-        <div class="overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
-          <div class="flex items-center justify-between border-b border-custom-blue3/60 bg-custom-blue3/40 px-4 py-2">
+        <div class="w-full max-w-full overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
+          <div class="flex w-full min-w-0 items-center justify-between gap-3 border-b border-custom-blue3/60 bg-custom-blue3/40 px-3 py-2 sm:px-4">
             <span class="font-mono text-xs text-custom-blue3">body.json</span>
             <button class="copy-btn p-1 text-custom-blue3 transition-colors hover:text-white" title="Copiar código" data-copy-type="body" data-content={JSON.stringify(request, null, 2)}>
               <Icon name="Copy" stroke-width={1.5} class="size-4" />
             </button>
           </div>
-          <div class="code-scroll code-container overflow-x-auto p-4">
+          <div class="code-scroll code-container w-full max-w-full overflow-hidden p-3 sm:p-4">
             <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(request, null, 2)} />
           </div>
         </div>
       </div>
     </div>
 
-    <div class="flex gap-x-3 pe-5 md:gap-x-10">
+    <div class="flex w-full max-w-full min-w-0 items-start gap-x-2 pe-0 sm:gap-x-3 sm:pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-xl font-bold text-white shadow-lg">4</div>
+        <div class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white bg-custom-blue3 text-base font-bold text-white shadow-lg sm:h-12 sm:w-12 sm:text-xl">
+          4
+        </div>
       </div>
 
-      <div class="w-full pt-2 pb-16">
-        <h3 class="mb-3 text-2xl font-bold text-slate-900">Respuesta</h3>
+      <div class="w-full max-w-full min-w-0 pt-2 pb-16">
+        <h3 class="mb-3 text-xl font-bold text-slate-900 sm:text-2xl">Respuesta</h3>
         <p class="mb-6 leading-relaxed text-slate-600">
           Si todo es correcto, recibirás un código <code>200 OK</code>. La respuesta incluirá un <code>uuid</code> único de documento que deberás y la url para ver el documento.
         </p>
 
-        <div class="overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
-          <div class="flex items-center justify-between border-b border-custom-blue3/60 bg-custom-blue3/40 px-4 py-2">
+        <div class="w-full max-w-full overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
+          <div class="flex w-full min-w-0 items-center justify-between gap-3 border-b border-custom-blue3/60 bg-custom-blue3/40 px-3 py-2 sm:px-4">
             <div class="flex items-center gap-2">
               <span class="flex h-2 w-2 rounded-full bg-custom-blue3"></span>
               <span class="font-mono text-xs font-bold text-custom-blue3">200 OK</span>
@@ -158,24 +166,24 @@ const request = data?.data.variables
               <Icon name="Copy" stroke-width={1.5} class="size-4" />
             </button>
           </div>
-          <div class="code-scroll code-container overflow-x-auto p-4">
+          <div class="code-scroll code-container w-full max-w-full overflow-hidden p-3 sm:p-4">
             <Code theme="catppuccin-latte" lang="json" code={JSON.stringify(responseExample, null, 2)} />
           </div>
         </div>
       </div>
     </div>
 
-    <div class="flex gap-x-3 md:gap-x-10">
+    <div class="flex w-full max-w-full min-w-0 items-start gap-x-2 pe-0 sm:gap-x-3 sm:pe-5 md:gap-x-10">
       <div class="flex flex-col items-center">
         <div class="z-10 flex h-12 w-12 shrink-0"></div>
       </div>
 
-      <div class="w-full pt-2 pb-16">
-        <h3 class="mb-3 text-2xl font-bold text-slate-900">Cómo importar en Postman:</h3>
+      <div class="w-full max-w-full min-w-0 pt-2 pb-16">
+        <h3 class="mb-3 text-xl font-bold text-slate-900 sm:text-2xl">Cómo importar en Postman:</h3>
         <p class="mb-6 leading-relaxed text-slate-600">Para importar la colección en Postman, haz clic en el botón de descarga y sigue las instrucciones.</p>
 
-        <div class="overflow-hidden rounded-xl bg-orange-50 shadow-lg ring-1 ring-orange-800/60">
-          <div class="code-scroll code-container items-start justify-between overflow-x-auto p-4 md:flex">
+        <div class="w-full max-w-full overflow-hidden rounded-xl bg-orange-50 shadow-lg ring-1 ring-orange-800/60">
+          <div class="code-scroll code-container flex w-full max-w-full flex-col items-start justify-between gap-4 overflow-hidden p-4 md:flex-row md:gap-6">
             <ol class="space-y-1 text-left text-sm text-orange-800">
               <li class="flex items-start gap-2">
                 <span class="font-bold">1.</span>
@@ -344,5 +352,12 @@ const request = data?.data.variables
   .code-container,
   pre {
     background-color: transparent !important;
+  }
+
+  .code-container pre,
+  .code-container code {
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 </style>
