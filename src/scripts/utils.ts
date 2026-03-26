@@ -32,7 +32,11 @@ export function deleteCookie(name: string) {
  * @returns La fecha formateada (ej: "Mar, 4 noviembre 2025")
  */
 export function formatISODateWithIntl(isoString: string): string {
+  if (!isoString) return ''
   const date = new Date(isoString)
+
+  if (Number.isNaN(date.getTime())) return ''
+
   const options: Intl.DateTimeFormatOptions = {
     weekday: 'short', // "lun", "mar", "mié"
     day: 'numeric', // "4", "20"
