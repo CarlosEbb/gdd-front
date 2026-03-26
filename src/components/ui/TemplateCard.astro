@@ -1,14 +1,14 @@
 ---
 import { Image } from 'astro:assets'
 import type { Category } from '@/types/templates'
-const { PROJECT_URL } = import.meta.env
+const { PUBLIC_PROJECT_URL } = import.meta.env
 
 interface Props {
   template: Category
 }
 
 const { template } = Astro.props
-const thumbnails = `${PROJECT_URL}${template.path_thumbnails}`
+const thumbnails = `${PUBLIC_PROJECT_URL}${template.path_thumbnails}`
 ---
 
 <div class="group hover:border-primary cursor-pointer overflow-hidden rounded-lg bg-white shadow-sm shadow-custom-blue3/10 transition-all hover:shadow-lg" id={template.uuid}>

@@ -11,7 +11,7 @@ import { Image } from 'astro:assets'
 import Icon from '@/components/ui/Icon.astro'
 
 const getUser = (await Astro.session?.get('user')) as InfoUser
-const { PROJECT_URL } = import.meta.env
+const { PUBLIC_PROJECT_URL } = import.meta.env
 
 const name = getUser?.name
 const lastName = getUser?.last_name
@@ -23,7 +23,7 @@ const getInitialsNameAndLastName = (name: string, lastName: string) => name.char
 
 const initials = getInitialsNameAndLastName(name, lastName).toUpperCase()
 const hasPhoto = getUser?.photo === null || getUser?.photo === '{}'
-const photo = hasPhoto ? '' : `${PROJECT_URL}${getUser.photo}`
+const photo = hasPhoto ? '' : `${PUBLIC_PROJECT_URL}${getUser.photo}`
 const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
 ---
 
