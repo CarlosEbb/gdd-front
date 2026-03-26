@@ -17,23 +17,23 @@ type Props = {
 }
 
 const GRADIENTS: Record<number, any> = {
-  0: { gradientBg: 'to-purple-50', bgIcon: 'bg-purple-100', colorIcon: 'text-purple-600' },
-  1: { gradientBg: 'to-blue-50', bgIcon: 'bg-blue-100', colorIcon: 'text-blue-600' },
-  2: { gradientBg: 'to-red-50', bgIcon: 'bg-red-100', colorIcon: 'text-red-600' },
+  0: { gradientBg: 'to-purple-50 via-white from-transparent', bgIcon: 'bg-purple-100', colorIcon: 'text-purple-600' },
+  1: { gradientBg: 'to-blue-50 via-white from-transparent', bgIcon: 'bg-blue-100', colorIcon: 'text-blue-600' },
+  2: { gradientBg: 'to-red-50 via-white from-transparent', bgIcon: 'bg-red-100', colorIcon: 'text-red-600' },
 }
 
 const { workspace, index } = Astro.props
 ---
 
 <a
-  class={`flex h-20 md:h-24 cursor-pointer items-center gap-3 rounded-main border border-gray-200 bg-linear-to-br from-white ${GRADIENTS[index].gradientBg} p-3 md:p-4 text-center shadow-sm transition-all hover:border-purple-300 hover:shadow-md`}
+  class={`flex cursor-pointer items-center gap-2 rounded-lg border border-border p-4 md:p-3 text-center hover:shadow-base transition-all duration-300 bg-background bg-linear-to-tr ${GRADIENTS[index].gradientBg}`}
   href={`/workspaces/${workspace.uuid}`}
 >
-  <div class={`rounded-main ${GRADIENTS[index].bgIcon} p-2 md:p-3`}>
-    <Icon name={workspace.icon} class={`size-6 md:size-8 ${GRADIENTS[index].colorIcon}`} stroke-width={1.5} />
+  <div class={`rounded-xl ${GRADIENTS[index].bgIcon} p-2`}>
+    <Icon name={workspace.icon} class={`size-5 ${GRADIENTS[index].colorIcon}`} stroke-width={1.5} />
   </div>
   <div class="flex flex-col items-start justify-start">
-    <span class="font-semibold text-gray-800">{workspace.name}</span>
-    <span class="text-sm text-gray-400">{formatISODateWithIntl(workspace.updated_at)}</span>
+    <span class="text-sm font-medium text-heading">{workspace.name}</span>
+    <span class="text-xs text-subheading">{formatISODateWithIntl('2025-10-15T10:30:00Z')}</span>
   </div>
 </a>
