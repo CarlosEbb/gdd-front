@@ -11,7 +11,7 @@ const name = user.name
 
 <MainLayout title="Inicio">
   <Container>
-    <TitleForPage class="mb-6" showBackButton={false} title={`¡Bienvenido, ${name}!`} />
+    <TitleForPage titleStyle="md:text-3xl" class="mb-10" subtitle="Gestiona tus espacios de trabajo y documentos" showBackButton={false} title={`¡Bienvenido, ${name}!`} />
 
     <ListLatestOpenid />
     <ListDocuments title="Últimos documentos" limit={7} />
