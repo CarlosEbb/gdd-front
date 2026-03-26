@@ -31,7 +31,7 @@ const ACTIONS = [
 
 const { document } = Astro.props
 
-const { uuid, last_version, id_workspace, title, created_at, jwt_token } = document
+const { uuid, last_version, id_workspace, title, created_at } = document
 const { path_thumbnails, build_number, name_version, uuid: uuid_version } = last_version
 
 const thumbnails = `${PUBLIC_PROJECT_URL}${path_thumbnails}` || template.src
@@ -49,7 +49,6 @@ const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_work
   data-name-version={name_version}
   data-build-number={build_number}
   data-uuid-version={uuid_version}
-  data-jwt-token={jwt_token}
 >
   <div class="mb-3 flex items-center justify-between space-x-2">
     <div class="flex items-center gap-x-2">
@@ -151,7 +150,6 @@ const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_work
         nameVersion: card.dataset.nameVersion,
         buildNumber: card.dataset.buildNumber,
         uuidVersion: card.dataset.uuidVersion,
-        jwtToken: card.dataset.jwtToken || '',
       }
 
       // Cerrar el dropdown
