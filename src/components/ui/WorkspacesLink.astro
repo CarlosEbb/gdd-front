@@ -34,6 +34,6 @@ const { workspace, index } = Astro.props
   </div>
   <div class="flex flex-col items-start justify-start">
     <span class="text-sm font-medium text-heading">{workspace.name}</span>
-    <span class="text-xs text-subheading">{formatISODateWithIntl('2025-10-15T10:30:00Z')}</span>
+    <span class="text-xs text-subheading">{formatISODateWithIntl(workspace.updated_at)}</span>
   </div>
 </a>
