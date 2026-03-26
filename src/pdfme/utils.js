@@ -203,12 +203,12 @@ export async function handleGeneratePdf(designer, jsonContent, plugins, fonts) {
     // Modificar los metadatos del PDF
     const pdfDoc = await PDFDocument.load(pdf.buffer)
 
-    pdfDoc.setTitle('Documento')
-    pdfDoc.setAuthor('Wakal 4.0')
-    pdfDoc.setSubject('Facturación digital')
-    pdfDoc.setProducer('Mi Compañía')
-    pdfDoc.setCreator('Wakal 4.0')
-    pdfDoc.setKeywords(['PDF', 'Generación', 'Metadatos', 'Facturación', 'digital', 'wakal'])
+    // pdfDoc.setTitle('Documento')
+    pdfDoc.setAuthor('-')
+    // pdfDoc.setSubject('Facturación digital')
+    // pdfDoc.setProducer('Mi Compañía')
+    pdfDoc.setCreator('-')
+    //pdfDoc.setKeywords(['PDF', 'Generación', 'Metadatos', 'Facturación', 'digital', 'wakal'])
 
     const pdfBytes = await pdfDoc.save()
 
