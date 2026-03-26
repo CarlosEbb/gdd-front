@@ -9,6 +9,7 @@ export interface Document {
   created_at: string
   updated_at: string
   status: string
+  jwt_token: string
   last_version: LastVersion
 }
 

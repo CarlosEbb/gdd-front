@@ -62,8 +62,9 @@ export function initDocumentModals() {
 
   document.addEventListener('document:view-documentation', async (event: Event) => {
     const cardData = (event as CustomEvent).detail
-    const { uuid, buildNumber, uuidVersion } = cardData
-    navigate(`/config/documentation/${uuid}?build_number=${buildNumber}`)
+    const { uuid, buildNumber, jwtToken = null } = cardData
+    const tokenParam = jwtToken ? `&token=${jwtToken}` : ''
+    navigate(`/config/documentation/${uuid}?build_number=${buildNumber}${tokenParam}`)
   })
 
   document.addEventListener('submit', async (event: Event) => {
