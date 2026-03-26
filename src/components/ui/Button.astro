@@ -12,13 +12,13 @@ export interface Props extends HTMLAttributes<'button'> {
 const { variant = 'default', size = 'default', class: className, rounded = 'default', loadingText, showTextOnLoading = true, ...props } = Astro.props
 
 const baseClasses =
-  'inline-flex items-center cursor-pointer justify-center whitespace-nowrap rounded-main font-semibold ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none disabled:bg-primary/30'
+  'inline-flex items-center font-medium cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none disabled:bg-primary/30'
 
 const variantClasses = {
-  default: 'bg-primary text-white hover:bg-primary/80',
-  destructive: 'bg-destructive/30 text-destructive hover:bg-destructive/20',
+  default: 'border border-primary bg-primary text-white hover:bg-primary/80',
+  destructive: 'border border-destructive/30 text-destructive hover:bg-destructive/20',
   outline: 'border border-border bg-foreground hover:bg-background text-heading',
-  secondary: 'bg-primary-foreground text-primary hover:bg-primary-foreground/60',
+  secondary: 'border border-border bg-background text-heading hover:bg-foreground/60',
   ghost: 'hover:bg-background bg-foreground text-heading',
   gradient: 'bg-gradient-to-r from-primary via-primary/80 to-primary/60 hover:bg-gradient-to-r hover:from-primary/90 hover:via-primary/70 hover:to-primary/50 text-white transition-color',
   transparent: 'bg-transparent text-heading hover:bg-foreground',
@@ -26,8 +26,8 @@ const variantClasses = {
 
 const sizeClasses = {
   default: 'h-12 px-4 py-2.5 ',
-  sm: 'h-9 px-3',
-  lg: 'h-11 px-8',
+  sm: 'h-8 px-1.5',
+  lg: 'h-10 px-8',
   icon: 'h-9 w-9',
 }
 
@@ -49,7 +49,7 @@ const roundedClasses = {
       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
     </svg>
   </span>
-  <span data-button-content>
+  <span data-button-content class="px-1.5">
     <slot />
   </span>
 </button>

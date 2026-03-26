@@ -12,13 +12,13 @@ export interface Props extends HTMLAttributes<'a'> {
 const { variant = 'default', size = 'default', class: className, href, rounded = 'default', target = '_self', ...props } = Astro.props
 
 const baseClasses =
-  'inline-flex items-center cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+  'inline-flex items-center font-medium cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
 
 const variantClasses = {
-  default: 'bg-primary text-white hover:bg-primary/80',
-  destructive: 'bg-destructive/30 text-destructive hover:bg-destructive/20',
+  default: 'border border-primary bg-primary text-white hover:bg-primary/80',
+  destructive: 'border border-destructive/30 text-destructive hover:bg-destructive/20',
   outline: 'border border-border bg-foreground hover:bg-background text-heading',
-  secondary: 'bg-primary-foreground text-primary hover:bg-primary-foreground/60',
+  secondary: 'border border-border bg-background text-heading hover:bg-foreground/60',
   ghost: 'hover:bg-background bg-foreground text-heading',
   gradient: 'bg-gradient-to-r from-primary via-primary/80 to-primary/60 hover:bg-gradient-to-r hover:from-primary/90 hover:via-primary/70 hover:to-primary/50 text-white transition-color',
   transparent: 'bg-transparent text-heading hover:bg-foreground',
@@ -26,12 +26,14 @@ const variantClasses = {
 
 const sizeClasses = {
   default: 'h-12 px-4 py-2.5 ',
-  sm: 'h-9 px-3',
-  lg: 'h-11 px-8',
+  sm: 'h-8 px-1.5',
+  lg: 'h-10 px-8',
   icon: 'h-9 w-9',
 }
 ---
 
 <a class:list={[baseClasses, variantClasses[variant], sizeClasses[size], className]} href={href} target={target} {...props}>
-  <slot />
+  <span class="flex items-center gap-3 px-1.5">
+    <slot />
+  </span>
 </a>
