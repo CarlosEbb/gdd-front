@@ -1,3 +1,5 @@
+type Status = 'active' | 'deleted'
+
 export interface Document {
   id: number
   uuid: string
@@ -9,7 +11,6 @@ export interface Document {
   created_at: string
   updated_at: string
   status: string
-  jwt_token: string
   last_version: LastVersion
 }
 
@@ -95,9 +96,22 @@ export interface GeneratedDocument {
   encrypt: string
 }
 
+export interface Template {
+  id: number
+  title: string
+  name: string
+  description: string
+  open_date: string
+  id_workspace: number
+  created_at: string
+  updated_at: string
+  status: Status
+  uuid: string
+  jwt_token: string
+}
+
 export interface RequestForDocument {
   variables: Record<string, any>
   elementos: string[]
+  template: Template
 }
-
-type Status = 'active' | 'deleted'
