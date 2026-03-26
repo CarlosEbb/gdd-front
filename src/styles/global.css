@@ -22,6 +22,7 @@
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
     --ring: oklch(0.708 0 0);
+    --elevation-base: 0 2px 8px rgba(0, 0, 0, 0.04);
     --radius: 6px;
 }
 
@@ -44,6 +45,7 @@
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
     --ring: oklch(0.556 0 0);
+    --elevation-base: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 @theme inline {
@@ -68,6 +70,7 @@
   --color-background: var(--background);
   --color-heading: var(--heading);
   --color-subheading: var(--subheading);
+  --shadow-base: var(--elevation-base);
   --radius-main: calc(var(--radius));
 }
 
