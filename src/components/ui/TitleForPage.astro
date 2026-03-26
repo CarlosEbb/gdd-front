@@ -6,11 +6,12 @@ interface Props {
   title: string
   backHref?: string
   class?: string
+  titleStyle?: string
   showBackButton?: boolean
   subtitle?: string | null
 }
 
-const { title, class: className, backHref = undefined, showBackButton = true, subtitle = null } = Astro.props
+const { title, class: className, backHref = undefined, showBackButton = true, subtitle = null, titleStyle = '' } = Astro.props
 ---
 
 <div class="flex items-start gap-4">
@@ -22,8 +23,8 @@ const { title, class: className, backHref = undefined, showBackButton = true, su
     )
   }
 
-  <div>
-    <h1 class="text-xl font-semibold text-heading md:text-2xl" class:list={[className]} transition:animate="fade" transition:name="title">
+  <div class:list={[className]}>
+    <h1 class="text-xl font-semibold text-heading md:text-2xl" class:list={[titleStyle]} transition:animate="fade" transition:name="title">
       {title}
     </h1>
     {subtitle && <p class="text-sm text-subheading">{subtitle}</p>}
