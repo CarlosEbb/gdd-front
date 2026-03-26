@@ -17,28 +17,28 @@ const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id,
   <Container>
     <TitleForPage title="Mis documentos" class="mb-6" />
 
-    <section class="">
+    <section>
       <div class="flex flex-col flex-wrap items-center gap-x-3 gap-y-2 md:gap-y-0 lg:flex-row">
         <div class="flex-1">
-          <Input name="filter-title" type="search" placeholder="buscar por título" />
+          <Input name="filter-title" type="search" placeholder="Buscar por título" />
         </div>
-        <div class="">
-          <Input name="filter-date" type="date" placeholder="buscar por fecha de creación" />
+        <div>
+          <Input name="filter-date" type="date" placeholder="Buscar por fecha de creación" />
         </div>
-        <div class="">
-          <Select name="workspace" options={workspacesOptions} placeholder="filtrar por espacio de trabajo" />
+        <div>
+          <Select name="workspace" options={workspacesOptions} placeholder="Filtrar por espacio de trabajo" />
         </div>
 
         <div class="flex items-end gap-2">
           <span id="reset-filters" class="hidden">
-            <Button variant="secondary" size="sm" aria-label="Restablecer filtros">
+            <Button variant="secondary" size="lg" aria-label="Restablecer filtros">
               <span class="flex items-center gap-2">
                 <Icon name="X" stroke-width={1.5} size={18} />
                 Restablecer
               </span>
             </Button>
           </span>
-          <Button id="sort-button" variant="secondary" size="sm" aria-label="Ordenar" data-order="desc">
+          <Button id="sort-button" variant="secondary" size="lg" aria-label="Ordenar" data-order="desc">
             <span class="flex items-center gap-2">
               <Icon name="ArrowUpDown" stroke-width={1.5} size={18} />
               Ordenar
