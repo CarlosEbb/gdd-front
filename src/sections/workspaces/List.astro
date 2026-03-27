@@ -8,7 +8,36 @@ import Link from '@/components/ui/Link.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import WorkspacesLink from '@/components/ui/WorkspacesLink.astro'
 
-const workspaces = (await Astro.session?.get('workspaces')) || []
+// const workspaces = (await Astro.session?.get('workspaces')) || []
+const workspaces = [
+  {
+    id: 1,
+    uuid: 'workspace-1',
+    name: 'Workspace 1',
+    email: 'workspace1@example.com',
+    is_owner: true,
+    updated_at: '2025-11-04T15:45:54.868Z',
+    icon: 'Home',
+  },
+  {
+    id: 2,
+    uuid: 'workspace-2',
+    name: 'Workspace 2',
+    email: 'workspace1@example.com',
+    is_owner: true,
+    updated_at: '2025-11-04T15:45:54.868Z',
+    icon: 'Home',
+  },
+  {
+    id: 3,
+    uuid: 'workspace-2',
+    name: 'Workspace 3',
+    email: 'workspace1@example.com',
+    is_owner: true,
+    updated_at: '2025-11-04T15:45:54.868Z',
+    icon: 'Home',
+  },
+]
 const latestWorkspaces = workspaces.toReversed().slice(0, 3)
 const hasWorkSpaces = workspaces.length > 0
 ---
@@ -45,7 +74,7 @@ const hasWorkSpaces = workspaces.length > 0
 
     <IconPicker />
 
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+    <div class="flex justify-end space-x-4 border-t border-border pt-4">
       <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
       <Button type="submit" size="sm" id="btn-create-workspace" loadingText="Creando espacio...">Crear espacio</Button>
     </div>
