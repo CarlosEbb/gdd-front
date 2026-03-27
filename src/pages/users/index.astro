@@ -2,10 +2,53 @@
 import MainLayout from '@/layouts/MainLayout.astro'
 import Container from '@/components/ui/Container.astro'
 import TitleForPage from '@/components/ui/TitleForPage.astro'
+import CardList from '@/components/ui/CardList.astro'
 ---
 
 <MainLayout>
   <Container>
     <TitleForPage title="Usuarios" class="mb-6" backHref="/home" />
+
+    <div class="overflow-hidden rounded-main border border-border bg-background">
+      <CardList icon="User" title="Carlos Martínez" description="Desarrollador Full Stack especializado en aplicaciones web modernas y arquitectura de microservicios." secondaryText="Activo hace 2h">
+        <div slot="actions" class="flex gap-1">
+          <a href="/users/1" class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"> Ver perfil </a>
+          <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-subheading transition-colors hover:bg-muted"> Mensaje </button>
+        </div>
+      </CardList>
+
+      <CardList icon="CircleUser" title="Ana García" description="Diseñadora UX/UI con 5 años de experiencia creando interfaces intuitivas y centradas en el usuario." secondaryText="En línea">
+        <div slot="actions" class="flex gap-1">
+          <a href="/users/2" class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"> Ver perfil </a>
+          <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-subheading transition-colors hover:bg-muted"> Mensaje </button>
+        </div>
+      </CardList>
+
+      <CardList
+        img="/images/avatar-1.jpg"
+        icon="User"
+        title="Miguel Rodríguez"
+        description="Product Manager enfocado en estrategia de producto y análisis de métricas para optimizar la experiencia del usuario."
+        secondaryText="Hace 1 día"
+      >
+        <div slot="actions" class="flex gap-1">
+          <a href="/users/3" class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"> Ver perfil </a>
+          <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-subheading transition-colors hover:bg-muted"> Mensaje </button>
+        </div>
+      </CardList>
+
+      <CardList icon="Briefcase" title="Laura Fernández" description="Ingeniera de DevOps especializada en automatización, CI/CD y gestión de infraestructura en la nube." secondaryText="Hace 3h">
+        <div slot="actions" class="flex gap-1">
+          <a href="/users/4" class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"> Ver perfil </a>
+          <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-subheading transition-colors hover:bg-muted"> Mensaje </button>
+        </div>
+      </CardList>
+
+      <CardList icon="Code" title="Javier López" description="Backend Developer con expertise en Node.js, Python y bases de datos relacionales y NoSQL.">
+        <div slot="actions" class="flex gap-1">
+          <a href="/users/5" class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"> Ver perfil </a>
+        </div>
+      </CardList>
+    </div>
   </Container>
 </MainLayout>
