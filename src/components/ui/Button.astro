@@ -1,5 +1,7 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
+import Icon from './Icon.astro'
+import { icons } from '@lucide/astro'
 
 export interface Props extends HTMLAttributes<'button'> {
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient' | 'transparent'
@@ -7,12 +9,13 @@ export interface Props extends HTMLAttributes<'button'> {
   rounded?: 'default' | 'full'
   loadingText?: string
   showTextOnLoading?: boolean
+  icon?: keyof typeof icons
 }
 
-const { variant = 'default', size = 'default', class: className, rounded = 'default', loadingText, showTextOnLoading = true, ...props } = Astro.props
+const { variant = 'default', size = 'default', class: className, rounded = 'default', loadingText, showTextOnLoading = true, icon, ...props } = Astro.props
 
 const baseClasses =
-  'inline-flex items-center font-medium cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none disabled:bg-neutral-200 disabled:border-border disabled:text-neutral-600'
+  'inline-flex items-center font-normal cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none disabled:bg-neutral-200 disabled:border-border disabled:text-neutral-600'
 
 const variantClasses = {
   default: 'border border-primary bg-primary text-white hover:bg-primary/80',
@@ -29,6 +32,13 @@ const sizeClasses = {
   sm: 'h-8 px-1.5',
   lg: 'h-10 px-8',
   icon: 'h-9 w-9',
+}
+
+const iconSizes = {
+  default: 16,
+  sm: 17,
+  lg: 18,
+  icon: 16,
 }
 
 const roundedClasses = {
@@ -49,8 +59,15 @@ const roundedClasses = {
       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
     </svg>
   </span>
-  <span data-button-content class="px-1.5">
+  <span data-button-content class="flex items-center gap-2 px-1.5">
     <slot />
+    {
+      icon && (
+        <span data-button-icon>
+          <Icon name={icon} size={iconSizes[size]} />
+        </span>
+      )
+    }
   </span>
 </button>
 
@@ -74,11 +91,16 @@ const roundedClasses = {
       button.addEventListener('button:start-loading', () => {
         const loadingText = button.dataset.loadingText
         const showTextOnLoading = button.dataset.showTextOnLoading !== 'false'
+        const iconElement = button.querySelector('[data-button-icon]') as HTMLElement
 
         button.setAttribute('data-loading', 'true')
         button.disabled = true
 
         spinner.classList.remove('hidden')
+
+        if (iconElement) {
+          iconElement.classList.add('hidden')
+        }
 
         if (loadingText) {
           content.textContent = loadingText
@@ -90,11 +112,16 @@ const roundedClasses = {
       button.addEventListener('button:stop-loading', () => {
         const loadingText = button.dataset.loadingText
         const showTextOnLoading = button.dataset.showTextOnLoading !== 'false'
+        const iconElement = button.querySelector('[data-button-icon]') as HTMLElement
 
         button.removeAttribute('data-loading')
         button.disabled = false
 
         spinner.classList.add('hidden')
+
+        if (iconElement) {
+          iconElement.classList.remove('hidden')
+        }
 
         if (loadingText || !showTextOnLoading) {
           content.innerHTML = originalContent
