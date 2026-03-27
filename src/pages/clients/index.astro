@@ -11,6 +11,7 @@ import List from '@/components/ui/List.astro'
 import type { DetailsClient } from '@/types/clients'
 import Input from '@/components/form/Input.astro'
 import { formatDate } from '@/scripts/utils'
+import Header from '@/components/ui/Header.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.clients.list, {})
@@ -22,16 +23,11 @@ const totalClients = clients.length
 
 <MainLayout title="Clientes">
   <Container>
-    <div class="mb-6 flex items-center justify-between">
-      <TitleForPage title="Gestión de clientes" subtitle={`Total: ${totalClients} clientes`} />
-
-      <Link href="/clients/form-client" size="sm">
-        <span class="flex items-center justify-center gap-2">
-          <span class="hidden md:block">Crear Cliente</span>
-          <Icon name="Plus" size={14} />
-        </span>
-      </Link>
-    </div>
+    <Header title="Gestión de clientes" subtitle={`Total: ${totalClients} clientes`}>
+      <div slot="actions">
+        <Link size="sm" icon="Plus">Crear Cliente</Link>
+      </div>
+    </Header>
 
     <DataGrid hasData={hasClients} isError={error} grid="x1">
       <EmptyState slot="error-state" title="Error al cargar los clientes" description="Intenta nuevamente." href={currentPath} state="error" />

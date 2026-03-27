@@ -5,11 +5,11 @@ import EmptyState from '@/components/ui/EmptyState.astro'
 import List from '@/components/ui/List.astro'
 import type { DetailsServer } from '@/types/servers'
 import Container from '@/components/ui/Container.astro'
-import TitleForPage from '@/components/ui/TitleForPage.astro'
 import Icon from '@/components/ui/Icon.astro'
 import Link from '@/components/ui/Link.astro'
 import DataGrid from '@/components/ui/DataGrid.astro'
 import Input from '@/components/form/Input.astro'
+import Header from '@/components/ui/Header.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.servers.list, {})
@@ -20,15 +20,11 @@ const hasServers = servers.length > 0
 
 <MainLayout title="Servidores">
   <Container>
-    <div class="mb-10 flex items-center justify-between">
-      <TitleForPage class="mb-0" title="Gestión de servidores" />
-      <Link href="/servers/form-server" size="sm">
-        <span class="flex items-center justify-center gap-2">
-          <span class="hidden md:block">Crear servidor</span>
-          <Icon name="Plus" size={14} />
-        </span>
-      </Link>
-    </div>
+    <Header title="Gestión de servidores" subtitle={`Total: ${servers.length} servidores`}>
+      <div slot="actions">
+        <Link size="sm" href="/servers/form-server" icon="Plus">Crear Servidor</Link>
+      </div>
+    </Header>
 
     <DataGrid hasData={hasServers} isError={error}>
       <EmptyState slot="error-state" title="Error al cargar los servidores" description="Intenta nuevamente." href={currentPath} state="error" />

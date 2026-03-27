@@ -1,54 +1,74 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro'
 import Container from '@/components/ui/Container.astro'
-import TitleForPage from '@/components/ui/TitleForPage.astro'
 import CardList from '@/components/ui/CardList.astro'
+import Link from '@/components/ui/Link.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Input from '@/components/form/Input.astro'
+import Header from '@/components/ui/Header.astro'
+
+const LIST_USERS = [
+  {
+    id: 1,
+    name: 'Carlos Martínez',
+    description: 'Cliente: Mi Empresa SL',
+    secondaryText: 'Activo hace 2h',
+  },
+  {
+    id: 2,
+    name: 'Ana García',
+    description: 'Cliente: Ferretería Sb',
+    secondaryText: 'En línea',
+  },
+  {
+    id: 3,
+    name: 'Miguel Rodríguez',
+    description: 'Cliente: Soluciones SRL',
+    secondaryText: 'Hace 1 día',
+  },
+  {
+    id: 4,
+    name: 'Laura Fernández',
+    description: 'Cliente: Daka SL',
+    secondaryText: 'Hace 3h',
+  },
+  {
+    id: 5,
+    name: 'Javier López',
+    description: 'Cliente: Tech Solutions SL',
+    secondaryText: 'Hace 5h',
+  },
+]
+const totalUsers = LIST_USERS.length
 ---
 
-<MainLayout>
+<MainLayout title="Usuarios">
   <Container>
-    <TitleForPage title="Usuarios" class="mb-6" backHref="/home" />
+    <Header title="Gestión de usuarios" subtitle={`Total: ${totalUsers} usuarios`}>
+      <div slot="actions">
+        <Link href="/users/form-user" size="sm" icon="Plus"> Crear usuarios </Link>
+      </div>
+    </Header>
+
+    <div class="mb-4">
+      <Input name="search" type="search" placeholder="Buscar usuario..." />
+    </div>
 
     <div class="overflow-hidden rounded-main border border-border bg-background">
-      <CardList icon="User" title="Carlos Martínez" description="Desarrollador Full Stack especializado en aplicaciones web modernas y arquitectura de microservicios." secondaryText="Activo hace 2h">
-        <div slot="actions" class="flex gap-1">
-          <a href="/users/1" class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"> Ver perfil </a>
-          <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-subheading transition-colors hover:bg-muted"> Mensaje </button>
-        </div>
-      </CardList>
-
-      <CardList icon="CircleUser" title="Ana García" description="Diseñadora UX/UI con 5 años de experiencia creando interfaces intuitivas y centradas en el usuario." secondaryText="En línea">
-        <div slot="actions" class="flex gap-1">
-          <a href="/users/2" class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"> Ver perfil </a>
-          <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-subheading transition-colors hover:bg-muted"> Mensaje </button>
-        </div>
-      </CardList>
-
-      <CardList
-        img="/images/avatar-1.jpg"
-        icon="User"
-        title="Miguel Rodríguez"
-        description="Product Manager enfocado en estrategia de producto y análisis de métricas para optimizar la experiencia del usuario."
-        secondaryText="Hace 1 día"
-      >
-        <div slot="actions" class="flex gap-1">
-          <a href="/users/3" class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"> Ver perfil </a>
-          <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-subheading transition-colors hover:bg-muted"> Mensaje </button>
-        </div>
-      </CardList>
-
-      <CardList icon="Briefcase" title="Laura Fernández" description="Ingeniera de DevOps especializada en automatización, CI/CD y gestión de infraestructura en la nube." secondaryText="Hace 3h">
-        <div slot="actions" class="flex gap-1">
-          <a href="/users/4" class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"> Ver perfil </a>
-          <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-subheading transition-colors hover:bg-muted"> Mensaje </button>
-        </div>
-      </CardList>
-
-      <CardList icon="Code" title="Javier López" description="Backend Developer con expertise en Node.js, Python y bases de datos relacionales y NoSQL.">
-        <div slot="actions" class="flex gap-1">
-          <a href="/users/5" class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"> Ver perfil </a>
-        </div>
-      </CardList>
+      {
+        LIST_USERS.map((user) => (
+          <CardList icon="User" title={user.name} description={user.description} secondaryText={user.secondaryText}>
+            <div slot="actions" class="flex gap-1">
+              <Link href={`/users/${user.id}/edit`} variant="outline" size="icon">
+                <Icon stroke-width={1.5} name="Pencil" size={16} />
+              </Link>
+              <Link href={`/users/${user.id}`} variant="outline" size="icon">
+                <Icon stroke-width={1.5} name="ChevronRight" size={16} />
+              </Link>
+            </div>
+          </CardList>
+        ))
+      }
     </div>
   </Container>
 </MainLayout>
