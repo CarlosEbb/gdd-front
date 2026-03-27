@@ -31,16 +31,16 @@ const ACTIONS = [
 
 const { document } = Astro.props
 
-const { uuid, last_version, id_workspace, title, created_at } = document
+const { uuid, last_version, id_workspace, title, created_at, description } = document
 const { path_thumbnails, build_number, name_version, uuid: uuid_version } = last_version
 
 const thumbnails = `${PROJECT_URL}${path_thumbnails}` || template.src
-
+const autor = 'Juan peres'
 const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_workspace}&name_document=${title}`
 ---
 
 <div
-  class="document-card group block cursor-pointer rounded-main border border-border bg-background p-3 transition-all duration-200 hover:shadow-base"
+  class="document-card group block cursor-pointer overflow-hidden rounded-main border border-border bg-background transition-all duration-200 hover:shadow-base"
   data-url={url}
   data-title={title}
   data-created-at={created_at}
@@ -50,11 +50,24 @@ const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_work
   data-build-number={build_number}
   data-uuid-version={uuid_version}
 >
-  <div class="mb-3 flex items-center justify-between space-x-2">
+  <div class="px-3 pt-3">
+    <div class="relative flex h-48 w-full items-center justify-center overflow-hidden rounded-main bg-foreground">
+      <div class="thumbnail-skeleton absolute inset-0 animate-pulse bg-muted"></div>
+      <img
+        src={thumbnails}
+        class="thumbnail-img relative z-10 h-full w-full object-contain opacity-0 transition-opacity duration-200"
+        alt={title}
+        width="200"
+        height="128"
+        loading="lazy"
+        decoding="async"
+        onload="this.classList.remove('opacity-0'); this.previousElementSibling.classList.add('hidden')"
+      />
+    </div>
+  </div>
+
+  <div class="mt-2 flex items-center justify-between space-x-2 px-3">
     <div class="flex items-center gap-x-2">
-      <div class="flex items-center justify-center rounded-main bg-primary-foreground p-2">
-        <Icon name="FileText" stroke-width={1.5} class="h-4 w-4 text-primary" />
-      </div>
       <h3 class="truncate text-sm font-medium text-heading">{title}</h3>
     </div>
 
@@ -88,23 +101,16 @@ const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_work
     </div>
   </div>
 
-  <div class="relative flex h-44 w-full items-center justify-center overflow-hidden rounded-main bg-foreground">
-    <div class="thumbnail-skeleton absolute inset-0 animate-pulse bg-muted"></div>
-    <img
-      src={thumbnails}
-      class="thumbnail-img relative z-10 h-full w-full object-contain opacity-0 transition-opacity duration-200"
-      alt={title}
-      width="200"
-      height="128"
-      loading="lazy"
-      decoding="async"
-      onload="this.classList.remove('opacity-0'); this.previousElementSibling.classList.add('hidden')"
-    />
+  <div class="mb-2 px-3">
+    {description && <p class="truncate text-xs text-subheading">{description}</p>}
   </div>
 
-  <div class="my-3 flex items-center space-x-2">
-    <Avatar size="sm" />
-    <p class="mt-0.5 text-sm text-heading">{formatISODateWithIntl(created_at)}</p>
+  <div class="mt-5 flex items-center justify-between border-t border-border bg-foreground px-3 py-2">
+    <div class="flex items-center">
+      <Avatar size="xs" />
+      <p class="ml-2 text-sm text-heading">{autor}</p>
+    </div>
+    <p class="mt-0.5 text-xs text-subheading">{formatISODateWithIntl(created_at)}</p>
   </div>
 </div>
 
