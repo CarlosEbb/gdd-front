@@ -23,11 +23,11 @@ const baseUrl = import.meta.env.PROJECT_URL
 const urlImage = hasImage ? `${baseUrl}${img}` : undefined
 ---
 
-<div class={`group flex items-center justify-between border-b border-border py-3 px-4 transition-all last:border-b-0 hover:bg-muted/30 ${className || ''}`} {...rest}>
+<div class={`group flex items-center justify-between border-b border-border py-3 px-4 transition-all last:border-b-0 ${className || ''}`} {...rest}>
   <div class="flex min-w-0 flex-1 items-center gap-4">
     {
       hasImage ? (
-        <div class="relative size-10 shrink-0 overflow-hidden rounded-2xl">
+        <div class="relative size-10 shrink-0 overflow-hidden rounded-main">
           <img
             src={urlImage}
             alt={title ? `Imagen de ${title}` : 'Imagen'}
@@ -43,7 +43,7 @@ const urlImage = hasImage ? `${baseUrl}${img}` : undefined
         </div>
       ) : (
         hasIcon && (
-          <div class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-heading transition-colors">
+          <div class="flex size-10 shrink-0 items-center justify-center rounded-main bg-muted text-heading transition-colors">
             <Icon name={icon} stroke-width={1.6} size={20} />
           </div>
         )
@@ -59,7 +59,7 @@ const urlImage = hasImage ? `${baseUrl}${img}` : undefined
     {
       hasSecondaryText && (
         <div class="hidden flex-col items-end sm:flex">
-          <span class="text-sm font-medium whitespace-nowrap text-subheading">{secondaryText}</span>
+          <span class="text-xs font-medium whitespace-nowrap text-subheading">{secondaryText}</span>
         </div>
       )
     }
