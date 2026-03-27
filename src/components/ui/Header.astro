@@ -1,0 +1,15 @@
+---
+import TitleForPage from './TitleForPage.astro'
+
+interface Props {
+  title: string
+  subtitle?: string
+}
+
+const { title, subtitle } = Astro.props
+---
+
+<div class="mb-10 flex items-center justify-between">
+  <TitleForPage title={title} subtitle={subtitle} />
+  <slot name="actions" />
+</div>
