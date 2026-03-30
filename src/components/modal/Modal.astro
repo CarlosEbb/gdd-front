@@ -20,6 +20,14 @@ const { modalId, title } = Astro.props
     <div class="modal-body">
       <slot />
     </div>
+
+    {
+      Astro.slots.has('footer') && (
+        <footer class="modal-footer">
+          <slot name="footer" />
+        </footer>
+      )
+    }
   </div>
 </dialog>
 
@@ -44,41 +52,64 @@ const { modalId, title } = Astro.props
 
 <style>
   dialog.modal-dialog {
-    border: none;
+    border: 1px solid oklch(0.922 0 0);
     padding: 0;
-    border-radius: 8px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1);
     max-width: 500px;
     width: 90vw;
     margin: 0;
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
     max-height: 90vh;
+
+    /* Estado cerrado (fade-out) */
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.9);
-    transition:
-      opacity 0.2s ease,
-      transform 0.2s ease;
-  }
 
-  dialog.modal-dialog::backdrop {
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(3px);
-    opacity: 0;
     transition:
-      opacity 0.2s ease,
-      backdrop-filter 0.2s ease;
+      opacity 0.3s ease,
+      transform 0.3s ease,
+      display 0.3s allow-discrete,
+      overlay 0.3s allow-discrete;
   }
 
   dialog.modal-dialog[open] {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1); /* Estado abierto */
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  /* Estado inicial al abrirse (fade-in desde) */
+  @starting-style {
+    dialog.modal-dialog[open] {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+  }
+
+  dialog.modal-dialog::backdrop {
+    background: rgba(253, 247, 247, 0.5);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+
+    transition:
+      opacity 0.3s ease,
+      backdrop-filter 0.3s ease,
+      display 0.3s allow-discrete,
+      overlay 0.3s allow-discrete;
   }
 
   dialog.modal-dialog[open]::backdrop {
     opacity: 1;
+  }
+
+  @starting-style {
+    dialog.modal-dialog[open]::backdrop {
+      opacity: 0;
+    }
   }
 
   /* Estilos para el contenido interno */
@@ -90,7 +121,8 @@ const { modalId, title } = Astro.props
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid oklch(0.922 0 0);
+    background-color: #fafafa;
   }
 
   .modal-title {
@@ -114,5 +146,15 @@ const { modalId, title } = Astro.props
   .modal-body {
     padding: 1rem 1.5rem 1.5rem;
     overflow-y: auto;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid oklch(0.922 0 0);
+    background-color: #fafafa;
   }
 </style>
