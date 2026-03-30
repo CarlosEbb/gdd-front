@@ -1,0 +1,138 @@
+---
+import Icon from './Icon.astro'
+
+export interface BreadcrumbItem {
+  label: string
+  href?: string
+}
+
+interface Props {
+  items?: BreadcrumbItem[]
+  class?: string
+}
+
+const { items: manualItems, class: className } = Astro.props
+const currentPath = Astro.url.pathname
+
+const routeLabels: Record<string, string> = {
+  home: 'Inicio',
+  documents: 'Documentos',
+  templates: 'Plantillas',
+  users: 'Usuarios',
+  clients: 'Clientes',
+  servers: 'Servidores',
+  workspaces: 'Espacios de trabajo',
+  config: 'Configuración',
+  profile: 'Perfil',
+  editor: 'Editor',
+  'list-documents': 'Lista de documentos',
+  'form-client': 'Formulario',
+  'form-server': 'Formulario',
+  'form-user': 'Formulario',
+  'change-password': 'Cambiar contraseña',
+  documentation: 'Documentación',
+  security: 'Seguridad',
+  validation: 'Validación',
+  version: 'Versión',
+}
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
+  const segments = pathname.replace(/\/$/, '').split('/').filter(Boolean)
+  const items: BreadcrumbItem[] = [{ label: 'Inicio', href: '/home' }]
+
+  if (segments.length === 0 || (segments.length === 1 && segments[0] === 'home')) {
+    return items
+  }
+
+  let currentHref = ''
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i]
+    currentHref += `/${segment}`
+    const isLast = i === segments.length - 1
+
+    let label: string
+    if (UUID_REGEX.test(segment)) {
+      label = 'Detalles'
+    } else {
+      label = routeLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ')
+    }
+
+    items.push({
+      label,
+      href: isLast ? undefined : currentHref,
+    })
+  }
+
+  return items
+}
+
+const breadcrumbs = manualItems || generateBreadcrumbs(currentPath)
+const showTruncated = breadcrumbs.length > 3
+---
+
+<nav aria-label="breadcrumb" class:list={['mb-2', className]}>
+  <ol class="flex items-center gap-1.5 text-sm">
+    {
+      breadcrumbs.map((item, index) => {
+        const isFirst = index === 0
+        const isLast = index === breadcrumbs.length - 1
+        const isMiddle = !isFirst && !isLast
+        const hiddenOnMobile = showTruncated && isMiddle
+
+        return (
+          <li
+            class:list={[
+              'flex items-center gap-1.5',
+              { 'hidden md:flex': hiddenOnMobile },
+            ]}
+          >
+            {index > 0 && (
+              <Icon
+                name="ChevronRight"
+                size={14}
+                stroke-width={1.5}
+                class="shrink-0 text-subheading/50"
+              />
+            )}
+            {item.href ? (
+              <a
+                href={item.href}
+                class="whitespace-nowrap text-subheading transition-colors duration-150 hover:text-primary"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <span class="whitespace-nowrap font-medium text-heading">
+                {item.label}
+              </span>
+            )}
+          </li>
+        )
+      })
+    }
+    {
+      showTruncated && (
+        <li class="flex items-center gap-1.5 md:hidden" aria-hidden="true">
+          <Icon
+            name="ChevronRight"
+            size={14}
+            stroke-width={1.5}
+            class="shrink-0 text-subheading/50"
+          />
+          <span class="text-subheading">…</span>
+          <Icon
+            name="ChevronRight"
+            size={14}
+            stroke-width={1.5}
+            class="shrink-0 text-subheading/50"
+          />
+          <span class="whitespace-nowrap font-medium text-heading">
+            {breadcrumbs[breadcrumbs.length - 1].label}
+          </span>
+        </li>
+      )
+    }
+  </ol>
+</nav>
