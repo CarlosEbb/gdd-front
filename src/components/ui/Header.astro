@@ -4,12 +4,13 @@ import TitleForPage from './TitleForPage.astro'
 interface Props {
   title: string
   subtitle?: string
+  backHref?: string
 }
 
-const { title, subtitle } = Astro.props
+const { title, subtitle, backHref = undefined } = Astro.props
 ---
 
 <div class="mb-10 flex items-center justify-between">
-  <TitleForPage title={title} subtitle={subtitle} />
+  <TitleForPage title={title} subtitle={subtitle} backHref={backHref} />
   <slot name="actions" />
 </div>
