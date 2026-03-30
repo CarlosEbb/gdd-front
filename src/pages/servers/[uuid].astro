@@ -1,7 +1,7 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro'
 import Container from '@/components/ui/Container.astro'
-import TitleForPage from '@/components/ui/TitleForPage.astro'
+import Header from '@/components/ui/Header.astro'
 import { actions } from 'astro:actions'
 import type { Database } from '@/types/servers'
 import List from '@/components/ui/List.astro'
@@ -31,7 +31,7 @@ const urlEditServer = `/servers/form-server?edit=true&ip=${selectedServer.ip}&na
 
 <MainLayout title="Detalles del servidor">
   <Container>
-    <TitleForPage title="Detalles del servidor" backHref="/servers" class="mb-6" />
+    <Header title="Detalles del servidor" backHref="/servers" />
     <StateSwitch hasError={!!error}>
       <>
         <div class="overflow-hidden rounded-main border border-border bg-background shadow-base">

@@ -15,6 +15,7 @@ import { actions } from 'astro:actions'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import Modal from '@/components/modal/Modal.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
+import Header from '@/components/ui/Header.astro'
 
 const { uuid } = Astro.params
 const { PROJECT_URL } = import.meta.env
@@ -42,7 +43,8 @@ const selectedClient = {
 
 <MainLayout title="Nombre del cliente">
   <Container>
-    <TitleForPage title="Detalles del cliente" backHref="/clients" class="mb-6" />
+    <Header title="Detalles del cliente" />
+
     <StateSwitch hasError={!!error}>
       <>
         <div class="overflow-hidden rounded-main border border-border bg-background shadow-base">

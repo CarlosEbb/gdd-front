@@ -2,7 +2,6 @@
 import MainLayout from '@/layouts/MainLayout.astro'
 import Container from '@/components/ui/Container.astro'
 import Input from '@/components/form/Input.astro'
-import TitleForPage from '@/components/ui/TitleForPage.astro'
 import Icon from '@/components/ui/Icon.astro'
 import { actions } from 'astro:actions'
 import SelectionCard from '@/components/form/SelectionCard.astro'
@@ -13,6 +12,7 @@ import FormBlock from '@/components/ui/FormBlock.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import InputWithPrefix from '@/components/form/InputWithPrefix.astro'
 import { rifOptions } from '@/constants/rif'
+import Header from '@/components/ui/Header.astro'
 
 const isEdit = Astro.url.searchParams.get('edit') === 'true'
 
@@ -51,7 +51,7 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
 
 <MainLayout title={titleText}>
   <Container>
-    <TitleForPage title={titleText} class="mb-6" />
+    <Header title={titleText} />
     <StateSwitch hasError={error !== null}>
       <FormPageLayout formId="form-client" submitText={btnText} loadingText={loadingText} cancelHref="/clients" isEdit={isEdit}>
         <FormBlock title="Información General" description="Ingrese los datos del cliente ya que serán utilizados en el sistema para identificarlo y tener una mejor experiencia" cols={2}>

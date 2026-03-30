@@ -1,10 +1,10 @@
 ---
 import Input from '@/components/form/Input.astro'
 import Container from '@/components/ui/Container.astro'
-import TitleForPage from '@/components/ui/TitleForPage.astro'
 import MainLayout from '@/layouts/MainLayout.astro'
 import FormPageLayout from '@/layouts/FormPageLayout.astro'
 import FormBlock from '@/components/ui/FormBlock.astro'
+import Header from '@/components/ui/Header.astro'
 
 const isEdit = Astro.url.searchParams.get('edit') === 'true'
 const values: { ip: string; name: string; puerto: string; uuid?: string } = {
@@ -28,7 +28,7 @@ const loadingText = isEdit ? 'Actualizando servidor...' : 'Creando servidor...'
 
 <MainLayout title={titleText}>
   <Container>
-    <TitleForPage title={titleText} class="mb-6" />
+    <Header title={titleText} />
     <FormPageLayout formId="form-server" submitText={btnText} loadingText={loadingText} cancelHref="/servers" isEdit={isEdit}>
       <FormBlock title="Información del servidor" description="Complete los campos para crear un nuevo servidor" cols={2}>
         <div>
