@@ -142,12 +142,12 @@ const currentPath = Astro.url.pathname
         <Input label="Descripción" name="description" placeholder="Ingrese la descripción del documento" required />
         <input type="hidden" name="uuid_category" id="uuid_category" value="" required readonly />
       </div>
-
-      <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
-        <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-        <Button type="submit" size="sm" id="btn-create-template" loadingText="Creando documento...">Crear documento</Button>
-      </div>
     </form>
+
+    <div slot="footer">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" form="create-template-form" id="btn-create-template" loadingText="Creando documento...">Crear documento</Button>
+    </div>
   </Modal>
 </MainLayout>
 

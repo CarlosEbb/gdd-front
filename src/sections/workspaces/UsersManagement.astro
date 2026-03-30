@@ -65,11 +65,12 @@ const usersWithOutOwner = users.filter((user) => user.is_owner === false)
       <input type="hidden" name="workspace-uuid" id="workspace-uuid" />
       <input type="hidden" name="user-email" id="user-email" />
     </div>
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
-      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-      <Button type="submit" size="sm" id="btn-delete-user-from-workspace" loadingText="Eliminando usuario...">Eliminar usuario</Button>
-    </div>
   </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" form="delete-user-from-workspace-form" id="btn-delete-user-from-workspace" loadingText="Eliminando usuario...">Eliminar usuario</Button>
+  </div>
 </Modal>
 
 <!-- Eliminar usuario del espacio de trabajo -->

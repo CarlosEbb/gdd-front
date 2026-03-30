@@ -169,11 +169,12 @@ const currentPath = '/home'
       <input type="hidden" name="uuid_template" id="uuid-template" value="" />
       <input type="hidden" name="name_version" id="name-version" value="" />
     </div>
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
-      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-      <Button type="submit" size="sm" id="btn-delete-document" loadingText="Eliminando...">Eliminar documento</Button>
-    </div>
   </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" form="delete-document-form" id="btn-delete-document" loadingText="Eliminando...">Eliminar documento</Button>
+  </div>
 </Modal>
 
 <script>

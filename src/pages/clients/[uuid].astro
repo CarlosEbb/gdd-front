@@ -179,11 +179,12 @@ const selectedClient = {
       <p class="mb-4 text-center">¿Estás seguro de querer eliminar este cliente?</p>
       <input type="hidden" name="uuid" value={selectedClient.uuid} required readonly />
     </div>
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
-      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-      <Button type="submit" size="sm" variant="destructive" id="btn-delete-client" loadingText="Eliminando cliente...">Eliminar cliente</Button>
-    </div>
   </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" variant="destructive" form="delete-client-form" id="btn-delete-client" loadingText="Eliminando cliente...">Eliminar cliente</Button>
+  </div>
 </Modal>
 
 <script>

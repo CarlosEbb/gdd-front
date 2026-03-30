@@ -49,11 +49,12 @@ const icon = (workspace?.icon as keyof typeof icons) ?? ''
       <p class="mb-4 text-center">¿Estás seguro de querer eliminar este espacio de trabajo?</p>
       <input type="hidden" name="uuid" value={workspace.uuid} required readonly />
     </div>
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
-      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-      <Button type="submit" size="sm" id="btn-delete-workspace" loadingText="Eliminando espacio...">Eliminar espacio</Button>
-    </div>
   </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" form="delete-workspace-form" id="btn-delete-workspace" loadingText="Eliminando espacio...">Eliminar espacio</Button>
+  </div>
 </Modal>
 
 <Modal modalId="edit-workspace" title="Editar espacio de trabajo">
@@ -73,12 +74,12 @@ const icon = (workspace?.icon as keyof typeof icons) ?? ''
     </div>
 
     <IconPicker iconSelected={icon} />
-
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
-      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-      <Button type="submit" size="sm" id="btn-edit-workspace" loadingText="Editando espacio...">Editar espacio</Button>
-    </div>
   </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" form="edit-workspace-form" id="btn-edit-workspace" loadingText="Editando espacio...">Editar espacio</Button>
+  </div>
 </Modal>
 
 <!-- Editar un workspace -->
