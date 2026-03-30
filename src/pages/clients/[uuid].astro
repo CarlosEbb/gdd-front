@@ -18,7 +18,7 @@ import StateSwitch from '@/components/ui/StateSwitch.astro'
 import Header from '@/components/ui/Header.astro'
 
 const { uuid } = Astro.params
-const { PROJECT_URL } = import.meta.env
+const { PUBLIC_PROJECT_URL } = import.meta.env
 const { data, error } = await Astro.callAction(actions.clients.getByUuid, { uuid: uuid! })
 
 const client = data?.data || null
@@ -37,7 +37,7 @@ const selectedClient = {
   createdAt: client?.createdAt || '',
   databases: client?.databases || [],
   servers: client?.servers || [],
-  logo: client?.logo ? `${PROJECT_URL}${client.logo}` : null,
+  logo: client?.logo ? `${PUBLIC_PROJECT_URL}${client.logo}` : null,
 }
 ---
 
