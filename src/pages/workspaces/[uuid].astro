@@ -24,7 +24,7 @@ const name = details?.data.name ?? 'Espacio de trabajo no encontrado'
 const currentPath = Astro.url.pathname
 ---
 
-<MainLayout title={`${name}`}>
+<MainLayout title={`Espacio de trabajo: ${name}` || 'Espacio de trabajo'}>
   <Container>
     <Header title={name} />
 

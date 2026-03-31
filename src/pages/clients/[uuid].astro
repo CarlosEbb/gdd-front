@@ -40,7 +40,7 @@ const selectedClient = {
 }
 ---
 
-<MainLayout title="Nombre del cliente">
+<MainLayout title={selectedClient.name || 'Cliente'}>
   <Container>
     <Header title="Detalles del cliente" />
 

@@ -21,7 +21,7 @@ const serverValues = serverData?.data
   : { ip: '', name: '', puerto: '', uuid: '' }
 ---
 
-<MainLayout title="Actualizar servidor">
+<MainLayout title={`Actualizar servidor ${serverData?.data?.name || ''}`}>
   <Container>
     <Header title="Actualizar servidor" />
 

@@ -20,10 +20,9 @@ const servers =
   })) ?? []
 
 const hasServers = servers.length > 0
-console.log(clientError)
 ---
 
-<MainLayout title="Actualizar cliente">
+<MainLayout title={`Actualizar cliente ${clientData?.data?.name || ''}`}>
   <Container>
     <Header title="Actualizar cliente" />
     <StateSwitch hasError={clientError !== undefined}>

@@ -27,7 +27,7 @@ const selectedServer = {
 }
 ---
 
-<MainLayout title="Detalles del servidor">
+<MainLayout title={`Detalles del servidor ${server?.name || ''}`}>
   <Container>
     <Header title="Detalles del servidor" backHref="/servers" />
     <StateSwitch hasError={!!error}>
