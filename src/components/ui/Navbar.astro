@@ -2,6 +2,7 @@
 import logo from '@/assets/images/imagotipo.png'
 import Button from './Button.astro'
 import Search from './Search.astro'
+import { Image } from 'astro:assets'
 
 const { PUBLIC_NAME_PROJECT } = import.meta.env
 ---
@@ -10,7 +11,7 @@ const { PUBLIC_NAME_PROJECT } = import.meta.env
   <div id="progress-bar" class="pointer-events-none fixed top-0 left-0 z-50 h-[3px] w-0 bg-primary opacity-0 transition-all duration-200 ease-out"></div>
   <div class="flex h-full items-center justify-center">
     <a href="/home">
-      <img transition:name="image-transition" transition:animate="fade" src={logo.src} alt={PUBLIC_NAME_PROJECT} class="aspect-auto h-10 max-w-24 object-contain md:max-w-32" />
+      <Image transition:name="image-transition" transition:animate="fade" src={logo} alt={PUBLIC_NAME_PROJECT} class="aspect-auto h-10 max-w-24 object-contain md:max-w-32" />
     </a>
   </div>
 
