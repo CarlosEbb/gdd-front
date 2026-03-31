@@ -1,0 +1,231 @@
+---
+import Input from '@/components/form/Input.astro'
+import Icon from '@/components/ui/Icon.astro'
+import SelectionCard from '@/components/form/SelectionCard.astro'
+import FormPageLayout from '@/layouts/FormPageLayout.astro'
+import FormBlock from '@/components/ui/FormBlock.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import InputWithPrefix from '@/components/form/InputWithPrefix.astro'
+import { rifOptions } from '@/constants/rif'
+
+interface Props {
+  isEdit?: boolean
+  clientData?: any
+  servers?: any[]
+  serversError?: any
+  hasServers?: boolean
+}
+
+const { isEdit = false, clientData, servers = [], serversError, hasServers = false } = Astro.props
+
+const btnText = isEdit ? 'Actualizar cliente' : 'Crear cliente'
+const loadingText = isEdit ? 'Actualizando cliente...' : 'Creando cliente...'
+
+const rifRaw = clientData?.data?.rif || ''
+const rifParts = rifRaw.split('-')
+const rifPrefixCandidate = rifParts.length > 1 ? rifParts[0] : ''
+const rifNumber = rifParts.length > 1 ? rifParts.slice(1).join('-') : rifRaw
+const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixCandidate : undefined
+---
+
+<FormPageLayout formId="form-client" submitText={btnText} loadingText={loadingText} cancelHref="/clients" isEdit={isEdit}>
+  <FormBlock title="Información General" description="Ingrese los datos del cliente ya que serán utilizados en el sistema para identificarlo y tener una mejor experiencia" cols={2}>
+    {isEdit && <input type="hidden" name="uuid" value={clientData?.data.uuid} />}
+    <div>
+      <Input
+        required
+        type="text"
+        placeholder="ej. Empresa Tecnológica C.A."
+        name="name"
+        data-error-required="El nombre es obligatorio"
+        label="Nombre / Razón Social"
+        value={clientData?.data.name || ''}
+      />
+    </div>
+    <div>
+      <InputWithPrefix
+        idPrefix="typeRif"
+        namePrefix="typeRif"
+        optionsPrefix={rifOptions}
+        idInput="rif"
+        nameInput="rif"
+        label="RIF"
+        placeholderInput="1234567"
+        valuePrefix={rifPrefix}
+        valueInput={rifNumber}
+        requiredInput
+        typeInput="text"
+        patternInput="^\\d{8}-\\d$"
+        minlengthInput={10}
+        maxlengthInput={10}
+        placeholderPrefix="Tipo"
+        inputmode="numeric"
+        data-error-input-pattern="El formato del RIF debe ser J-12345678-9"
+      />
+    </div>
+
+    <div class="space-y-2 md:col-span-2">
+      <label class="ml-1 text-sm font-semibold text-heading">Logo de la Empresa (Opcional)</label>
+      <div class="flex items-center gap-4">
+        <div id="logo-preview" class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-main border border-dashed border-border bg-background">
+          <Icon name="FileImage" class="text-heading" size={24} />
+        </div>
+        <div class="relative flex-1">
+          <Input type="file" accept="image/*" id="logo-upload" name="logo" hidden />
+          <label
+            for="logo-upload"
+            class="group flex w-full cursor-pointer flex-col items-center justify-center rounded-main border border-dashed border-border bg-background px-4 py-3 transition-all hover:border-primary hover:bg-primary/5"
+          >
+            <div class="flex items-center gap-2 text-sm font-medium text-heading group-hover:text-primary">
+              <Icon name="Upload" size={18} class="text-heading group-hover:text-primary" />
+              <span id="upload-text">Haz clic para subir una imagen</span>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </FormBlock>
+
+  <FormBlock title="Límites del Sistema" description="Configura los límites máximos que este cliente podrá utilizar en el sistema." cols={2}>
+    <div class="space-y-2">
+      <Input
+        label="Máximo de documentos"
+        required
+        type="number"
+        min="1"
+        name="nroDocumentsMax"
+        data-error-required="El número de documentos es obligatorio"
+        value={clientData?.data.nroDocumentsMax?.toString() || ''}
+      />
+    </div>
+    <div class="space-y-2">
+      <Input
+        label="Máximo de espacios de trabajo"
+        placeholder="Ej: 10"
+        data-error-required="El número de espacios de trabajo es obligatorio"
+        required
+        type="number"
+        min="1"
+        name="nroWorkspacesMax"
+        value={clientData?.data.nroWorkspacesMax?.toString() || ''}
+      />
+    </div>
+  </FormBlock>
+
+  <FormBlock title="Asignar Servidores Iniciales" cols={1} description="Selecciona los servidores de infraestructura a los que este cliente tendrá acceso.">
+    <div class="custom-scrollbar grid max-h-62.5 grid-cols-1 gap-3 overflow-y-auto pr-2 md:grid-cols-3">
+      <StateSwitch hasError={!!serversError} isEmpty={!hasServers}>
+        {
+          servers.map((server) => (
+            <SelectionCard name="serverUuids" type="checkbox" value={server.uuid} label={`${server.name || 'Sin nombre'} - ${server.ip}:${server.puerto}`} icon="Server" checked={server.selected} />
+          ))
+        }
+
+        <p slot="error" class="col-span-full text-sm text-slate-500">Error al cargar los servidores.</p>
+        <p slot="empty" class="col-span-full text-sm text-slate-500">No hay servidores disponibles.</p>
+      </StateSwitch>
+    </div>
+  </FormBlock>
+</FormPageLayout>
+<!-- Edit and create client -->
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import { navigate } from 'astro:transitions/client'
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('form-client') as HTMLFormElement
+    if (!form) return
+
+    const isEdit = form.getAttribute('data-is-edit') === 'true'
+    const rifInput = document.getElementById('rif') as HTMLInputElement | null
+
+    const formatRifNumber = (value: string) => {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 9)
+
+      if (digitsOnly.length <= 8) {
+        return digitsOnly
+      }
+
+      return `${digitsOnly.slice(0, 8)}-${digitsOnly.slice(8, 9)}`
+    }
+
+    if (rifInput) {
+      rifInput.value = formatRifNumber(rifInput.value)
+
+      rifInput.addEventListener('input', () => {
+        rifInput.value = formatRifNumber(rifInput.value)
+      })
+    }
+
+    const handleSubmit = async (e: Event) => {
+      e.preventDefault()
+
+      const dataForm = new FormData(form)
+      const rifType = String(dataForm.get('typeRif') || '')
+        .trim()
+        .toUpperCase()
+      const rifNumber = String(dataForm.get('rif') || '')
+        .trim()
+        .replace(/\s+/g, '')
+
+      if (rifType && rifNumber) {
+        dataForm.set('rif', `${rifType}-${rifNumber}`)
+      }
+
+      dataForm.delete('typeRif')
+
+      setButtonLoading('#form-client-submit', true)
+      const action = isEdit ? actions.clients.update(dataForm) : actions.clients.register(dataForm)
+      const { data, error } = await callAction(action)
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#form-client-submit', false)
+        return
+      }
+
+      toast.success(data.message)
+      navigate(`/clients/${data.data.uuid}`)
+      setButtonLoading('#form-client-submit', true)
+    }
+
+    form.addEventListener('submit', handleSubmit)
+  })
+</script>
+
+<!-- Update imagen profile -->
+<script>
+  document.addEventListener('astro:page-load', function () {
+    const logoUpload = document.getElementById('logo-upload') as HTMLInputElement
+    const logoPreview = document.getElementById('logo-preview')
+    const uploadText = document.getElementById('upload-text')
+
+    if (!logoUpload || !logoPreview || !uploadText) return
+
+    logoUpload.addEventListener('change', function (e) {
+      const target = e.target as HTMLInputElement
+      const file = target.files?.[0]
+
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader()
+
+        reader.onload = function (e) {
+          if (logoPreview && uploadText) {
+            logoPreview.innerHTML = `<img src="${e.target?.result}" alt="Vista previa" class="w-full h-full object-cover" />`
+            uploadText.textContent = 'Cambiar imagen'
+          }
+        }
+
+        reader.readAsDataURL(file)
+      } else {
+        if (logoPreview && uploadText) {
+          logoPreview.innerHTML =
+            '<svg class="text-slate-300" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>'
+          uploadText.textContent = 'Haz clic para subir una imagen'
+        }
+      }
+    })
+  })
+</script>

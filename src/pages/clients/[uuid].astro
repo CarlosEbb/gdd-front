@@ -1,6 +1,5 @@
 ---
 import Container from '@/components/ui/Container.astro'
-import TitleForPage from '@/components/ui/TitleForPage.astro'
 import MainLayout from '@/layouts/MainLayout.astro'
 import Link from '@/components/ui/Link.astro'
 import Icon from '@/components/ui/Icon.astro'
@@ -52,7 +51,7 @@ const selectedClient = {
             <h1 class="text-base font-medium text-heading">Detalles cliente</h1>
 
             <div class="flex items-center gap-3">
-              <Link size="sm" href={`/clients/form-client?edit=true&uuid=${uuid}`}> Editar </Link>
+              <Link size="sm" href={`/clients/${uuid}/edit`} icon="Pencil"> Editar </Link>
               <Button size="sm" variant="destructive" data-open-modal="delete-client"> Eliminar </Button>
             </div>
           </div>
