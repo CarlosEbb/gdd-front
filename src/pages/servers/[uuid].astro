@@ -25,8 +25,6 @@ const selectedServer = {
   puerto: server?.puerto || 0,
   status: 'online',
 }
-
-const urlEditServer = `/servers/form-server?edit=true&ip=${selectedServer.ip}&name=${selectedServer.name}&puerto=${selectedServer.puerto}&uuid=${uuid}`
 ---
 
 <MainLayout title="Detalles del servidor">
@@ -39,7 +37,7 @@ const urlEditServer = `/servers/form-server?edit=true&ip=${selectedServer.ip}&na
             <h1 class="text-base font-medium text-heading">Detalles server</h1>
 
             <div class="flex items-center gap-3">
-              <Link size="sm" href={urlEditServer}> Editar </Link>
+              <Link size="sm" href={`/servers/${uuid}/edit`} icon="Pencil"> Editar </Link>
               <Button size="sm" variant="destructive" data-open-modal="delete-server"> Eliminar </Button>
             </div>
           </div>

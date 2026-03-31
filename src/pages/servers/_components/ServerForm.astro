@@ -1,0 +1,79 @@
+---
+import Input from '@/components/form/Input.astro'
+import FormPageLayout from '@/layouts/FormPageLayout.astro'
+import FormBlock from '@/components/ui/FormBlock.astro'
+
+interface Props {
+  isEdit?: boolean
+  values?: {
+    ip: string
+    name: string
+    puerto: string
+    uuid?: string
+  }
+}
+
+const { isEdit = false, values = { ip: '', name: '', puerto: '', uuid: '' } } = Astro.props
+
+const btnText = isEdit ? 'Actualizar servidor' : 'Crear servidor'
+const loadingText = isEdit ? 'Actualizando servidor...' : 'Creando servidor...'
+---
+
+<FormPageLayout formId="form-server" submitText={btnText} loadingText={loadingText} cancelHref="/servers" isEdit={isEdit}>
+  <FormBlock title="Información del servidor" description="Complete los campos para crear un nuevo servidor" cols={2}>
+    <div>
+      <Input
+        label="IP"
+        type="text"
+        pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        name="ip"
+        data-error-required="La IP es obligatoria"
+        required
+        placeholder="192.168.1.1"
+        data-error-pattern="La IP no es válida Ej: 192.168.1.1"
+        value={isEdit ? values?.ip : ''}
+      />
+    </div>
+    <div>
+      <Input label="Nombre" type="text" name="name" data-error-required="El nombre es obligatorio" required placeholder="Servidor 1" value={isEdit ? values?.name || '' : ''} />
+    </div>
+    <div>
+      <Input label="Puerto" type="number" name="puerto" data-error-required="El puerto es obligatorio" required placeholder="3000" value={isEdit ? values?.puerto : ''} />
+    </div>
+    {isEdit && <input type="hidden" name="uuid" value={values?.uuid} />}
+  </FormBlock>
+</FormPageLayout>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import { navigate } from 'astro:transitions/client'
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('form-server') as HTMLFormElement
+    const isEdit = form.getAttribute('data-is-edit') === 'true'
+
+    const handleSubmit = async (e: Event) => {
+      e.preventDefault()
+
+      const dataForm = new FormData(form)
+
+      setButtonLoading('#form-server-submit', true)
+      const action = isEdit ? actions.servers.updated(dataForm) : actions.servers.register(dataForm)
+      const { data, error } = await callAction(action)
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#form-server-submit', false)
+        return
+      }
+
+      toast.success(data.message)
+      navigate(`/servers/${data.data.uuid}`)
+      setButtonLoading('#form-server-submit', true)
+    }
+
+    form.addEventListener('submit', handleSubmit)
+  })
+</script>
