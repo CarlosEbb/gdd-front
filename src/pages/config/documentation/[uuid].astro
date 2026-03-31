@@ -12,14 +12,14 @@ if (!uuid) {
 
 const build_number = Astro.url.searchParams.get('build_number') as string
 const url = `/variables/${uuid}/${build_number}`
-const { API_URL: base_url, PROJECT_URL: project_url } = import.meta.env
+const { API_URL: base_url, PUBLIC_PROJECT_URL: PUBLIC_PROJECT_URL } = import.meta.env
 
 const responseExample = {
   status: 200,
   message: 'Documento guardado exitosamente',
   data: {
     uuid: 'c73bc0b8-ea3b-49b7-8974-f3f9553ad281',
-    url: `${project_url}documents/viewPDF/c73bc0b8-ea3b-49b7-8974-f3f9553ad281`,
+    url: `${PUBLIC_PROJECT_URL}documents/viewPDF/c73bc0b8-ea3b-49b7-8974-f3f9553ad281`,
   },
 }
 
@@ -177,7 +177,7 @@ const request = data?.data.variables
 
 <script>
   import { toast } from '@/scripts/toast'
-  import { PROJECT_URL, PUBLIC_NAME_PROJECT } from 'astro:env/client'
+  import { PUBLIC_PROJECT_URL, PUBLIC_NAME_PROJECT } from 'astro:env/client'
 
   function setupCopyButtons() {
     const buttons = document.querySelectorAll('.copy-btn')
@@ -255,9 +255,9 @@ const request = data?.data.variables
                   },
                 },
                 url: {
-                  raw: PROJECT_URL + endpoint,
+                  raw: PUBLIC_PROJECT_URL + endpoint,
                   protocol: 'https',
-                  host: [PROJECT_URL.replace('https://', '').replace('http://', '')],
+                  host: [PUBLIC_PROJECT_URL.replace('https://', '').replace('http://', '')],
                   path: endpoint.split('/').filter(Boolean),
                 },
                 description: 'Endpoint para crear un nuevo documento con las variables especificadas',

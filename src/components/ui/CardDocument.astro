@@ -5,7 +5,7 @@ import template from '@/assets/images/preview/template-1.png'
 import { formatISODateWithIntl } from '@/scripts/utils'
 import Icon from './Icon.astro'
 import Avatar from './Avatar.astro'
-const { PROJECT_URL } = import.meta.env
+const { PUBLIC_PROJECT_URL } = import.meta.env
 
 interface Props {
   document: Document
@@ -34,7 +34,7 @@ const { document } = Astro.props
 const { uuid, last_version, id_workspace, title, created_at, description } = document
 const { path_thumbnails, build_number, name_version, uuid: uuid_version } = last_version
 
-const thumbnails = `${PROJECT_URL}${path_thumbnails}` || template.src
+const thumbnails = `${PUBLIC_PROJECT_URL}${path_thumbnails}` || template.src
 const autor = 'Juan peres'
 const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_workspace}&name_document=${title}`
 ---
