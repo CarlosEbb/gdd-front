@@ -1,6 +1,6 @@
 import { defineMiddleware } from 'astro:middleware'
 
-const publicRoutes = ['/auth/login', '/auth/forgot-password', '/auth/reset-password', '/auth/inactivity', '/auth/register', '_image']
+const publicRoutes = ['/auth/login', '/auth/forgot-password', '/auth/reset-password', '/auth/inactivity', '/auth/register', '/_image']
 
 const publicPatterns = [/^\/_actions\/.*/, /^\/.*\.(jpg|jpeg|png|gif|svg|webp|ico|css|js|woff|woff2|ttf|eot)$/i]
 
