@@ -1,6 +1,6 @@
 import { defineMiddleware } from 'astro:middleware'
 
-const publicRoutes = ['/', '/auth', '/auth/forgot-password', '/auth/reset-password', '/auth/inactivity', '_image']
+const publicRoutes = ['/auth/login', '/auth/forgot-password', '/auth/reset-password', '/auth/inactivity', '/auth/register', '_image']
 
 const publicPatterns = [/^\/_actions\/.*/, /^\/.*\.(jpg|jpeg|png|gif|svg|webp|ico|css|js|woff|woff2|ttf|eot)$/i]
 
@@ -19,7 +19,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (!token) {
-    return context.redirect('/auth/inactivity')
+    return context.redirect('/auth/login')
   }
 
   const response = await next()
