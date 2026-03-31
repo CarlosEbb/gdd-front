@@ -6,19 +6,16 @@ import logo from '@/assets/images/imagotipo.png'
 import Layout from './Layout.astro'
 import { Image } from 'astro:assets'
 
-const { PUBLIC_NAME_PROJECT } = import.meta.env
-
 interface Props {
   titleTabBrowser?: string
   titleCardAuth: string
 }
 
 const { titleTabBrowser = null, titleCardAuth } = Astro.props
-const optionalTitle = titleTabBrowser === null ? PUBLIC_NAME_PROJECT : `${titleTabBrowser} | ${PUBLIC_NAME_PROJECT}`
 const currentYear = new Date().getFullYear()
 ---
 
-<Layout title={optionalTitle}>
+<Layout title={titleTabBrowser}>
   <div class="flex min-h-screen items-center justify-center bg-foreground">
     <div class="flex min-h-[calc(100vh-285px)] w-full max-w-none flex-col overflow-hidden bg-transparent md:max-w-xl md:rounded-main md:bg-white md:shadow-2xl lg:max-w-4xl lg:flex-row">
       <div class="relative hidden h-64 overflow-hidden lg:block lg:h-auto lg:w-1/2 lg:bg-none">
