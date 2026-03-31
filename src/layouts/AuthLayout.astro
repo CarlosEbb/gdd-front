@@ -3,7 +3,7 @@ import '@/styles/global.css'
 
 import bgAuth from '@/assets/images/img-login.jpg'
 import logo from '@/assets/images/imagotipo.png'
-import { ClientRouter } from 'astro:transitions'
+import Layout from './Layout.astro'
 
 const { PUBLIC_NAME_PROJECT } = import.meta.env
 
@@ -16,20 +16,12 @@ const { titleTabBrowser = null, titleCardAuth } = Astro.props
 const optionalTitle = titleTabBrowser === null ? PUBLIC_NAME_PROJECT : `${titleTabBrowser} | ${PUBLIC_NAME_PROJECT}`
 ---
 
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href={'@/assets/images/favicon.ico'} />
-    <title>{optionalTitle}</title>
-    <ClientRouter />
-  </head>
-  <body class="flex min-h-screen items-center justify-center bg-foreground">
+<Layout title={optionalTitle}>
+  <div class="flex min-h-screen items-center justify-center bg-foreground">
     <div class="flex min-h-[calc(100vh-285px)] w-full max-w-none flex-col overflow-hidden bg-transparent md:max-w-xl md:rounded-main md:bg-white md:shadow-2xl lg:max-w-4xl lg:flex-row">
       <div class="relative hidden h-64 overflow-hidden lg:block lg:h-auto lg:w-1/2 lg:bg-none">
         <div class="absolute h-full w-full rotate-0 pe-2">
-          <img src={bgAuth.src} alt="Decorative gradient" class="h-full w-64 rounded-main object-cover lg:w-full" />
+          <img transition:name="image-transition" transition:animate="fade" src={bgAuth.src} alt="Decorative gradient" class="h-full w-64 rounded-main object-cover lg:w-full" />
         </div>
       </div>
 
@@ -50,5 +42,5 @@ const optionalTitle = titleTabBrowser === null ? PUBLIC_NAME_PROJECT : `${titleT
         </footer>
       </div>
     </div>
-  </body>
-</html>
+  </div>
+</Layout>
