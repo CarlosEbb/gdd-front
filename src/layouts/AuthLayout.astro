@@ -15,6 +15,7 @@ interface Props {
 
 const { titleTabBrowser = null, titleCardAuth } = Astro.props
 const optionalTitle = titleTabBrowser === null ? PUBLIC_NAME_PROJECT : `${titleTabBrowser} | ${PUBLIC_NAME_PROJECT}`
+const currentYear = new Date().getFullYear()
 ---
 
 <Layout title={optionalTitle}>
@@ -46,7 +47,9 @@ const optionalTitle = titleTabBrowser === null ? PUBLIC_NAME_PROJECT : `${titleT
         </main>
         <footer>
           <p class="text-center text-base text-subheading">
-            <span class="mt-1 block">© Made by Soluciones Laser 2025</span>
+            <span class="mt-1 block"
+              >© Made by <a href="https://www.solucioneslaser.com/" target="_blank" rel="noopener noreferrer" class="border-b border-dashed border-border">Soluciones Laser</a> {currentYear}</span
+            >
           </p>
         </footer>
       </div>
