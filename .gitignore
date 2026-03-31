@@ -27,3 +27,7 @@ yarn.lock
 
 # jetbrains setting folder
 .idea/
+
+.windsurf
+.cursor
+.agents
