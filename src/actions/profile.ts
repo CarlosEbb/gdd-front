@@ -1,9 +1,9 @@
 import { ActionError, defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
-import type { InfoUser } from '@/types/user'
+import type { InfoUser } from '@/types/profile'
 
-export const user = {
+export const profile = {
   update: defineAction({
     accept: 'form',
     input: z.object({

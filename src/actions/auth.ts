@@ -1,7 +1,7 @@
 import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import type { ApiResponse } from '@/types/response'
-import type { User } from '@/types/user'
+import type { User } from '@/types/users'
 import { handleApiError, http } from './http'
 
 export const auth = {
