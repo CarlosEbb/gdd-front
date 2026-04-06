@@ -2,7 +2,6 @@
 import TemplateCard from '@/components/ui/TemplateCard.astro'
 import MainLayout from '@/layouts/MainLayout.astro'
 import { Box, File, FileText, LayoutGrid, NotepadText, Scale, ScrollText } from '@lucide/astro'
-import Icon from '@/components/ui/Icon.astro'
 import { actions } from 'astro:actions'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import Modal from '@/components/modal/Modal.astro'
@@ -51,11 +50,11 @@ const currentPath = Astro.url.pathname
   <Container>
     <Header title="Plantillas recientes" subtitle={`Total: ${TEMPLATES.length} plantillas`} />
 
-    <div class="sticky top-14 z-30 mb-6 w-full bg-foreground py-3">
-      <Input type="search" placeholder="Buscar por nombre o categoría..." id="search-input" name="search" />
-    </div>
-
     <StateSwitch hasError={error !== undefined}>
+      <div class="sticky top-14 z-30 mb-4 w-full bg-foreground">
+        <Input type="search" placeholder="Buscar por nombre o categoría..." id="search-input" name="search" />
+      </div>
+
       <div id="categories-sticky" class="flex gap-8 border-b border-border">
         <button
           type="button"
