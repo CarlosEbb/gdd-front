@@ -6,40 +6,18 @@ import Link from '@/components/ui/Link.astro'
 import Icon from '@/components/ui/Icon.astro'
 import Input from '@/components/form/Input.astro'
 import Header from '@/components/ui/Header.astro'
+import { actions } from 'astro:actions'
+import type { User } from '@/types/users'
+import { formatDate } from '@/scripts/utils'
+import Avatar from '@/components/ui/Avatar.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
 
-const LIST_USERS = [
-  {
-    id: 1,
-    name: 'Carlos Martínez',
-    description: 'Cliente: Mi Empresa SL',
-    secondaryText: 'Activo hace 2h',
-  },
-  {
-    id: 2,
-    name: 'Ana García',
-    description: 'Cliente: Ferretería Sb',
-    secondaryText: 'En línea',
-  },
-  {
-    id: 3,
-    name: 'Miguel Rodríguez',
-    description: 'Cliente: Soluciones SRL',
-    secondaryText: 'Hace 1 día',
-  },
-  {
-    id: 4,
-    name: 'Laura Fernández',
-    description: 'Cliente: Daka SL',
-    secondaryText: 'Hace 3h',
-  },
-  {
-    id: 5,
-    name: 'Javier López',
-    description: 'Cliente: Tech Solutions SL',
-    secondaryText: 'Hace 5h',
-  },
-]
-const totalUsers = LIST_USERS.length
+const { data, error } = await Astro.callAction(actions.users.list, {})
+
+const users = data?.data || []
+const hasUsers = users.length > 0
+const totalUsers = users.length
 ---
 
 <MainLayout title="Usuarios">
@@ -50,25 +28,36 @@ const totalUsers = LIST_USERS.length
       </div>
     </Header>
 
-    <div class="mb-4">
-      <Input name="search" type="search" placeholder="Buscar usuario..." />
-    </div>
+    <StateSwitch isEmpty={!hasUsers} hasError={!!error}>
+      <div class="mb-4">
+        <Input name="search" type="search" placeholder="Buscar usuario..." />
+      </div>
 
-    <div class="overflow-hidden rounded-main border border-border bg-background">
-      {
-        LIST_USERS.map((user) => (
-          <CardList icon="User" title={user.name} description={user.description} secondaryText={user.secondaryText}>
-            <div slot="actions" class="flex gap-1">
-              <Link href={`/users/${user.id}/edit`} variant="outline" size="icon">
-                <Icon stroke-width={1.5} name="Pencil" size={16} />
-              </Link>
-              <Link href={`/users/${user.id}`} variant="outline" size="icon">
-                <Icon stroke-width={1.5} name="ChevronRight" size={16} />
-              </Link>
-            </div>
-          </CardList>
-        ))
-      }
-    </div>
+      <div class="overflow-hidden rounded-main border border-border bg-background">
+        {
+          users.map((user: User) => (
+            <CardList title={user.name} description={user.email} secondaryText={user.lastConnection ? `Última conexión: ${formatDate(user.lastConnection)}` : ''}>
+              <Avatar slot="avatar" size="lg" name={user.name} lastName={user.lastName} photo={user.photo} />
+              <div slot="actions" class="flex gap-1">
+                <Link href={`/users/${user.uuid}/edit`} variant="outline" size="icon">
+                  <Icon stroke-width={1.5} name="Pencil" size={16} />
+                </Link>
+                <Link href={`/users/${user.uuid}`} variant="outline" size="icon">
+                  <Icon stroke-width={1.5} name="ChevronRight" size={16} />
+                </Link>
+              </div>
+            </CardList>
+          ))
+        }
+      </div>
+
+      <div slot="empty">
+        <EmptyState title="No hay usuarios registrados" href="/users/new" hrefText="Crear usuario" state="info" />
+      </div>
+
+      <div slot="error">
+        <EmptyState title="Error al cargar los usuarios" state="error" href="/users" hrefText="Reintentar" />
+      </div>
+    </StateSwitch>
   </Container>
 </MainLayout>
