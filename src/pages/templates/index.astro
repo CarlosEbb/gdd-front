@@ -1,7 +1,7 @@
 ---
 import TemplateCard from '@/components/ui/TemplateCard.astro'
 import MainLayout from '@/layouts/MainLayout.astro'
-import { Box, File, FileText, NotepadText, Scale, ScrollText } from '@lucide/astro'
+import { Box, File, FileText, LayoutGrid, NotepadText, Scale, ScrollText } from '@lucide/astro'
 import Icon from '@/components/ui/Icon.astro'
 import { actions } from 'astro:actions'
 import EmptyState from '@/components/ui/EmptyState.astro'
@@ -11,11 +11,13 @@ import Input from '@/components/form/Input.astro'
 import Button from '@/components/ui/Button.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import Container from '@/components/ui/Container.astro'
+import type { Templates } from '@/types/templates'
+import Header from '@/components/ui/Header.astro'
 
 const workspaces = (await Astro.session?.get('workspaces')) || []
 const { data, error } = await Astro.callAction(actions.templates.get, {})
 
-const TEMPLATES = data?.data?.categories ?? []
+const TEMPLATES = data?.data ?? []
 
 const CATEGORIES = {
   Facturas: { name: 'Facturas', icon: File, color: 'bg-blue-500/20 text-blue-500/80' },
@@ -26,7 +28,7 @@ const CATEGORIES = {
   Boletas: { name: 'Boletas', icon: NotepadText, color: 'bg-green-500/20 text-green-500/80' },
 } as const
 
-const categories = TEMPLATES.map((template) => template.category)
+const categories = TEMPLATES.map((template: Templates) => template.category)
 const uniqueCategories = [...new Set(categories)]
 const AssignedCategories = uniqueCategories.map((category) => CATEGORIES[category as keyof typeof CATEGORIES])
 
@@ -45,83 +47,78 @@ const groupedTemplates = () => {
 const currentPath = Astro.url.pathname
 ---
 
-<MainLayout title="Plantillas" class="ml-16 p-0 md:ml-24">
-  <div class="relative flex-1 overflow-auto">
-    <div class="w-full bg-linear-to-l from-blue-300/30 via-indigo-300/30 to-violet-300/30 mask-b-from-20% mask-b-to-95%">
-      <div class="mx-auto max-w-6xl p-6">
-        <div class="mb-8 text-center">
-          <h1 class="mt-24 text-2xl font-bold md:text-4xl">Descubre nuestras plantillas más recientes</h1>
+<MainLayout title="Plantillas">
+  <Container>
+    <Header title="Plantillas recientes" subtitle={`Total: ${TEMPLATES.length} plantillas`} />
 
-          <div class="relative mx-auto my-2 mb-8 max-w-2xl py-5 md:my-5 md:py-10">
-            <div class="absolute top-1/2 left-4 -translate-y-1/2">
-              <Icon name="Search" stroke-width={1.5} size={16} />
-            </div>
-            <input
-              type="text"
-              id="search-input"
-              placeholder="Buscar plantillas"
-              class="w-full rounded-main border border-blue-muted/40 bg-white py-4 pr-14 pl-12 text-xl text-neutral-950 placeholder-gray-500 shadow-lg focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-            <div class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400"></div>
-          </div>
-        </div>
+    <div class="sticky top-14 z-30 mb-6 w-full bg-foreground py-3">
+      <Input type="search" placeholder="Buscar por nombre o categoría..." id="search-input" name="search" />
+    </div>
+
+    <StateSwitch hasError={error !== undefined}>
+      <div id="categories-sticky" class="flex gap-8 border-b border-border">
+        <button
+          type="button"
+          data-category="all"
+          class="category-tab -mb-px flex cursor-pointer items-center gap-2 border-b-2 border-primary pb-3 text-sm font-semibold text-primary transition-all hover:text-primary"
+        >
+          <LayoutGrid class="size-4" stroke-width={1.5} />
+          <span class="text-sm">Todas</span>
+        </button>
+        {
+          AssignedCategories.map((item) => (
+            <button
+              type="button"
+              data-category={item.name}
+              class="category-tab -mb-px flex cursor-pointer items-center gap-2 border-b-2 border-transparent pb-3 text-sm text-subheading transition-all hover:text-primary"
+            >
+              <item.icon class="size-4" stroke-width={1.5} />
+              <span class="text-sm">{item.name}</span>
+            </button>
+          ))
+        }
       </div>
-    </div>
-  </div>
 
-  <StateSwitch hasError={error !== null}>
-    <div id="categories-sticky" class="sticky top-14 z-10 -mt-10 flex snap-x items-center gap-2 overflow-x-auto transition-colors duration-300 md:justify-center md:gap-3">
-      {
-        AssignedCategories.map((item, idx) => (
-          <a href={`#${item.name}`} class="group flex snap-start flex-col items-center gap-2 rounded-main px-2 py-1 whitespace-nowrap transition-all duration-100 hover:bg-white/30 md:px-4 md:py-2">
-            <div class={`size-10 rounded-main md:size-14 ${item.color} flex items-center justify-center text-xl group-hover:scale-105`}>
-              <item.icon class="size-5 group-hover:animate-bounce md:size-8" stroke-width={1.5} />
-            </div>
-            <span class="text-xs font-medium text-gray-700">{item.name}</span>
-          </a>
-        ))
-      }
-    </div>
-    <div class="mx-auto max-w-7xl">
-      <section class="mt-20 mb-24">
-        <div id="no-results-message" class="hidden px-10 py-16">
-          <EmptyState
-            title="No se encontraron plantillas"
-            description="No hay plantillas que coincidan con tu búsqueda. Intenta con otros términos."
-            state="notFound"
-            href="#"
-            hrefText="Limpiar búsqueda"
-          />
-        </div>
-        <div class="space-y-8" id="category-templates">
-          {
-            Object.entries(groupedTemplates()).map(([category, templates]) => (
-              <div id={category.charAt(0).toUpperCase() + category.slice(1)} class="category-section md-px-4 scroll-mt-44 px-10 lg:px-0">
-                <h2 class="mb-4 text-lg font-semibold text-gray-700">{category.charAt(0).toUpperCase() + category.slice(1)}</h2>
-                <div class="xs:grid-cols-2 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
-                  {templates.map((template) => (
-                    <TemplateCard template={template} />
-                  ))}
+      <div class="mt-6 mb-10">
+        <section class="">
+          <div id="no-results-message" class="hidden px-10 py-16">
+            <EmptyState
+              title="No se encontraron plantillas"
+              description="No hay plantillas que coincidan con tu búsqueda. Intenta con otros términos."
+              state="notFound"
+              href="#"
+              hrefText="Limpiar búsqueda"
+            />
+          </div>
+          <div class="space-y-8" id="category-templates">
+            {
+              Object.entries(groupedTemplates()).map(([category, templates]) => (
+                <div id={category.charAt(0).toUpperCase() + category.slice(1)} class="category-section md-px-4 scroll-mt-44 px-10 lg:px-0">
+                  <h2 class="mb-4 text-lg font-semibold text-heading">{category.charAt(0).toUpperCase() + category.slice(1)}</h2>
+                  <div class="xs:grid-cols-2 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                    {templates.map((template) => (
+                      <TemplateCard template={template} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))
-          }
-        </div>
-      </section>
-    </div>
+              ))
+            }
+          </div>
+        </section>
+      </div>
 
-    <div slot="error">
-      <Container>
-        <EmptyState title="Error al cargar las plantillas" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
-      </Container>
-    </div>
-    <div slot="empty">
-      <Container>
-        <EmptyState title="No se encontraron plantillas" description="No hay plantillas disponibles." state="notFound" />
-      </Container>
-    </div>
-  </StateSwitch>
-
+      <div slot="error">
+        <Container>
+          <EmptyState title="Error al cargar las plantillas" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
+        </Container>
+      </div>
+      <div slot="empty">
+        <Container>
+          <EmptyState title="No se encontraron plantillas" description="No hay plantillas disponibles." state="notFound" />
+        </Container>
+      </div>
+    </StateSwitch>
+  </Container>
   <Modal modalId="create-template" title="Crear plantilla">
     <form class="space-y-6" id="create-template-form">
       <div>
@@ -162,6 +159,7 @@ const currentPath = Astro.url.pathname
   interface Template {
     uuid: string
     title: string
+    category: string
   }
 
   document.addEventListener('astro:page-load', () => {
@@ -179,6 +177,8 @@ const currentPath = Astro.url.pathname
 
     const dataScript = document.getElementById('templates-data')
     const templates: Template[] = dataScript ? JSON.parse(dataScript.textContent || '[]') : []
+    const categoryTabs = document.querySelectorAll<HTMLButtonElement>('.category-tab')
+    let activeCategory = 'all'
 
     const toggleElement = (element: HTMLElement, show: boolean) => {
       element.style.display = show ? '' : 'none'
@@ -189,8 +189,20 @@ const currentPath = Astro.url.pathname
       add ? element.classList.add(className) : element.classList.remove(className)
     }
 
+    // Actualizar estado visual de las tabs
+    const updateTabsActiveState = (activeCat: string) => {
+      categoryTabs.forEach((tab) => {
+        const isActive = tab.dataset.category === activeCat
+        tab.classList.toggle('border-primary', isActive)
+        tab.classList.toggle('text-primary', isActive)
+        tab.classList.toggle('font-semibold', isActive)
+        tab.classList.toggle('border-transparent', !isActive)
+        tab.classList.toggle('text-subheading', !isActive)
+      })
+    }
+
     const showAllTemplates = () => {
-      const allCards = elements.categoryTemplates.querySelectorAll<HTMLElement>('[id]')
+      const allCards = elements.categoryTemplates.querySelectorAll<HTMLElement>('.category-section [id]')
       const allSections = elements.categoryTemplates.querySelectorAll<HTMLElement>('.category-section')
 
       allCards.forEach((card) => toggleElement(card, true))
@@ -198,8 +210,16 @@ const currentPath = Astro.url.pathname
       toggleClass(elements.noResultsMessage, 'hidden', true)
     }
 
-    const getFilteredUuids = (term: string): Set<string> => {
-      return new Set(templates.filter((template) => template.title?.toLowerCase().includes(term)).map((template) => template.uuid))
+    const getFilteredUuids = (term: string, category: string): Set<string> => {
+      return new Set(
+        templates
+          .filter((template) => {
+            const matchesSearch = term === '' || template.title?.toLowerCase().includes(term) || template.category?.toLowerCase().includes(term)
+            const matchesCategory = category === 'all' || template.category?.toLowerCase() === category.toLowerCase()
+            return matchesSearch && matchesCategory
+          })
+          .map((template) => template.uuid)
+      )
     }
 
     const processSectionVisibility = (section: HTMLElement, filteredUuids: Set<string>): number => {
@@ -216,16 +236,16 @@ const currentPath = Astro.url.pathname
       return visibleCount
     }
 
-    // Función principal de filtrado
-    const filterTemplates = (searchTerm: string) => {
-      const term = searchTerm.toLowerCase().trim()
+    // Función principal de filtrado (combina búsqueda + categoría)
+    const applyFilters = () => {
+      const term = (elements.searchInput?.value || '').toLowerCase().trim()
 
-      if (term === '') {
+      if (term === '' && activeCategory === 'all') {
         showAllTemplates()
         return
       }
 
-      const filteredUuids = getFilteredUuids(term)
+      const filteredUuids = getFilteredUuids(term, activeCategory)
       const categorySections = elements.categoryTemplates.querySelectorAll<HTMLElement>('.category-section')
 
       let totalVisible = 0
@@ -238,8 +258,8 @@ const currentPath = Astro.url.pathname
 
     // Event Listeners - Búsqueda
     const setupSearchListeners = () => {
-      elements.searchInput?.addEventListener('input', (e) => {
-        filterTemplates((e.target as HTMLInputElement).value)
+      elements.searchInput?.addEventListener('input', () => {
+        applyFilters()
       })
 
       elements.noResultsMessage?.addEventListener('click', (e) => {
@@ -249,8 +269,22 @@ const currentPath = Astro.url.pathname
         if (isLink && elements.searchInput) {
           e.preventDefault()
           elements.searchInput.value = ''
-          filterTemplates('')
+          activeCategory = 'all'
+          updateTabsActiveState(activeCategory)
+          applyFilters()
         }
+      })
+    }
+
+    // Event Listeners - Filtros de categoría
+    const setupCategoryFilters = () => {
+      categoryTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const category = tab.dataset.category || 'all'
+          activeCategory = category
+          updateTabsActiveState(activeCategory)
+          applyFilters()
+        })
       })
     }
 
@@ -258,7 +292,10 @@ const currentPath = Astro.url.pathname
     const setupTemplateClickListener = () => {
       elements.categoryTemplates.addEventListener('click', (event) => {
         const target = event.target as HTMLElement
-        const uuidTemplate = target.closest('[id]')?.id
+        const card = target.closest('.category-section [id]') as HTMLElement | null
+        if (!card) return
+
+        const uuidTemplate = card.id
 
         if (elements.inputIdTemplate && uuidTemplate) {
           elements.inputIdTemplate.value = uuidTemplate
@@ -267,11 +304,42 @@ const currentPath = Astro.url.pathname
       })
     }
 
+    // Observer para destacar la categoría visible al hacer scroll
+    const setupSectionObserver = () => {
+      const categorySections = elements.categoryTemplates.querySelectorAll<HTMLElement>('.category-section')
+      if (!categorySections.length) return
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          // Solo actualizar tabs por scroll si no hay filtro de categoría activo
+          if (activeCategory !== 'all') return
+          const searchTerm = (elements.searchInput?.value || '').trim()
+          if (searchTerm !== '') return
+
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              const sectionId = entry.target.id
+              if (sectionId) {
+                updateTabsActiveState(sectionId)
+              }
+              break
+            }
+          }
+        },
+        {
+          threshold: 0.3,
+          rootMargin: '-80px 0px -60% 0px',
+        }
+      )
+
+      categorySections.forEach((section) => observer.observe(section))
+    }
+
     // Configurar sticky header observer
     const setupStickyObserver = () => {
       if (!elements.sticky) return
 
-      const stickyClasses = ['bg-[#fdfaff]', 'backdrop-blur-sm', 'border-b', 'border-gray-200']
+      const stickyClasses = ['bg-[#fdfaff]', 'backdrop-blur-sm', 'border-gray-200']
 
       const observer = new IntersectionObserver(
         ([entry]) => {
@@ -325,8 +393,10 @@ const currentPath = Astro.url.pathname
 
     // Inicializar todos los listeners
     setupSearchListeners()
+    setupCategoryFilters()
     setupTemplateClickListener()
     setupStickyObserver()
+    setupSectionObserver()
     elements.createTemplateForm.addEventListener('submit', handleCreateTemplate)
   })
 </script>

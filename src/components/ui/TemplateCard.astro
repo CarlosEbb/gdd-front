@@ -1,28 +1,28 @@
 ---
 import { Image } from 'astro:assets'
-import type { Category } from '@/types/templates'
+import type { Templates } from '@/types/templates'
 const { PUBLIC_PROJECT_URL } = import.meta.env
 
 interface Props {
-  template: Category
+  template: Templates
 }
 
 const { template } = Astro.props
-const thumbnails = `${PUBLIC_PROJECT_URL}${template.path_thumbnails}`
+const thumbnails = `${PUBLIC_PROJECT_URL}${template.pathThumbnails}`
 ---
 
-<div class="group cursor-pointer overflow-hidden rounded-main bg-white shadow-sm shadow-blue-muted/10 transition-all hover:border-primary hover:shadow-lg" id={template.uuid}>
-  <div class="flex h-96 items-center justify-center p-4">
-    <Image src={thumbnails} alt={template.category} width={200} height={200} class="h-full w-full object-contain" priority={false} />
+<div class="group relative cursor-pointer overflow-hidden rounded-lg border border-border bg-foreground transition-all duration-300 hover:border-muted hover:shadow-base" id={template.uuid}>
+  <div class="relative h-52 overflow-hidden bg-background">
+    <div
+      class="absolute top-10 left-1/2 h-auto w-[80%] -translate-x-1/2 rounded-t-md border border-border bg-background mask-b-from-50% mask-b-to-90% shadow-sm transition-transform duration-500 ease-out group-hover:-translate-y-6"
+    >
+      <Image src={thumbnails} alt={template.category} width={200} height={200} class="h-full w-full rounded-t-md object-contain transition-opacity" priority={false} />
+    </div>
   </div>
-
-  <div class="px-4 py-2">
-    <h3 class="mb-2 line-clamp-2 font-semibold">{template.title}</h3>
-
-    <div class="mb-4">
-      <span class="text-custom-bg-blue-muted inline-block rounded bg-linear-to-r from-blue-muted/10 to-blue-muted/10 px-3 py-1 text-xs font-medium">
-        {template.category}
-      </span>
+  <div class="relative z-10 border-t border-border bg-foreground p-3">
+    <h3 class="text-sm font-semibold tracking-tight text-heading">{template.title}</h3>
+    <div class="flex items-center justify-between">
+      <span class="text-[11px] font-semibold text-subheading">{template.category}</span>
     </div>
   </div>
 </div>

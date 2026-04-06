@@ -17,7 +17,7 @@ export const templates = {
       const token = (await request.session?.get('token')) as string
 
       try {
-        const templates = await http.get<Templates>(`/category/all`, token)
+        const templates = await http.get<Templates[]>('/category/all', token)
         return templates
       } catch (error) {
         handleApiError(error, request)
