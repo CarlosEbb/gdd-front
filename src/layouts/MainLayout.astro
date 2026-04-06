@@ -45,6 +45,12 @@ const { title = undefined, class: className = 'px-4 pt-20' } = Astro.props
   </div>
 </Layout>
 
+<style is:global>
+  body {
+    background-color: var(--foreground);
+  }
+</style>
+
 <!--
 <script>
   import { navigate } from 'astro:transitions/client'
