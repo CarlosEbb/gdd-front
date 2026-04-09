@@ -5,10 +5,34 @@ import Link from '@/components/ui/Link.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import WorkspacesLink from '@/components/ui/WorkspacesLink.astro'
 import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
+import { actions } from 'astro:actions'
+import type { Workspace } from '@/types/workspaces'
 
-const workspaces = (await Astro.session?.get('workspaces')) || []
-const latestWorkspaces = workspaces.toReversed().slice(0, 3)
-const hasWorkSpaces = workspaces.length > 0
+const getWorkspacesFromSession = async () => {
+  const workspaces = (await Astro.session?.get('workspaces')) ?? []
+  return workspaces as Workspace[]
+}
+
+const hasWorkspacesInSession = (await getWorkspacesFromSession()).length > 0
+
+let workspaces: Workspace[] = []
+let latestWorkspaces: Workspace[] = []
+let hasWorkSpaces = false
+let error: string | null = null
+
+if (!hasWorkspacesInSession) {
+  const { data, error: actionError } = await Astro.callAction(actions.workspaces.list, {})
+  workspaces = data?.data ?? []
+  latestWorkspaces = workspaces.toReversed().slice(0, 3)
+  hasWorkSpaces = workspaces.length > 0
+  error = actionError?.message ?? null
+}
+
+if (hasWorkspacesInSession) {
+  workspaces = await getWorkspacesFromSession()
+  latestWorkspaces = workspaces.toReversed().slice(0, 3)
+  hasWorkSpaces = workspaces.length > 0
+}
 ---
 
 <section class="mb-10">
@@ -31,6 +55,10 @@ const hasWorkSpaces = workspaces.length > 0
 
     <div slot="empty">
       <EmptyState state="info" title="Aún no tienes espacios de trabajo" hiddenAction description="Crea tu primer espacio de trabajo para comenzar" />
+    </div>
+
+    <div slot="error">
+      <EmptyState state="error" title="Error al cargar los espacios de trabajo" description={error ?? 'Error al cargar los espacios de trabajo'} />
     </div>
   </StateSwitch>
 </section>
