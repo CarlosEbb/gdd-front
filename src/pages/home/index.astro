@@ -1,6 +1,6 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro'
-import ListLatestOpenid from '@/sections/workspaces/List.astro'
+import ListWorkspaces from '@/sections/workspaces/List.astro'
 import ListDocuments from '@/sections/documents/List.astro'
 import TitleForPage from '@/components/ui/TitleForPage.astro'
 import Container from '@/components/ui/Container.astro'
@@ -13,7 +13,7 @@ const name = user.name
   <Container>
     <TitleForPage titleStyle="md:text-3xl" class="mb-10" subtitle="Gestiona tus espacios de trabajo y documentos" showBackButton={false} title={`¡Bienvenido, ${name}!`} />
 
-    <ListLatestOpenid />
+    <ListWorkspaces />
     <ListDocuments title="Últimos documentos" limit={7} />
   </Container>
 </MainLayout>
