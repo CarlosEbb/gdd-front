@@ -20,7 +20,7 @@ const hasTitle = !!title
 const hasSubtitle = !!subtitle
 const hasActionsSlot = Astro.slots.has('actions')
 
-const baseUrl = import.meta.env.PUBLIC_NAME_PROJECT
+const baseUrl = import.meta.env.PUBLIC_PROJECT_URL
 const urlImage = hasImage ? `${baseUrl}${img}` : undefined
 ---
 
