@@ -4,7 +4,8 @@ import Container from '@/components/ui/Container.astro'
 import Header from '@/components/ui/Header.astro'
 import { actions } from 'astro:actions'
 import type { Database } from '@/types/servers'
-import List from '@/components/ui/List.astro'
+import Table from '@/components/ui/Table.astro'
+import type { TableColumn, TableRow } from '@/components/ui/Table.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import Button from '@/components/ui/Button.astro'
 import Modal from '@/components/modal/Modal.astro'
@@ -18,6 +19,16 @@ const { data, error } = await Astro.callAction(actions.servers.getByUuid, { uuid
 
 const server = data?.data || null
 const dataBases = server?.databases || []
+
+const dbColumns: TableColumn[] = [
+  { key: 'nameBd', label: 'Nombre' },
+  { key: 'username', label: 'Usuario' },
+]
+
+const dbRows: TableRow[] = dataBases.map((db: Database) => ({
+  nameBd: db.nameBd,
+  username: db.username,
+}))
 const hasDatabases = dataBases.length > 0
 const selectedServer = {
   name: server?.name || 'Servidor no encontrado',
@@ -38,7 +49,7 @@ const selectedServer = {
 
             <div class="flex items-center gap-3">
               <Link size="sm" href={`/servers/${uuid}/edit`} icon="Pencil"> Editar </Link>
-              <Button size="sm" variant="destructive" data-open-modal="delete-server"> Eliminar </Button>
+              <Button size="sm" variant="destructive" data-open-modal="delete-server" icon="Trash2"> Eliminar </Button>
             </div>
           </div>
           <div class="flex items-center justify-between gap-6 p-6">
@@ -67,16 +78,9 @@ const selectedServer = {
             </div>
           </div>
         </div>
-        <div class="mt-8">
-          <h3 class="mb-4 text-lg font-semibold text-heading">Bases de datos</h3>
-          <StateSwitch isEmpty={!hasDatabases}>
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {dataBases.map((db: Database) => <List icon="Database" title={db.nameBd} subtitle={db.username} />)}
-            </div>
-            <div slot="empty">
-              <EmptyState href="/servers" title="No hay bases de datos" state="info" description="No se encontraron bases de datos para este servidor" hiddenAction={true} />
-            </div>
-          </StateSwitch>
+        <div>
+          <h2 class="mt-12 mb-6 text-xl font-semibold text-heading">Bases de datos</h2>
+          <Table columns={dbColumns} rows={dbRows} showPagination={false} />
         </div>
       </>
       <div slot="error">
