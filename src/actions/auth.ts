@@ -1,7 +1,7 @@
 import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import type { ApiResponse } from '@/types/response'
-import type { User } from '@/types/users'
+import type { AuthResponse } from '@/types/users'
 import { handleApiError, http } from './http'
 
 export const auth = {
@@ -13,7 +13,7 @@ export const auth = {
     }),
     handler: async (input, request) => {
       try {
-        const info: ApiResponse<User> = await http.post<User>(
+        const info: ApiResponse<AuthResponse> = await http.post<AuthResponse>(
           `/users/login`,
           '',
           {
@@ -23,11 +23,10 @@ export const auth = {
           true
         )
 
-        const { user, token, workspaces } = info.data
+        const { user, token } = info.data
 
         await request.session?.set('token', token)
         await request.session?.set('user', user)
-        await request.session?.set('workspaces', workspaces)
 
         return {
           code: info.code,
@@ -65,13 +64,12 @@ export const auth = {
       myHeaders.append('Content-Type', 'application/json')
 
       try {
-        const register = await http.post<User>(`/auth/register`, '', input, true)
+        const register = await http.post<AuthResponse>(`/auth/register`, '', input, true)
 
-        const { user, token, workspaces } = register.data
+        const { user, token } = register.data
 
         if (register.code === 201) {
           await request.session?.set('user', user)
-          await request.session?.set('workspaces', workspaces)
           await request.session?.set('token', token)
 
           return {
