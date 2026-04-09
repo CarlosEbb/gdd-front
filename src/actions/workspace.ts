@@ -1,7 +1,7 @@
 import { ActionError, defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
-import type { AssignUser, DetailsWorkspace, NewWorkspace, WorkspaceByUser } from '@/types/workspaces'
+import type { Workspace } from '@/types/workspaces'
 
 export const workspaces = {
   create: defineAction({
@@ -9,6 +9,8 @@ export const workspaces = {
     input: z.object({
       name: z.string(),
       icon: z.string(),
+      clientUuid: z.string(),
+      serverUuid: z.string(),
     }),
     handler: async (input, request) => {
       const hasToken = await request.session?.has('token')
@@ -23,9 +25,11 @@ export const workspaces = {
       const workspaces = (await request.session?.get('workspaces')) || []
 
       try {
-        const newWorkspace = await http.post<NewWorkspace>('/workspace', token, {
+        const newWorkspace = await http.post<Workspace>('/workspaces', token, {
           name: input.name,
           icon: input.icon,
+          clientUuid: input.clientUuid,
+          serverUuid: input.serverUuid,
         })
 
         workspaces.push(newWorkspace.data)
@@ -38,7 +42,29 @@ export const workspaces = {
     },
   }),
 
-  getById: defineAction({
+  list: defineAction({
+    handler: async (_, request) => {
+      const hasToken = await request.session?.has('token')
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
+
+      try {
+        const workspaces = await http.get<Workspace[]>('/workspaces', token)
+        await request.session?.set('workspaces', workspaces.data)
+        return workspaces
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+
+  getByUuid: defineAction({
     input: z.object({
       uuid: z.string(),
     }),
@@ -54,91 +80,9 @@ export const workspaces = {
       const token = (await request.session?.get('token')) as string
 
       try {
-        const newWorkspace = await http.get<DetailsWorkspace>(`/workspace/${uuid}`, token)
+        const workspace = await http.get<Workspace>(`/workspaces/${uuid}`, token)
 
-        return newWorkspace
-      } catch (error) {
-        handleApiError(error, request)
-      }
-    },
-  }),
-
-  getByUser: defineAction({
-    input: z.object({
-      uuid: z.string(),
-    }),
-    handler: async ({ uuid }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
-
-      try {
-        const workspacesByUser = await http.get<WorkspaceByUser[]>(`/workspace/${uuid}/users`, token)
-
-        return workspacesByUser
-      } catch (error) {
-        handleApiError(error, request)
-      }
-    },
-  }),
-
-  assignUser: defineAction({
-    input: z.object({
-      uuid: z.string(),
-      email: z.string().email(),
-    }),
-    handler: async ({ uuid, email }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
-
-      try {
-        const assignUser = await http.post<AssignUser[]>(`/workspace/${uuid}/assign`, token, {
-          targetUserEmail: email,
-        })
-
-        return assignUser
-      } catch (error) {
-        handleApiError(error, request)
-      }
-    },
-  }),
-
-  unassignUser: defineAction({
-    input: z.object({
-      uuid: z.string(),
-      email: z.string().email(),
-    }),
-    handler: async ({ uuid, email }, request) => {
-      const hasToken = await request.session?.has('token')
-
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
-
-      try {
-        const unassignUser = await http.del<void>(`/workspace/${uuid}/remove-user`, token, {
-          targetUserEmail: email,
-        })
-
-        return unassignUser
+        return workspace
       } catch (error) {
         handleApiError(error, request)
       }
@@ -150,8 +94,10 @@ export const workspaces = {
       uuid: z.string(),
       name: z.string(),
       icon: z.string(),
+      clientUuid: z.string(),
+      serverUuid: z.string(),
     }),
-    handler: async ({ uuid, name, icon }, request) => {
+    handler: async ({ uuid, name, icon, clientUuid, serverUuid }, request) => {
       const hasToken = await request.session?.has('token')
 
       if (!hasToken) {
@@ -164,12 +110,14 @@ export const workspaces = {
       const token = (await request.session?.get('token')) as string
 
       try {
-        const updatedWorkspace = await http.put<NewWorkspace>(`/workspace/${uuid}`, token, {
+        const updatedWorkspace = await http.put<Workspace>(`/workspaces/${uuid}`, token, {
           name,
           icon,
+          clientUuid,
+          serverUuid,
         })
         const workspaces = (await request.session?.get('workspaces')) || []
-        const updatedWorkspaces = workspaces.map((workspace) => (workspace.uuid === uuid ? { ...workspace, name, icon } : workspace))
+        const updatedWorkspaces = workspaces.map((workspace) => (workspace.uuid === uuid ? { ...workspace, name, icon, clientUuid, serverUuid } : workspace))
         await request.session?.set('workspaces', updatedWorkspaces)
 
         return {
@@ -201,7 +149,7 @@ export const workspaces = {
       const token = (await request.session?.get('token')) as string
 
       try {
-        const deletedWorkspace = await http.del<void>(`/workspace/${uuid}`, token)
+        const deletedWorkspace = await http.del<void>(`/workspaces/${uuid}`, token)
 
         const workspaces = (await request.session?.get('workspaces')) || []
         const updatedWorkspaces = workspaces.filter((workspace) => workspace.uuid !== uuid)
@@ -211,7 +159,7 @@ export const workspaces = {
           code: deletedWorkspace.code,
           message: deletedWorkspace.message,
           data: {
-            redirect: '/home',
+            redirect: '/workspaces',
           },
         }
       } catch (error) {

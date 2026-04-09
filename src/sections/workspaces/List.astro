@@ -1,43 +1,12 @@
 ---
-import Input from '@/components/form/Input.astro'
-import Modal from '@/components/modal/Modal.astro'
 import Button from '@/components/ui/Button.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
-import IconPicker from '@/components/ui/IconPicker.astro'
 import Link from '@/components/ui/Link.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import WorkspacesLink from '@/components/ui/WorkspacesLink.astro'
+import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
 
-// const workspaces = (await Astro.session?.get('workspaces')) || []
-const workspaces = [
-  {
-    id: 1,
-    uuid: 'workspace-1',
-    name: 'Workspace 1',
-    email: 'workspace1@example.com',
-    is_owner: true,
-    updated_at: '2025-11-04T15:45:54.868Z',
-    icon: 'Home',
-  },
-  {
-    id: 2,
-    uuid: 'workspace-2',
-    name: 'Workspace 2',
-    email: 'workspace1@example.com',
-    is_owner: true,
-    updated_at: '2025-11-04T15:45:54.868Z',
-    icon: 'Home',
-  },
-  {
-    id: 3,
-    uuid: 'workspace-2',
-    name: 'Workspace 3',
-    email: 'workspace1@example.com',
-    is_owner: true,
-    updated_at: '2025-11-04T15:45:54.868Z',
-    icon: 'Home',
-  },
-]
+const workspaces = (await Astro.session?.get('workspaces')) || []
 const latestWorkspaces = workspaces.toReversed().slice(0, 3)
 const hasWorkSpaces = workspaces.length > 0
 ---
@@ -66,47 +35,4 @@ const hasWorkSpaces = workspaces.length > 0
   </StateSwitch>
 </section>
 
-<Modal modalId="create-workspace" title="Crear nuevo espacio de trabajo">
-  <form class="space-y-6" id="create-workspace-form">
-    <div>
-      <Input label="Nombre del espacio de trabajo" data-error-required="El nombre del espacio de trabajo es obligatorio" type="text" id="name" name="name" placeholder="Ingresa el nombre" required />
-    </div>
-
-    <IconPicker />
-  </form>
-
-  <div slot="footer">
-    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-    <Button type="submit" size="sm" form="create-workspace-form" id="btn-create-workspace" loadingText="Creando espacio...">Crear espacio</Button>
-  </div>
-</Modal>
-
-<script>
-  import { toast } from '@/scripts/toast'
-  import { actions } from 'astro:actions'
-  import { navigate } from 'astro:transitions/client'
-  import { callAction, setButtonLoading } from '@/scripts/utils'
-
-  document.addEventListener('astro:page-load', () => {
-    const form = document.getElementById('create-workspace-form') as HTMLFormElement
-    const modal = document.getElementById('create-workspace') as HTMLDialogElement
-
-    const handleSubmit = async (e: Event) => {
-      e.preventDefault()
-      const dataForm = new FormData(form)
-      setButtonLoading('#btn-create-workspace', true)
-      const { data, error } = await callAction(actions.workspaces.create(dataForm))
-
-      if (error) {
-        toast.error(error.message)
-        setButtonLoading('#btn-create-workspace', false)
-        return
-      }
-
-      toast.success(data.message)
-      navigate(`/workspaces/${data.data.uuid}`)
-      modal.close()
-    }
-    form.addEventListener('submit', handleSubmit)
-  })
-</script>
+<WorkspaceFormModal mode="create" />

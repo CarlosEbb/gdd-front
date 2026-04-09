@@ -1,14 +1,16 @@
 ---
-import EmptyState from '@/components/ui/EmptyState.astro'
 import MainLayout from '@/layouts/MainLayout.astro'
-import Aside from '@/sections/workspaces/Aside.astro'
-import type { DetailsWorkspace } from '@/types/workspaces'
 import { actions } from 'astro:actions'
 import Header from '@/components/ui/Header.astro'
 import Icon from '@/components/ui/Icon.astro'
-import ListDocuments from '@/sections/documents/List.astro'
-import StateSwitch from '@/components/ui/StateSwitch.astro'
 import Container from '@/components/ui/Container.astro'
+import Card from '@/components/ui/Card.astro'
+import { formatDate } from '@/scripts/utils'
+import Button from '@/components/ui/Button.astro'
+import Table from '@/components/ui/Table.astro'
+import Modal from '@/components/modal/Modal.astro'
+import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
+import Selector from '@/sections/workspaces/Selector.astro'
 const { uuid } = Astro.params
 
 if (!uuid) {
@@ -18,107 +20,226 @@ if (!uuid) {
 const workspaces = await Astro.session?.get('workspaces')
 const workspaceExists = workspaces?.some((workspace) => workspace.uuid === uuid)
 
-const { data: details, error: errorDetails } = await Astro.callAction(actions.workspaces.getById, { uuid })
+const { data, error } = await Astro.callAction(actions.workspaces.getByUuid, { uuid })
 
-const name = details?.data.name ?? 'Espacio de trabajo no encontrado'
-const currentPath = Astro.url.pathname
+const name = data?.data.name ?? 'Espacio de trabajo no encontrado'
+const workspace = data?.data
+const status = workspace?.status === 'ACTIVE'
+const client = workspace?.client
+const hasLogoClient = client?.logo === null
+const server = workspace?.dataBase?.server
+const database = workspace?.dataBase
+const templates = workspace?.templates || []
+const columnsTemplates = [
+  { key: 'title', label: 'Titulo' },
+  { key: 'description', label: 'Descripción', align: 'left' as const },
+  { key: 'updatedAt', label: 'Actualización', align: 'left' as const },
+]
+const rowsTemplates = templates.map((template) => ({
+  title: template.title,
+  description: template.description,
+  updatedAt: formatDate(template.updatedAt),
+  href: `/editor/${template.uuid}`,
+}))
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
 ---
 
 <MainLayout title={`Espacio de trabajo: ${name}` || 'Espacio de trabajo'}>
   <Container>
-    <Header title={name} />
-
-    <StateSwitch hasError={!!errorDetails} isEmpty={!workspaceExists}>
-      <div class="grid grid-cols-1 items-start gap-x-6 lg:grid-cols-3">
-        <div class="lg:col-span-2">
-          <ListDocuments uuidWorkspace={uuid} />
-        </div>
-
-        <button
-          id="btn-open-aside"
-          class="fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary/90 lg:hidden"
-          aria-label="Abrir panel de información"
-        >
-          <Icon name="PanelRight" size={24} />
-        </button>
-
-        <div
-          id="aside-drawer"
-          class="invisible fixed inset-0 z-50 opacity-0 transition-all duration-300 lg:visible lg:sticky lg:inset-auto lg:top-24 lg:col-span-1 lg:self-start lg:opacity-100 xl:ps-10"
-        >
-          <div id="aside-overlay" class="absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-300 lg:hidden"></div>
-
-          <div
-            id="aside-panel"
-            class="absolute top-0 right-0 h-full w-80 translate-x-full overflow-y-auto bg-transparent p-4 transition-transform duration-300 ease-out lg:static lg:h-auto lg:w-auto lg:translate-x-0 lg:overflow-visible lg:p-0"
-          >
-            <button
-              id="btn-close-aside"
-              class="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-600 shadow-md transition-colors hover:bg-gray-100 lg:hidden"
-              aria-label="Cerrar panel"
-            >
-              <Icon name="X" size={20} />
-            </button>
-
-            <Aside workspace={details?.data as DetailsWorkspace} />
-          </div>
-        </div>
+    <Header backHref="/workspaces" title={name} subtitle={`Numero de documentos: ${templates.length}`}>
+      <div slot="actions">
+        <Button size="sm" data-open-modal="edit-workspace" icon="Pencil">Editar</Button>
+        <Button size="sm" data-open-modal="delete-workspace" icon="Trash" variant="destructive">Eliminar</Button>
       </div>
+    </Header>
 
-      <EmptyState
-        title="Espacio de trabajo no encontrado"
-        description="El espacio de trabajo no existe o no tiene acceso."
-        href="/home"
-        hrefText="Volver a la página de inicio"
-        state="notFound"
-        slot="empty"
-        action="back"
-      />
+    <div>
+      <div class="mt-12 mb-6 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-heading">Detalles del espacio de trabajo</h2>
+        <Selector workspaces={workspaces || []} currentWorkspaceName={name} />
+      </div>
+      <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card>
+          <div class="mb-6 flex items-center gap-2 pb-4">
+            <Icon name="Info" size={16} class="text-heading" />
+            <h2 class="text-xs font-bold tracking-widest text-heading uppercase">Identificación</h2>
+          </div>
 
-      <EmptyState slot="error" title="Error al cargar el espacio de trabajo" description="Por favor, intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
-    </StateSwitch>
+          <div class="space-y-6">
+            <div>
+              <p class="mb-1 text-[10px] font-bold tracking-tighter text-subheading uppercase">Espacio de trabajo</p>
+              <p class="font-mono text-2xl font-bold text-heading">{workspace?.id}</p>
+            </div>
+            <div>
+              <p class="mb-1 text-[10px] font-bold tracking-tighter text-subheading uppercase">Estado del Entorno</p>
+              <div class="flex items-center gap-2 text-sm font-medium">
+                <span class="relative flex h-2 w-2">
+                  <span class:list={['absolute inline-flex h-full w-full animate-ping rounded-full', status ? 'bg-green-400' : 'bg-red-400', status ? 'opacity-75' : 'opacity-50']}></span>
+                  <span class:list={['relative inline-flex h-2 w-2 rounded-full', status ? 'bg-green-500' : 'bg-red-500']}></span>
+                </span>
+                {status ? <span class="text-green-600">Disponible</span> : <span class="text-red-600">Inactivo</span>}
+              </div>
+            </div>
+            <div>
+              <p class="mb-1 text-[10px] font-bold tracking-tighter text-subheading uppercase">Última actualización</p>
+              <p class="text-xs font-medium text-heading">{formatDate(workspace?.updatedAt || '')}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div class="mb-6 flex items-center gap-2 pb-4">
+            <Icon name="ShieldCheck" size={16} class="text-heading" />
+            <h2 class="text-xs font-bold tracking-widest text-heading uppercase">Propietario</h2>
+          </div>
+
+          <div class="mb-8 flex items-center gap-4">
+            {
+              hasLogoClient ? (
+                <img src={client?.logo || ''} alt="Logo del cliente" class="h-12 w-12 rounded-full object-cover" />
+              ) : (
+                <div class="flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-sm font-bold text-heading">{getInitials(client?.name || '')}</div>
+              )
+            }
+            <div>
+              <a href={`/clients/${client?.uuid}`} class="relative z-20 leading-none font-medium tracking-tight text-heading hover:underline">
+                {client?.name || 'Nombre no disponible'}
+              </a>
+              <p class="font-mono text-xs text-heading">RIF: {client?.rif || 'RIF no disponible'}</p>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs">
+                <span class="text-subheading uppercase">Espacios disponibles</span>
+                <span class="font-bold text-heading">{client?.nroWorkspacesMax || 0}</span>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs">
+                <span class="text-subheading uppercase">Documentos</span>
+                <span class="font-bold text-heading">{client?.nroDocumentsMax || 0}</span>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs">
+                <span class="text-subheading uppercase">Actualización</span>
+                <span class="font-bold text-heading">{client?.updatedAt ? formatDate(client?.updatedAt) : 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div class="mb-6 flex items-center gap-2 pb-4">
+            <Icon name="Database" size={16} class="text-heading" />
+            <h2 class="text-xs font-bold tracking-widest text-heading uppercase">Conexión de Datos</h2>
+          </div>
+
+          <div class="space-y-4">
+            <div class="rounded-xl border border-gray-200 bg-white p-3">
+              <p class="mb-1 text-[10px] font-bold text-subheading uppercase">Host de Acceso</p>
+              <div class="group flex items-center justify-between">
+                <a href={`/servers/${server?.uuid}`} class="relative z-20 font-mono text-sm font-bold text-heading hover:underline">{`${server?.ip}:${server?.puerto}`}</a>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="rounded-xl border border-gray-200 bg-white p-3">
+                <p class="mb-1 text-[10px] font-bold text-subheading uppercase">Database</p>
+                <span class="font-mono text-xs font-bold text-heading">{database?.nameBd}</span>
+              </div>
+              <div class="rounded-xl border border-gray-200 bg-white p-3">
+                <p class="mb-1 text-[10px] font-bold text-subheading uppercase">Usuario</p>
+                <span class="font-mono text-xs font-bold text-heading">{database?.username}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 px-1">
+              <span class="text-[10px] font-medium tracking-tighter text-subheading uppercase">Actualización: {database?.updatedAt ? formatDate(database?.updatedAt) : 'N/A'}</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="mt-12 mb-6 text-xl font-semibold text-heading">Documentos</h2>
+      <Table pageSize={templates.length} columns={columnsTemplates} rows={rowsTemplates} />
+    </div>
+
+    <Modal modalId="delete-workspace" title="Eliminar espacio de trabajo">
+      <form class="space-y-6" id="delete-workspace-form">
+        <div class="flex flex-col items-center justify-center py-5">
+          <Icon name="Trash" size={48} class="text-red-300" />
+          <p class="mt-4 mb-2 text-lg font-semibold text-heading">{name}</p>
+          <p class="mb-4 text-center text-subheading">¿Estás seguro de querer eliminar este espacio de trabajo?</p>
+          <input type="hidden" name="uuid" value={workspace?.uuid} required readonly />
+        </div>
+      </form>
+
+      <div slot="footer">
+        <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+        <Button variant="destructive" type="submit" size="sm" form="delete-workspace-form" id="btn-delete-workspace" loadingText="Eliminando espacio...">Eliminar espacio</Button>
+      </div>
+    </Modal>
+
+    <WorkspaceFormModal
+      mode="edit"
+      workspace={{
+        uuid: workspace?.uuid ?? '',
+        name: workspace?.name ?? '',
+        icon: workspace?.icon ?? '',
+        clientUuid: workspace?.uuidClient ?? '',
+        serverUuid: workspace?.dataBase?.uuidServer ?? '',
+      }}
+    />
   </Container>
 </MainLayout>
 
+<!-- Eliminar espacio de trabajo -->
 <script>
-  function initAsideDrawer() {
-    const btnOpen = document.getElementById('btn-open-aside')
-    const btnClose = document.getElementById('btn-close-aside')
-    const drawer = document.getElementById('aside-drawer')
-    const overlay = document.getElementById('aside-overlay')
-    const panel = document.getElementById('aside-panel')
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
 
-    if (!btnOpen || !drawer || !overlay || !panel) return
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('delete-workspace-form') as HTMLFormElement
+    const modal = document.getElementById('delete-workspace') as HTMLDialogElement
 
-    const openDrawer = () => {
-      drawer.classList.remove('invisible', 'opacity-0')
-      drawer.classList.add('visible', 'opacity-100')
-      overlay.classList.remove('opacity-0')
-      overlay.classList.add('opacity-100')
-      panel.classList.remove('translate-x-full')
-      panel.classList.add('translate-x-0')
-      document.body.style.overflow = 'hidden'
+    if (!form || !modal) return
+
+    // Evitar agregar múltiples listeners
+    if (form.dataset.initialized) return
+    form.dataset.initialized = 'true'
+
+    async function deleteWorkspace(e: Event) {
+      e.preventDefault()
+      const dataForm = new FormData(form)
+      setButtonLoading('#btn-delete-workspace', true)
+      const { data, error } = await callAction(actions.workspaces.delete({ uuid: dataForm.get('uuid') as string }))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-delete-workspace', false)
+        modal.close()
+        return
+      }
+
+      toast.success(data!.message)
+      navigate(data!.data.redirect)
+      modal.close()
     }
 
-    const closeDrawer = () => {
-      overlay.classList.remove('opacity-100')
-      overlay.classList.add('opacity-0')
-      panel.classList.remove('translate-x-0')
-      panel.classList.add('translate-x-full')
-
-      setTimeout(() => {
-        drawer.classList.remove('visible', 'opacity-100')
-        drawer.classList.add('invisible', 'opacity-0')
-        document.body.style.overflow = ''
-      }, 300)
-    }
-
-    btnOpen.addEventListener('click', openDrawer)
-    btnClose?.addEventListener('click', closeDrawer)
-    overlay.addEventListener('click', closeDrawer)
-  }
-
-  // Inicializar en carga
-  document.addEventListener('DOMContentLoaded', initAsideDrawer)
-  document.addEventListener('astro:page-load', initAsideDrawer)
+    form.addEventListener('submit', deleteWorkspace)
+  })
 </script>

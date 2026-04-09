@@ -2,10 +2,74 @@
 import MainLayout from '@/layouts/MainLayout.astro'
 import Container from '@/components/ui/Container.astro'
 import Header from '@/components/ui/Header.astro'
+import { actions } from 'astro:actions'
+import DataGrid from '@/components/ui/DataGrid.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Input from '@/components/form/Input.astro'
+import Card from '@/components/ui/Card.astro'
+import Icon from '@/components/ui/Icon.astro'
+import { formatISODateWithIntl } from '@/scripts/utils'
+import Button from '@/components/ui/Button.astro'
+import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
+
+const currentPath = Astro.url.pathname
+const { data, error } = await Astro.callAction(actions.workspaces.list, {})
+
+const workspaces = data?.data || []
+const hasWorkspaces = workspaces.length > 0
 ---
 
 <MainLayout title="Espacios de trabajo">
   <Container>
-    <Header title="Espacios de trabajo" />
+    <Header title="Gestión de espacios de trabajo" subtitle={`Total: ${workspaces.length} espacios`}>
+      <div slot="actions">
+        <Button size="sm" data-open-modal="create-workspace" icon="Plus">Crear Espacio</Button>
+      </div>
+    </Header>
+
+    <DataGrid hasData={hasWorkspaces} isError={error} grid="x2">
+      <EmptyState slot="error-state" title="Error al cargar los espacios" description="Intenta nuevamente." href={currentPath} state="error" />
+
+      <EmptyState slot="empty-state" title="No hay espacios disponibles" description="No tienes ningún espacio registrado." href={currentPath} state="notFound" />
+
+      <div slot="header" class="mb-4">
+        <Input name="search" type="search" placeholder="Buscar espacio..." />
+      </div>
+      {
+        workspaces.map((workspace: any) => (
+          <Card href={`/workspaces/${workspace.uuid}`}>
+            <div class="flex items-center gap-3">
+              <div class="flex size-9 items-center justify-center rounded-main border border-border text-heading">
+                <Icon name={workspace.icon || 'Folder'} stroke-width={1.6} size={18} />
+              </div>
+              <div class="flex w-full justify-between">
+                <div>
+                  <a href={`/workspaces/${workspace.uuid}`} class="relative z-20 leading-none font-medium tracking-tight text-heading hover:underline">
+                    {workspace.name}
+                  </a>
+                  {workspace.createdAt && <p class="text-sm text-subheading">Creado: {formatISODateWithIntl(workspace.createdAt)}</p>}
+                </div>
+                <div class:list={['size-2.5 rounded-full', workspace.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500']} title={workspace.status === 'ACTIVE' ? 'Activo' : 'Inactivo'} />
+              </div>
+            </div>
+
+            <div class="mt-4 flex flex-col items-start justify-start gap-2">
+              <a href={`/clients/${workspace.client?.uuid}`} class="relative z-20 cursor-pointer rounded-main bg-foreground p-1 text-sm font-medium text-heading">
+                {workspace.client?.name || 'N/A'}
+              </a>
+              <a href={`/servers/${workspace.dataBase?.server?.uuid}`} class="relative z-20 cursor-pointer text-sm text-subheading hover:underline">
+                Servidor: {`${workspace.dataBase?.server?.ip}:${workspace.dataBase?.server?.puerto}` || 'N/A'}
+              </a>
+            </div>
+
+            <div slot="footer" class="flex items-center justify-between">
+              <span class="text-xs text-subheading">Documentos: {workspace.documents?.length || 0}</span>
+            </div>
+          </Card>
+        ))
+      }
+    </DataGrid>
+
+    <WorkspaceFormModal mode="create" />
   </Container>
 </MainLayout>

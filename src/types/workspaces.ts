@@ -1,29 +1,61 @@
-export interface NewWorkspace {
-  id: number
+export interface WorkspaceCreate {
   name: string
   icon: string
-  created_at: Date
-  updated_at: Date
+  clientUuid: string
+  serverUuid: string
+}
+
+export interface Workspace {
+  id: number
   uuid: string
-}
-
-export interface DetailsWorkspace extends NewWorkspace {
-  is_owner: boolean
-}
-
-export interface WorkspaceByUser {
-  id: number
   name: string
-  email: string
-  is_owner: boolean
-  created_at: Date
+  icon: string
+  idClient: number
+  uuidClient: string
+  idDataBase: number
+  uuidDataBase: string
+  createdAt: string
+  updatedAt: string
+  status: string
+  deletedAt: null
+  client: Client
+  dataBase: DataBase
+  templates: any[]
 }
 
-export interface AssignUser {
+export interface Client {
   id: number
-  user_id: number
-  workspace_id: number
-  is_owner: boolean
-  created_at: string
-  updated_at: string
+  uuid: string
+  nroDocumentsMax: number
+  nroWorkspacesMax: number
+  name: string
+  rif: string
+  logo: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DataBase {
+  id: number
+  uuid: string
+  nameBd: string
+  username: string
+  password: string
+  idServer: number
+  uuidServer: string
+  idClient: number
+  uuidClient: string
+  createdAt: string
+  updatedAt: string
+  server: Server
+}
+
+export interface Server {
+  id: number
+  uuid: string
+  name: null
+  ip: string
+  puerto: number
+  createdAt: string
+  updatedAt: string
 }

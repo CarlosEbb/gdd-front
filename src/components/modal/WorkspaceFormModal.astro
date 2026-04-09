@@ -1,0 +1,235 @@
+---
+import Modal from './Modal.astro'
+import Input from '../form/Input.astro'
+import Button from '../ui/Button.astro'
+import IconPicker from '../ui/IconPicker.astro'
+import Select from '../form/Select.astro'
+
+interface Props {
+  mode: 'create' | 'edit'
+  workspace?: {
+    uuid: string
+    name: string
+    icon: string
+    clientUuid: string
+    serverUuid: string
+  }
+}
+
+const { mode, workspace } = Astro.props
+
+const isEdit = mode === 'edit'
+const modalId = isEdit ? 'edit-workspace' : 'create-workspace'
+const formId = isEdit ? 'edit-workspace-form' : 'create-workspace-form'
+const title = isEdit ? 'Editar espacio de trabajo' : 'Crear nuevo espacio de trabajo'
+const submitText = isEdit ? 'Guardar cambios' : 'Crear espacio'
+const loadingText = isEdit ? 'Guardando cambios...' : 'Creando espacio...'
+const btnId = isEdit ? 'btn-edit-workspace' : 'btn-create-workspace'
+---
+
+<Modal modalId={modalId} title={title}>
+  <form
+    class="space-y-6"
+    id={formId}
+    data-mode={mode}
+    data-workspace-uuid={workspace?.uuid ?? ''}
+    data-workspace-client={workspace?.clientUuid ?? ''}
+    data-workspace-server={workspace?.serverUuid ?? ''}
+  >
+    {isEdit && <input type="hidden" name="uuid" value={workspace?.uuid} />}
+
+    <div>
+      <Select label="Seleccione el cliente" name="clientUuid" placeholder="Seleccione un cliente" options={[]} required />
+    </div>
+
+    <div>
+      <Select label="Seleccione el servidor" name="serverUuid" placeholder="Seleccione un servidor" options={[]} required disabled />
+    </div>
+    <div>
+      <Input
+        label="Nombre del espacio de trabajo"
+        data-error-required="El nombre del espacio de trabajo es obligatorio"
+        type="text"
+        id={`${mode}-workspace-name`}
+        name="name"
+        placeholder="Ingresa el nombre"
+        value={isEdit ? workspace?.name : undefined}
+        required
+      />
+    </div>
+
+    <IconPicker iconSelected={isEdit ? workspace?.icon : undefined} />
+  </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" form={formId} id={btnId} loadingText={loadingText}>{submitText}</Button>
+  </div>
+</Modal>
+
+<script>
+  import { toast } from '@/scripts/toast'
+  import { actions } from 'astro:actions'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import type { DetailsClient } from '@/types/clients'
+
+  let sharedClients: DetailsClient[] = []
+  let clientsLoaded = false
+
+  function populateSelect(select: HTMLSelectElement, items: { value: string; label: string }[], placeholder: string) {
+    select.innerHTML = `<option disabled selected value="">${placeholder}</option>`
+    items.forEach((item) => {
+      const option = document.createElement('option')
+      option.value = item.value
+      option.textContent = item.label
+      select.appendChild(option)
+    })
+  }
+
+  async function fetchClients(): Promise<DetailsClient[]> {
+    if (clientsLoaded) return sharedClients
+
+    const { data, error } = await callAction(actions.clients.list())
+
+    if (error) {
+      toast.error(error.message)
+      return []
+    }
+
+    sharedClients = data.data
+    clientsLoaded = true
+    return sharedClients
+  }
+
+  function getServersForClient(clients: DetailsClient[], clientUuid: string) {
+    const selected = clients.find((c) => c.uuid === clientUuid)
+    if (selected && selected.servers.length > 0) {
+      return selected.servers.map((s) => ({
+        value: s.uuidServer,
+        label: `${s.server?.name || 'Servidor'} - ${s.server?.ip || ''}:${s.server?.puerto || ''}`,
+      }))
+    }
+    return []
+  }
+
+  function initializeWorkspaceModal(formId: string, modalId: string, btnId: string) {
+    const form = document.getElementById(formId) as HTMLFormElement
+    const modal = document.getElementById(modalId) as HTMLDialogElement
+
+    if (!form || !modal) return
+
+    const clientSelect = form.querySelector<HTMLSelectElement>('select[name="clientUuid"]') as HTMLSelectElement
+    const serverSelect = form.querySelector<HTMLSelectElement>('select[name="serverUuid"]') as HTMLSelectElement
+
+    if (!clientSelect || !serverSelect) return
+
+    const mode = form.dataset.mode as 'create' | 'edit'
+    const preselectedClient = form.dataset.workspaceClient || ''
+    const preselectedServer = form.dataset.workspaceServer || ''
+
+    async function loadClients() {
+      clientSelect.innerHTML = '<option disabled selected value="">Cargando clientes...</option>'
+
+      const clients = await fetchClients()
+
+      if (clients.length === 0) {
+        clientSelect.innerHTML = '<option disabled selected value="">Error al cargar clientes</option>'
+        return
+      }
+
+      populateSelect(
+        clientSelect,
+        clients.map((c) => ({ value: c.uuid, label: c.name })),
+        'Seleccione un cliente'
+      )
+
+      // Pre-seleccionar cliente y servidor en modo edición
+      if (mode === 'edit' && preselectedClient) {
+        clientSelect.value = preselectedClient
+
+        const servers = getServersForClient(clients, preselectedClient)
+        if (servers.length > 0) {
+          serverSelect.disabled = false
+          populateSelect(serverSelect, servers, 'Seleccione un servidor')
+          if (preselectedServer) {
+            serverSelect.value = preselectedServer
+          }
+        }
+      }
+    }
+
+    // Cargar clientes cuando se abre el modal
+    const observer = new MutationObserver(() => {
+      if (modal.open) loadClients()
+    })
+    observer.observe(modal, { attributes: true, attributeFilter: ['open'] })
+
+    // Poblar servidores cuando se selecciona un cliente
+    clientSelect.addEventListener('change', () => {
+      const clients = sharedClients
+      const servers = getServersForClient(clients, clientSelect.value)
+
+      if (servers.length > 0) {
+        serverSelect.disabled = false
+        populateSelect(serverSelect, servers, 'Seleccione un servidor')
+      } else {
+        populateSelect(serverSelect, [], 'Sin servidores disponibles')
+        serverSelect.disabled = true
+      }
+    })
+
+    // Submit del formulario
+    const handleSubmit = async (e: Event) => {
+      e.preventDefault()
+      const dataForm = new FormData(form)
+      setButtonLoading(`#${btnId}`, true)
+
+      if (mode === 'edit') {
+        const { data, error } = await callAction(
+          actions.workspaces.update({
+            uuid: dataForm.get('uuid') as string,
+            name: dataForm.get('name') as string,
+            icon: dataForm.get('icon') as string,
+            clientUuid: dataForm.get('clientUuid') as string,
+            serverUuid: dataForm.get('serverUuid') as string,
+          })
+        )
+
+        if (error) {
+          toast.error(error.message)
+          setButtonLoading(`#${btnId}`, false)
+          return
+        }
+
+        toast.success(data.message)
+        navigate(data.data.redirect)
+        modal.close()
+      } else {
+        const { data, error } = await callAction(actions.workspaces.create(dataForm))
+
+        if (error) {
+          toast.error(error.message)
+          setButtonLoading(`#${btnId}`, false)
+          return
+        }
+
+        toast.success(data.message)
+        navigate(`/workspaces/${data.data.uuid}`)
+        modal.close()
+      }
+    }
+
+    form.addEventListener('submit', handleSubmit)
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    // Resetear cache de clientes en cada navegación
+    clientsLoaded = false
+    sharedClients = []
+
+    // Inicializar modales presentes en la página
+    initializeWorkspaceModal('create-workspace-form', 'create-workspace', 'btn-create-workspace')
+    initializeWorkspaceModal('edit-workspace-form', 'edit-workspace', 'btn-edit-workspace')
+  })
+</script>
