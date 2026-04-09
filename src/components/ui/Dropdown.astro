@@ -12,22 +12,23 @@ interface Props {
   mobileIcon?: keyof typeof icons
 }
 
-const { buttonLabel = 'Seleccionar', withSearch = false, size = 'default', shadow = 'sm', border = 'border', position = 'default', mobileIcon = 'Menu' } = Astro.props
+const { buttonLabel = 'Seleccionar', withSearch = false, size = 'default', shadow = 'base', border = 'border', position = 'default', mobileIcon = 'Menu' } = Astro.props
 
 const sizeClasses = {
-  default: 'px-4 py-3',
-  sm: 'px-3 py-1.5',
+  default: 'h-10 px-2',
+  sm: 'h-8 px-2',
 }
 
 const shadowClasses = {
   lg: 'shadow-lg',
   md: 'shadow-md',
   sm: 'shadow-sm',
+  base: 'shadow-base',
   none: '',
 }
 
 const borderClasses = {
-  border: 'border border-gray-200',
+  border: 'border border-border',
   none: '',
 }
 
@@ -41,7 +42,7 @@ const positionClasses = {
 <div class="relative inline-block w-full cursor-pointer text-left" data-dropdown-container>
   <button
     class:list={[
-      'inline-flex w-full cursor-pointer items-center justify-between gap-x-1.5 rounded-main bg-white/80 backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+      'inline-flex w-full cursor-pointer items-center justify-between gap-x-1.5 rounded-main bg-background backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
       sizeClasses[size],
       shadowClasses[shadow],
       borderClasses[border],
@@ -51,11 +52,11 @@ const positionClasses = {
     {
       mobileIcon && (
         <span class="flex items-center justify-center md:hidden">
-          <Icon name={mobileIcon} class="h-5 w-5 text-gray-600" />
+          <Icon name={mobileIcon} class="h-5 w-5 text-heading" />
         </span>
       )
     }
-    <span class:list={['truncate', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>
+    <span class:list={['truncate text-sm text-heading', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>
     <svg
       width="16"
       height="16"
@@ -81,10 +82,10 @@ const positionClasses = {
   >
     {
       withSearch && (
-        <div class="border-b border-gray-100 p-2">
+        <div class="border-b border-border p-2">
           <input
             type="text"
-            class="block w-full rounded-main border border-gray-200 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
+            class="block w-full rounded-main border border-border bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
             placeholder="Buscar..."
             data-dropdown-search
           />
