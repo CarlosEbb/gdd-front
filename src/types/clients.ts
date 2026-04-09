@@ -11,7 +11,7 @@ export interface DetailsClient {
   databases: Databases[]
   workspaces: Workspaces[]
   servers: Servers[]
-  usersClients: any[]
+  usersClients: UsersClient[]
 }
 
 export interface Servers {
@@ -29,6 +29,7 @@ export interface DetailsServer {
   id: number
   uuid: string
   ip: string
+  name: string | null
   puerto: number
   createdAt: Date | string
   updatedAt: Date | string
@@ -59,4 +60,22 @@ export interface Workspaces {
   uuidDataBase: string
   createdAt: Date | string
   updatedAt: Date | string
+}
+
+export interface UsersClient {
+  id: number
+  idClient: number
+  uuidClient: string
+  idUser: number
+  uuidUser: string
+  createdAt: Date
+  updatedAt: Date
+  user: User
+}
+
+export interface User {
+  uuid: string
+  name: string
+  lastName: string
+  email: string
 }
