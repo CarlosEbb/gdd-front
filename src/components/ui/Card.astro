@@ -1,0 +1,38 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+interface Props extends HTMLAttributes<'div'> {
+  href?: string
+  target?: '_blank' | '_self' | '_parent' | '_top'
+}
+
+const { href, target = '_self', class: className, ...rest } = Astro.props
+
+const hasHeader = Astro.slots.has('header')
+const hasFooter = Astro.slots.has('footer')
+const hasLink = !!href
+---
+
+<div class:list={['group relative overflow-hidden rounded-main border border-border bg-background transition-all duration-200', hasLink && 'cursor-pointer hover:shadow-base', className]} {...rest}>
+  {
+    hasHeader && (
+      <div class="border-b border-border px-4 py-3">
+        <slot name="header" />
+      </div>
+    )
+  }
+
+  <div class="px-4 py-3">
+    <slot />
+  </div>
+
+  {
+    hasFooter && (
+      <div class="border-t border-border bg-foreground px-4 py-3">
+        <slot name="footer" />
+      </div>
+    )
+  }
+
+  {hasLink && <a href={href} target={target} class="absolute inset-0 z-10" aria-label="Ir al enlace" />}
+</div>
