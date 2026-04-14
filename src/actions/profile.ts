@@ -1,18 +1,18 @@
 import { ActionError, defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
-import type { InfoUser } from '@/types/profile'
+import type { InfoProfile } from '@/types/profile'
 
 export const profile = {
   update: defineAction({
     accept: 'form',
     input: z.object({
       name: z.string(),
-      last_name: z.string(),
+      lastName: z.string(),
       email: z.string().email(),
       country: z.string().optional(),
       img_profile_file: z.any().optional(),
-      zip_code: z.string().optional(),
+      zipCode: z.string().optional(),
     }),
     handler: async (input, request) => {
       const hasToken = await request.session?.has('token')
@@ -30,17 +30,70 @@ export const profile = {
         const formData = new FormData()
 
         formData.append('name', input.name)
-        formData.append('last_name', input.last_name)
+        formData.append('lastName', input.lastName)
         formData.append('email', input.email)
 
         if (input.country) formData.append('country', input.country)
-        if (input.zip_code) formData.append('zip_code', input.zip_code)
+        if (input.zipCode) formData.append('zipCode', input.zipCode)
         if (input.img_profile_file && input.img_profile_file.size > 0) formData.append('img_profile_file', input.img_profile_file)
 
-        const userUpdated = await http.put<InfoUser>(`/auth/updateMyProfile`, token, formData)
-        await request.session?.set('user', userUpdated.data as InfoUser)
+        const userUpdated = await http.put<InfoProfile>('/users/profile', token, formData)
+        await request.session?.set('user', userUpdated.data as InfoProfile)
 
         return userUpdated
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+
+  resetPassword: defineAction({
+    accept: 'form',
+    input: z.object({
+      email: z.string().email(),
+    }),
+    handler: async (input, request) => {
+      const hasToken = await request.session?.has('token')
+
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
+
+      try {
+        const response = await http.post(`/users/reset-password-request`, token, input)
+
+        return response
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+
+  changePassword: defineAction({
+    input: z.object({
+      token: z.string(),
+      newPassword: z.string(),
+    }),
+    handler: async (input, request) => {
+      const hasToken = await request.session?.has('token')
+
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
+      try {
+        const response = await http.post(`/users/change-password`, token, input)
+
+        return response
       } catch (error) {
         handleApiError(error, request)
       }

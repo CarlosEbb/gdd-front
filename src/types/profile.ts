@@ -1,26 +1,22 @@
 export interface User {
   token: string
-  user: InfoUser
+  user: InfoProfile
   workspaces: Workspace[]
 }
 
-export interface InfoUser {
+export interface InfoProfile {
   id: number
-  name: string
-  last_name: string
-  email: string
-  password: string
-  photo: null
-  country: string
-  zip_code: string
-  last_connection: Date
-  status: null
-  id_rol: number
-  created_at: Date
-  updated_at: Date
-  failed_attempts: number
-  access_expiration: Date
   uuid: string
+  name: string
+  lastName: string
+  email: string
+  country: string
+  zipCode: string
+  status: string
+  photo: null
+  lastConnection: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Workspace {
