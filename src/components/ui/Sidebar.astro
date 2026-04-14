@@ -1,5 +1,5 @@
 ---
-import { House, FileText, FolderOpen, type Icon as IconType, CirclePlus, Menu, X, Briefcase, Server, Users } from '@lucide/astro'
+import { House, FileText, FolderOpen, type Icon as IconType, CirclePlus, Menu, X, Briefcase, Server, Users, CircleUser } from '@lucide/astro'
 
 type MenuItem = {
   name: string
@@ -11,7 +11,7 @@ const OPTIONS_MENU: MenuItem[] = [
   { href: '/home', name: 'Inicio', icon: House },
   { href: '/documents', name: 'Documentos', icon: FolderOpen },
   { href: '/templates', name: 'Plantillas', icon: FileText },
-  // { href: '/profile', name: 'Perfil', icon: CircleUser },
+  { href: '/profile', name: 'Perfil', icon: CircleUser },
   { href: '/users', name: 'Usuarios', icon: Users },
   { href: '/clients', name: 'Clientes', icon: Briefcase },
   { href: '/servers', name: 'Servidores', icon: Server },
