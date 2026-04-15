@@ -1,0 +1,48 @@
+---
+import Container from '@/components/ui/Container.astro'
+import MainLayout from '@/layouts/MainLayout.astro'
+import Header from '@/components/ui/Header.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import { actions } from 'astro:actions'
+import UserForm from '../_components/UserForm.astro'
+
+const { uuid } = Astro.params
+
+const { data: userData, error: userError } = await Astro.callAction(actions.users.getByUuid, { uuid: uuid as string })
+const clientUuidsByUser = userData?.data?.clientUuids || []
+
+const { data: clientsData, error: clientsError } = await Astro.callAction(actions.clients.list, {})
+const clients =
+  clientsData?.data?.map((client: any) => ({
+    ...client,
+    selected: clientUuidsByUser.includes(client.uuid),
+  })) ?? []
+
+const hasClients = clients.length > 0
+
+const { data: permissionsData, error: permissionsError } = await Astro.callAction(actions.permissions.get, {})
+const permissions = permissionsData?.data ?? []
+const hasPermissions = permissions.length > 0
+---
+
+<MainLayout title={`Actualizar usuario ${userData?.data?.name || ''}`}>
+  <Container>
+    <Header title="Actualizar usuario" />
+
+    <StateSwitch hasError={userError !== undefined}>
+      <UserForm
+        isEdit={true}
+        userData={userData}
+        clients={clients}
+        clientsError={clientsError}
+        hasClients={hasClients}
+        permissions={permissions}
+        permissionsError={permissionsError}
+        hasPermissions={hasPermissions}
+      />
+
+      <EmptyState slot="error" title="Ha ocurrido un error al cargar el usuario" description="Por favor, intenta nuevamente" state="error" />
+    </StateSwitch>
+  </Container>
+</MainLayout>

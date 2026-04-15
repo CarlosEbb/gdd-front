@@ -2,10 +2,221 @@
 import MainLayout from '@/layouts/MainLayout.astro'
 import Container from '@/components/ui/Container.astro'
 import Header from '@/components/ui/Header.astro'
+import Card from '@/components/ui/Card.astro'
+import Link from '@/components/ui/Link.astro'
+import Button from '@/components/ui/Button.astro'
+import { actions } from 'astro:actions'
+import Icon from '@/components/ui/Icon.astro'
+import Avatar from '@/components/ui/Avatar.astro'
+import { Status } from '@/types/users'
+import Modal from '@/components/modal/Modal.astro'
+
+const { PUBLIC_PROJECT_URL, PUBLIC_NAME_PROJECT } = import.meta.env
+const { uuid } = Astro.params
+const { data, error } = await Astro.callAction(actions.users.getByUuid, { uuid: uuid! })
+
+const user = data?.data || null
+const selectedUser = {
+  name: user?.name || '',
+  email: user?.email || '',
+  photo: user?.photo ? `${PUBLIC_PROJECT_URL}${user.photo}` : null,
+  country: user?.country || '',
+  zipCode: user?.zipCode || '',
+  lastName: user?.lastName || '',
+  lastConnection: user?.lastConnection || '',
+  status: user?.status || '',
+  uuid: user?.uuid || '',
+}
+
+const statusMap: Record<Status, string> = {
+  [Status.ACTIVO]: 'Activo',
+  [Status.BLOQUEADO]: 'Bloqueado',
+}
 ---
 
 <MainLayout title="Detalle de usuario">
   <Container>
     <Header title="Detalle de usuario" backHref="/users" />
+
+    <Card class="mb-6 shadow-base">
+      <div slot="header" class="flex flex-row items-center justify-between">
+        <h1 class="text-base font-medium text-heading">Detalles usuario</h1>
+
+        <div class="flex items-center gap-3">
+          <Link size="sm" href={`/users/${uuid}/edit`} icon="Pencil"> Editar </Link>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-start justify-between gap-6 p-3 sm:p-5 md:flex-row md:items-center">
+        <div class="flex items-start gap-5">
+          {
+            selectedUser.photo !== null ? (
+              <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl text-heading shadow-inner">
+                <img src={selectedUser.photo} alt="Foto del usuario" class="object-contain" />
+              </div>
+            ) : (
+              <Avatar slot="avatar" size="xl" name={selectedUser.name} lastName={selectedUser.lastName} photo={selectedUser.photo} />
+            )
+          }
+          <div>
+            <div class="grid">
+              <h2 class="mb-4 text-xl font-semibold tracking-tight text-heading">{selectedUser.name} {selectedUser.lastName}</h2>
+
+              <div class="grid gap-4 sm:grid-cols-3">
+                <div class="grid gap-1">
+                  <span class="text-xs font-semibold tracking-wide text-subheading">Correo electrónico</span>
+                  <span class="text-sm font-medium text-heading">{selectedUser.email}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+
+    <Card class="mb-6 border-red-300 shadow-base">
+      <div slot="header" class="flex flex-row items-center justify-between">
+        <h1 class="text-base font-medium text-heading">Eliminar usuario</h1>
+      </div>
+      <div class="p-4">
+        <p class="text-base text-subheading">
+          Retire permanentemente la cuenta del usuario y todo su contenido de la plataforma {PUBLIC_NAME_PROJECT}. Esta acción no es reversible, así que por favor continúe con cautela
+        </p>
+      </div>
+      <div slot="footer" class="flex items-center justify-end">
+        <Button size="sm" variant="destructive" icon="Trash2" data-open-modal="delete-user"> Eliminar </Button>
+      </div>
+    </Card>
+
+    <Card class:list={['mb-6 shadow-base', selectedUser.status === Status.BLOQUEADO ? 'border-green-300' : 'border-yellow-300']}>
+      <div slot="header" class="flex flex-row items-center justify-between">
+        <h1 class="text-base font-medium text-heading">{selectedUser.status === Status.BLOQUEADO ? 'Habilitar usuario' : 'Deshabilitar usuario'}</h1>
+      </div>
+      <div class="p-4">
+        <p class="text-base text-subheading">
+          {
+            selectedUser.status === Status.BLOQUEADO
+              ? `Habilite la cuenta del usuario y su acceso a la plataforma ${PUBLIC_NAME_PROJECT}. Esta acción puede ser revertida en el futuro.`
+              : `Deshabilite la cuenta del usuario y su acceso a la plataforma ${PUBLIC_NAME_PROJECT}. Esta acción puede ser revertida en el futuro.`
+          }
+        </p>
+      </div>
+      <div slot="footer" class="flex items-center justify-end">
+        <Button size="sm" variant="secondary" icon="Info" data-open-modal="update-status-user"> {selectedUser.status === Status.BLOQUEADO ? 'Habilitar' : 'Deshabilitar'} </Button>
+      </div>
+    </Card>
   </Container>
+  <Modal modalId="delete-user" title="Eliminar usuario">
+    <form class="space-y-6" id="delete-user-form">
+      <div class="flex flex-col items-center justify-center py-5">
+        <Icon name="Trash" size={48} class="text-red-300" />
+        <p class="mt-4 mb-2 text-lg font-semibold text-heading">{selectedUser.name} {selectedUser.lastName}</p>
+        <p class="mb-4 text-center text-subheading">¿Estás seguro de querer eliminar este usuario?</p>
+        <input type="hidden" name="uuid" value={selectedUser.uuid} required readonly />
+      </div>
+    </form>
+
+    <div slot="footer">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button variant="destructive" type="submit" size="sm" form="delete-user-form" id="btn-delete-user" loadingText="Eliminando usuario...">Eliminar usuario</Button>
+    </div>
+  </Modal>
+
+  <Modal modalId="update-status-user" title="Actualizar estado del usuario">
+    <form class="space-y-6" id="status-user-form">
+      <div class="flex flex-col items-center justify-center py-5">
+        <Icon name="Info" stroke-width="1.5" size={48} class="text-heading" />
+        <p class="mt-4 mb-2 text-lg font-semibold text-heading">{selectedUser.name} {selectedUser.lastName}</p>
+        <p class="mb-4 text-center text-subheading">
+          {selectedUser.status === Status.BLOQUEADO ? `Habilite la cuenta del usuario y su acceso a la plataforma` : `Deshabilite la cuenta del usuario y su acceso a la plataforma`}
+        </p>
+        <input type="hidden" name="uuid" value={selectedUser.uuid} required readonly />
+        <input type="hidden" name="status" value={selectedUser.status === Status.BLOQUEADO ? Status.ACTIVO : Status.BLOQUEADO} required readonly />
+      </div>
+    </form>
+
+    <div slot="footer">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button variant="secondary" type="submit" size="sm" form="status-user-form" id="btn-status-user" loadingText="Actualizando estado...">
+        {selectedUser.status === statusMap.BLOQUEADO ? 'Habilitar' : 'Deshabilitar'}
+      </Button>
+    </div>
+  </Modal>
 </MainLayout>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('delete-user-form') as HTMLFormElement
+    const modal = document.getElementById('delete-user') as HTMLDialogElement
+
+    if (!form || !modal) return
+
+    // Evitar agregar múltiples listeners
+    if (form.dataset.initialized) return
+    form.dataset.initialized = 'true'
+
+    async function deleteUser(e: Event) {
+      e.preventDefault()
+      const dataForm = new FormData(form)
+      setButtonLoading('#btn-delete-user', true)
+      const { data, error } = await callAction(actions.users.delete({ uuid: dataForm.get('uuid') as string }))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-delete-user', false)
+        modal.close()
+        return
+      }
+
+      toast.success(data!.message)
+      navigate(data!.data.redirect)
+      modal.close()
+    }
+
+    form.addEventListener('submit', deleteUser)
+  })
+</script>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  // update status user
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('status-user-form') as HTMLFormElement
+    const modal = document.getElementById('update-status-user') as HTMLDialogElement
+
+    if (!form || !modal) return
+
+    // Evitar agregar múltiples listeners
+    if (form.dataset.initialized) return
+    form.dataset.initialized = 'true'
+
+    async function updateStatusUser(e: Event) {
+      e.preventDefault()
+      const dataForm = new FormData(form)
+      setButtonLoading('#btn-status-user', true)
+      const { data, error } = await callAction(actions.users.updateStatus(dataForm))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-status-user', false)
+        modal.close()
+        return
+      }
+
+      toast.success(data!.message)
+
+      navigate(`/users/${data!.data.uuid}`)
+      modal.close()
+    }
+
+    form.addEventListener('submit', updateStatusUser)
+  })
+</script>

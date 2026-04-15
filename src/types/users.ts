@@ -1,6 +1,6 @@
-export interface AuthResponse {
+export interface User {
   token: string
-  user: User
+  user: Details
   permissions: Permissions
 }
 
@@ -18,10 +18,9 @@ export interface ByModule {
   clients: string[]
   servers: string[]
   databases: string[]
-  ejemplo: string[]
 }
 
-export interface User {
+export interface Details {
   id: number
   uuid: string
   name: string
@@ -31,7 +30,17 @@ export interface User {
   zipCode: string
   status: string
   photo: string
-  lastConnection: Date
-  createdAt: Date
-  updatedAt: Date
+  lastConnection: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface GetUserByUuidResponse extends Details {
+  permissionUuids: string[]
+  clientUuids: string[]
+}
+
+export enum Status {
+  ACTIVO = 'ACTIVO',
+  BLOQUEADO = 'BLOQUEADO',
 }

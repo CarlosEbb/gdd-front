@@ -7,7 +7,7 @@ import Icon from '@/components/ui/Icon.astro'
 import Input from '@/components/form/Input.astro'
 import Header from '@/components/ui/Header.astro'
 import { actions } from 'astro:actions'
-import type { User } from '@/types/users'
+import type { Details } from '@/types/users'
 import { formatDate } from '@/scripts/utils'
 import Avatar from '@/components/ui/Avatar.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
@@ -24,7 +24,7 @@ const totalUsers = users.length
   <Container>
     <Header title="Gestión de usuarios" subtitle={`Total: ${totalUsers} usuarios`}>
       <div slot="actions">
-        <Link href="/users/new" size="sm" icon="Plus"> Crear usuarios </Link>
+        <Link href="/users/new" size="sm" icon="Plus"> Crear usuario </Link>
       </div>
     </Header>
 
@@ -35,7 +35,7 @@ const totalUsers = users.length
 
       <div class="overflow-hidden rounded-main border border-border bg-background">
         {
-          users.map((user: User) => (
+          users.map((user: Details) => (
             <CardList title={user.name} description={user.email} secondaryText={user.lastConnection ? `Última conexión: ${formatDate(user.lastConnection)}` : ''}>
               <Avatar slot="avatar" size="lg" name={user.name} lastName={user.lastName} photo={user.photo} />
               <div slot="actions" class="flex gap-1">
