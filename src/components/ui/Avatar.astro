@@ -1,18 +1,18 @@
 ---
-import type { InfoUser } from '@/types/profile'
+import type { InfoProfile } from '@/types/profile'
 const { PUBLIC_PROJECT_URL } = import.meta.env
 
 interface Props {
-  size: 'xs' | 'sm' | 'md' | 'lg'
+  size: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   name?: string
   lastName?: string
   photo?: string | null
 }
 
 const { size, name: nameProp, lastName: lastNameProp, photo: photoProp } = Astro.props
-const getUser = (await Astro.session?.get('user')) as InfoUser | undefined
+const getUser = (await Astro.session?.get('user')) as InfoProfile | undefined
 const name = nameProp ?? getUser?.name ?? ''
-const last_name = lastNameProp ?? getUser?.last_name ?? ''
+const last_name = lastNameProp ?? getUser?.lastName ?? ''
 const photo = photoProp !== undefined ? photoProp : (getUser?.photo ?? null)
 
 const SIZES = {
@@ -20,6 +20,7 @@ const SIZES = {
   sm: 'size-6',
   md: 'size-8',
   lg: 'size-10',
+  xl: 'size-12',
 }
 
 const SIZE_TEXT = {
@@ -27,6 +28,7 @@ const SIZE_TEXT = {
   sm: 'text-xs',
   md: 'text-sm',
   lg: 'text-base',
+  xl: 'text-lg',
 }
 
 const sizeClass = SIZES[size]
