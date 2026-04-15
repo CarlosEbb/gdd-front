@@ -28,3 +28,40 @@ const { formId, submitText, loadingText = 'Guardando...', cancelHref = '/', meth
     </div>
   </div>
 </form>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const form = document.querySelector('form')
+    if (!form) return
+
+    let firstInvalidEl: Element | null = null
+    let scrollScheduled = false
+
+    form.addEventListener(
+      'invalid',
+      (e) => {
+        if (!firstInvalidEl && e.target instanceof Element) {
+          firstInvalidEl = e.target
+        }
+
+        if (!scrollScheduled) {
+          scrollScheduled = true
+          requestAnimationFrame(() => {
+            if (firstInvalidEl) {
+              const wrapper = firstInvalidEl.closest('[data-input-wrapper], [data-select-wrapper], [data-inputprefix-wrapper]')
+              const scrollTarget = wrapper || firstInvalidEl
+              scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+              if (firstInvalidEl instanceof HTMLElement) {
+                firstInvalidEl.focus({ preventScroll: true })
+              }
+            }
+            firstInvalidEl = null
+            scrollScheduled = false
+          })
+        }
+      },
+      true
+    )
+  })
+</script>
