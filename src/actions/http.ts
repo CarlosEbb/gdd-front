@@ -168,6 +168,10 @@ export const http = {
   download: (endpoint: string, token: string, method: 'GET' | 'POST' = 'GET'): Promise<Blob> => {
     return apiFetchBlob(endpoint, token, method)
   },
+
+  patch: <T>(endpoint: string, token: string, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'PATCH', token, body }, isPublic)
+  },
 }
 
 export function handleApiError(error: unknown, request: ActionAPIContext): never {
