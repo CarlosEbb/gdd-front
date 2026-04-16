@@ -23,10 +23,11 @@ export const auth = {
           true
         )
 
-        const { user, token } = info.data
+        const { user, token, permissions } = info.data
 
         await request.session?.set('token', token)
         await request.session?.set('user', user)
+        await request.session?.set('permissions', permissions)
 
         return {
           code: info.code,

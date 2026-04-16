@@ -1,7 +1,8 @@
-import { ActionError, defineAction } from 'astro:actions'
+import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
 import type { Workspace } from '@/types/workspaces'
+import { requirePermission, requireAuth } from '@/lib/permissions'
 
 export const workspaces = {
   create: defineAction({
@@ -13,15 +14,8 @@ export const workspaces = {
       serverUuid: z.string(),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['workspaces.create'])
+      const token = await requireAuth(request)
       const workspaces = (await request.session?.get('workspaces')) || []
 
       try {
@@ -44,15 +38,8 @@ export const workspaces = {
 
   list: defineAction({
     handler: async (_, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['workspaces.view'])
+      const token = await requireAuth(request)
 
       try {
         const workspaces = await http.get<Workspace[]>('/workspaces', token)
@@ -69,15 +56,8 @@ export const workspaces = {
       uuid: z.string(),
     }),
     handler: async ({ uuid }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['workspaces.view'])
+      const token = await requireAuth(request)
 
       try {
         const workspace = await http.get<Workspace>(`/workspaces/${uuid}`, token)
@@ -98,16 +78,8 @@ export const workspaces = {
       serverUuid: z.string(),
     }),
     handler: async ({ uuid, name, icon, clientUuid, serverUuid }, request) => {
-      const hasToken = await request.session?.has('token')
-
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['workspaces.update'])
+      const token = await requireAuth(request)
 
       try {
         const updatedWorkspace = await http.put<Workspace>(`/workspaces/${uuid}`, token, {
@@ -138,15 +110,8 @@ export const workspaces = {
       uuid: z.string(),
     }),
     handler: async ({ uuid }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['workspaces.delete'])
+      const token = await requireAuth(request)
 
       try {
         const deletedWorkspace = await http.del<void>(`/workspaces/${uuid}`, token)

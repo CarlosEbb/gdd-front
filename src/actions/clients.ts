@@ -1,20 +1,14 @@
-import { ActionError, defineAction } from 'astro:actions'
+import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
 import type { DetailsClient } from '@/types/clients'
+import { requirePermission, requireAuth } from '@/lib/permissions'
 
 export const clients = {
   list: defineAction({
     handler: async (_, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['clients.view'])
+      const token = await requireAuth(request)
 
       try {
         const clients = await http.get<DetailsClient[]>(`/clients`, token)
@@ -29,15 +23,8 @@ export const clients = {
       uuid: z.string(),
     }),
     handler: async ({ uuid }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['clients.view'])
+      const token = await requireAuth(request)
 
       try {
         const client = await http.get<DetailsClient>(`/clients/${uuid}`, token)
@@ -58,15 +45,8 @@ export const clients = {
       serverUuids: z.array(z.string()).min(1, 'Debe seleccionar al menos un servidor'),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['clients.create'])
+      const token = await requireAuth(request)
 
       try {
         const payload = new FormData()
@@ -97,15 +77,8 @@ export const clients = {
       uuid: z.string(),
     }),
     handler: async ({ uuid }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['clients.delete'])
+      const token = await requireAuth(request)
 
       try {
         const client = await http.del(`/clients/${uuid}`, token)
@@ -133,15 +106,8 @@ export const clients = {
       serverUuids: z.array(z.string()).min(1, 'Debe seleccionar al menos un servidor'),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['clients.update'])
+      const token = await requireAuth(request)
 
       try {
         const client = await http.put<DetailsClient>(`/clients/${input.uuid}`, token, input)

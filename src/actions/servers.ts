@@ -1,8 +1,9 @@
-import { ActionError, defineAction } from 'astro:actions'
+import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import type { ApiResponse } from '@/types/response'
 import { handleApiError, http } from './http'
 import type { createServer, DetailsServer } from '@/types/servers'
+import { requirePermission, requireAuth } from '@/lib/permissions'
 
 export const servers = {
   register: defineAction({
@@ -13,16 +14,9 @@ export const servers = {
       name: z.string(),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
+      await requirePermission(request, ['servers.create'])
+      const token = await requireAuth(request)
 
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
       try {
         const response: ApiResponse<createServer> = await http.post<createServer>(`/servers`, token, input)
         return response
@@ -33,15 +27,8 @@ export const servers = {
   }),
   list: defineAction({
     handler: async (_, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['servers.view'])
+      const token = await requireAuth(request)
 
       try {
         const servers = await http.get<DetailsServer[]>(`/servers`, token)
@@ -57,15 +44,8 @@ export const servers = {
       uuid: z.string(),
     }),
     handler: async ({ uuid }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['servers.view'])
+      const token = await requireAuth(request)
 
       try {
         const serverInfo = await http.get<DetailsServer>(`/servers/${uuid}`, token)
@@ -85,15 +65,9 @@ export const servers = {
       name: z.string(),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
+      await requirePermission(request, ['servers.update'])
+      const token = await requireAuth(request)
 
-      const token = (await request.session?.get('token')) as string
       try {
         const response: ApiResponse<createServer> = await http.put<createServer>(`/servers/${input.uuid}`, token, input)
         return response
@@ -108,15 +82,9 @@ export const servers = {
       uuid: z.string(),
     }),
     handler: async ({ uuid }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
+      await requirePermission(request, ['servers.delete'])
+      const token = await requireAuth(request)
 
-      const token = (await request.session?.get('token')) as string
       try {
         const response: ApiResponse<null> = await http.del(`/servers/${uuid}`, token)
         return {
@@ -136,15 +104,8 @@ export const servers = {
       ip: z.string(),
     }),
     handler: async ({ ip }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['servers.view'])
+      const token = await requireAuth(request)
 
       try {
         const serverInfo = await http.get<DetailsServer[]>(`/servers/ip/${ip}`, token)

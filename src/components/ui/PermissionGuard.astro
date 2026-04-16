@@ -1,0 +1,35 @@
+---
+import type { PermissionData, PermissionString, Module } from '@/lib/permissions/types'
+import { hasPermission, hasAnyPermission, hasAllPermissions, hasModuleAccess } from '@/lib/permissions/policy'
+
+interface Props {
+  /** Permiso único requerido, e.g. 'users.create' */
+  permission?: PermissionString
+  /** Lista de permisos requeridos */
+  permissions?: PermissionString[]
+  /** Módulo requerido (cualquier operación) */
+  module?: Module
+  /** Modo de verificación: 'any' (al menos uno) o 'all' (todos). Default: 'any' */
+  mode?: 'any' | 'all'
+}
+
+const { permission, permissions: permissionsList, module, mode = 'any' } = Astro.props
+
+const userPermissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
+
+let isAllowed = false
+
+if (userPermissions) {
+  if (permission) {
+    isAllowed = hasPermission(userPermissions, permission)
+  } else if (permissionsList && permissionsList.length > 0) {
+    const check = mode === 'all' ? hasAllPermissions : hasAnyPermission
+    isAllowed = check(userPermissions, permissionsList)
+  } else if (module) {
+    isAllowed = hasModuleAccess(userPermissions, module)
+  }
+}
+---
+
+{isAllowed && <slot />}
+{!isAllowed && <slot name="fallback" />}

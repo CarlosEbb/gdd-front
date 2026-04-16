@@ -1,6 +1,7 @@
-export interface User {
+export interface AuthResponse {
   token: string
   user: Details
+  clients: string[]
   permissions: Permissions
 }
 
@@ -10,15 +11,7 @@ export interface Permissions {
   total: number
 }
 
-export interface ByModule {
-  users: string[]
-  admin: string[]
-  workspaces: string[]
-  permissions: string[]
-  clients: string[]
-  servers: string[]
-  databases: string[]
-}
+export type ByModule = Record<string, string[]>
 
 export interface Details {
   id: number

@@ -1,20 +1,14 @@
-import { ActionError, defineAction } from 'astro:actions'
+import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
-import { Status, type Details, type GetUserByUuidResponse, type User } from '@/types/users'
+import { Status, type Details, type GetUserByUuidResponse } from '@/types/users'
+import { requirePermission, requireAuth } from '@/lib/permissions'
 
 export const users = {
   list: defineAction({
     handler: async (_, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['users.view'])
+      const token = await requireAuth(request)
 
       try {
         const users = await http.get<Details[]>(`/users`, token)
@@ -39,16 +33,8 @@ export const users = {
       img_profile_file: z.any().optional(),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
-
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['users.create'])
+      const token = await requireAuth(request)
 
       try {
         const formData = new FormData()
@@ -63,7 +49,7 @@ export const users = {
           }
         })
 
-        const userCreated = await http.post<User>(`/users/register`, token, formData)
+        const userCreated = await http.post<Details>(`/users/register`, token, formData)
         return userCreated
       } catch (error) {
         handleApiError(error, request)
@@ -82,16 +68,8 @@ export const users = {
       zipCode: z.string().optional(),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
-
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['users.update'])
+      const token = await requireAuth(request)
 
       try {
         const formData = new FormData()
@@ -102,9 +80,9 @@ export const users = {
         if (input.zipCode) formData.append('zipCode', input.zipCode)
         if (input.img_profile_file && input.img_profile_file.size > 0) formData.append('img_profile_file', input.img_profile_file)
 
-        const userUpdated = await http.put<User>(`/users/${input.uuid}`, token, formData)
+        const userUpdated = await http.put<Details>(`/users/${input.uuid}`, token, formData)
 
-        await request.session?.set('user', userUpdated.data as User)
+        await request.session?.set('user', userUpdated.data)
 
         return userUpdated
       } catch (error) {
@@ -117,15 +95,8 @@ export const users = {
       uuid: z.string(),
     }),
     handler: async ({ uuid }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['users.delete'])
+      const token = await requireAuth(request)
 
       try {
         const response = await http.del(`/users/${uuid}`, token)
@@ -146,15 +117,8 @@ export const users = {
       uuid: z.string(),
     }),
     handler: async ({ uuid }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['users.view'])
+      const token = await requireAuth(request)
 
       try {
         const user = await http.get<GetUserByUuidResponse>(`/users/${uuid}`, token)
@@ -172,15 +136,8 @@ export const users = {
       status: z.enum(Object.values(Status) as [string, ...string[]]),
     }),
     handler: async ({ uuid, status }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['users.update'])
+      const token = await requireAuth(request)
 
       try {
         const user = await http.patch<Details>(`/users/${uuid}/status`, token, { status })

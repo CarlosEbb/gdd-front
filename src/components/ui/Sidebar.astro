@@ -1,22 +1,36 @@
 ---
 import { House, FileText, FolderOpen, type Icon as IconType, CirclePlus, Menu, X, Briefcase, Server, Users, CircleUser } from '@lucide/astro'
+import type { PermissionData } from '@/lib/permissions/types'
+import { hasModuleAccess, hasPermission } from '@/lib/permissions/policy'
+import PermissionGuard from './PermissionGuard.astro'
 
 type MenuItem = {
   name: string
   href: string
   icon: typeof IconType
+  module?: string
+  permission?: string
 }
 
-const OPTIONS_MENU: MenuItem[] = [
+const ALL_MENU_ITEMS: MenuItem[] = [
   { href: '/home', name: 'Inicio', icon: House },
-  { href: '/documents', name: 'Documentos', icon: FolderOpen },
-  { href: '/templates', name: 'Plantillas', icon: FileText },
+  { href: '/documents', name: 'Documentos', icon: FolderOpen, module: 'templates' },
+  { href: '/templates', name: 'Plantillas', icon: FileText, module: 'templates', permission: 'templates.create' },
   { href: '/profile', name: 'Perfil', icon: CircleUser },
-  { href: '/users', name: 'Usuarios', icon: Users },
-  { href: '/clients', name: 'Clientes', icon: Briefcase },
-  { href: '/servers', name: 'Servidores', icon: Server },
-  { href: '/workspaces', name: 'Espacios', icon: FolderOpen },
+  { href: '/users', name: 'Usuarios', icon: Users, module: 'users' },
+  { href: '/clients', name: 'Clientes', icon: Briefcase, module: 'clients' },
+  { href: '/servers', name: 'Servidores', icon: Server, module: 'servers' },
+  { href: '/workspaces', name: 'Espacios', icon: FolderOpen, module: 'workspaces' },
 ]
+
+const permissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
+
+const OPTIONS_MENU = ALL_MENU_ITEMS.filter((item) => {
+  if (!item.module && !item.permission) return true
+  if (!permissions) return false
+  if (item.permission) return hasPermission(permissions, item.permission)
+  return hasModuleAccess(permissions, item.module!)
+})
 
 const currentPath = Astro.url.pathname
 ---
@@ -47,18 +61,19 @@ const currentPath = Astro.url.pathname
         <span class="sr-only">Cerrar menú</span>
       </button>
     </div>
-    <div class="mt-4 flex w-full items-center justify-center p-2">
-      <button
-        data-open-modal="save-template"
-        class="group flex w-auto cursor-pointer flex-col items-center justify-center gap-1 rounded-main p-2 text-xs font-medium text-primary transition-all duration-200 hover:scale-105"
-      >
-        <span class="flex items-center justify-center rounded-main bg-primary-foreground p-2 text-primary transition-all duration-200 group-hover:shadow-lg">
-          <CirclePlus class="size-5" />
-        </span>
-        <span>Crear</span>
-      </button>
-    </div>
-
+    <PermissionGuard permission="templates.create">
+      <div class="mt-4 flex w-full items-center justify-center p-2">
+        <button
+          data-open-modal="save-template"
+          class="group flex w-auto cursor-pointer flex-col items-center justify-center gap-1 rounded-main p-2 text-xs font-medium text-primary transition-all duration-200 hover:scale-105"
+        >
+          <span class="flex items-center justify-center rounded-main bg-primary-foreground p-2 text-primary transition-all duration-200 group-hover:shadow-lg">
+            <CirclePlus class="size-5" />
+          </span>
+          <span>Crear</span>
+        </button>
+      </div>
+    </PermissionGuard>
     <nav class="mt-7 space-y-5 overflow-y-auto">
       <ul class="space-y-3 p-1">
         {

@@ -1,7 +1,9 @@
-import { ActionError, defineAction } from 'astro:actions'
+import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
 import type { InfoProfile } from '@/types/profile'
+import { requireAuth } from '@/lib/permissions'
+import type { Details } from '@/types/users'
 
 export const profile = {
   update: defineAction({
@@ -15,16 +17,7 @@ export const profile = {
       zipCode: z.string().optional(),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
-
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      const token = await requireAuth(request)
 
       try {
         const formData = new FormData()
@@ -38,7 +31,7 @@ export const profile = {
         if (input.img_profile_file && input.img_profile_file.size > 0) formData.append('img_profile_file', input.img_profile_file)
 
         const userUpdated = await http.put<InfoProfile>('/users/profile', token, formData)
-        await request.session?.set('user', userUpdated.data as InfoProfile)
+        await request.session?.set('user', userUpdated.data as Details)
 
         return userUpdated
       } catch (error) {
@@ -53,16 +46,7 @@ export const profile = {
       email: z.string().email(),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
-
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      const token = await requireAuth(request)
 
       try {
         const response = await http.post(`/users/reset-password-request`, token, input)
@@ -80,16 +64,8 @@ export const profile = {
       newPassword: z.string(),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
+      const token = await requireAuth(request)
 
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
       try {
         const response = await http.post(`/users/change-password`, token, input)
 

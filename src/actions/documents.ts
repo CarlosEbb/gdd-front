@@ -1,7 +1,8 @@
-import { ActionError, defineAction } from 'astro:actions'
+import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
 import type { CreateDocument, CreateNewVersion, Document, GeneratedDocument, RequestForDocument, SchemaFile } from '@/types/documents'
+import { requireAuth, requirePermission } from '@/lib/permissions'
 
 export const documents = {
   getByWorkspaces: defineAction({
@@ -9,15 +10,8 @@ export const documents = {
       uuid: z.string(),
     }),
     handler: async ({ uuid }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['templates.view'])
+      const token = await requireAuth(request)
 
       try {
         const documents = await http.get<Document[]>(`/template/${uuid}`, token)
@@ -34,15 +28,7 @@ export const documents = {
       limit: z.number().nullable(),
     }),
     handler: async ({ limit }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      const token = await requireAuth(request)
       const url = limit === null ? '/template' : `/template?limit=${limit}`
 
       try {
@@ -66,15 +52,8 @@ export const documents = {
       prompt: z.string().optional(),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['templates.create'])
+      const token = await requireAuth(request)
 
       try {
         const newDocument = await http.post<CreateDocument>('/template', token, input)
@@ -94,15 +73,8 @@ export const documents = {
       template_data: z.instanceof(File),
     }),
     handler: async ({ uuid_template, name_version, template_data }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['templates.update'])
+      const token = await requireAuth(request)
 
       const formData = new FormData()
       formData.append('template_data', template_data)
@@ -126,15 +98,8 @@ export const documents = {
       compress: z.boolean().optional(),
     }),
     handler: async ({ uuid_template, build_number, compress }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['templates.view'])
+      const token = await requireAuth(request)
       const url = `/template/file/${uuid_template}/${build_number}${compress ? '?compress=true' : ''}`
 
       try {
@@ -153,15 +118,8 @@ export const documents = {
       name_version: z.string(),
     }),
     handler: async (input, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['templates.delete'])
+      const token = await requireAuth(request)
 
       try {
         const deletedDocument = await http.del<void>(`/template/${input.uuid_template}`, token, input)
@@ -184,7 +142,7 @@ export const documents = {
       build_number: z.string(),
     }),
     handler: async ({ uuid_template, build_number }, request) => {
-      const hasToken = await request.session?.has('token')
+      const token = await requireAuth(request)
     },
   }),
 
@@ -194,15 +152,8 @@ export const documents = {
       build_number: z.string(),
     }),
     handler: async ({ uuid_template, build_number }, request) => {
-      const hasToken = await request.session?.has('token')
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      await requirePermission(request, ['templates.view'])
+      const token = await requireAuth(request)
       const url = `/template/generatePDF/${uuid_template}/${build_number}`
       try {
         const pdf = await http.download(url, token)
@@ -229,16 +180,7 @@ export const documents = {
       uuid_template: z.string(),
     }),
     handler: async ({ uuid_template }, request) => {
-      const hasToken = await request.session?.has('token')
-
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      const token = await requireAuth(request)
       const url = `/documents/getTemplate/${uuid_template}`
       try {
         const documents = await http.get<GeneratedDocument[]>(url, token)
@@ -255,16 +197,7 @@ export const documents = {
       build_number: z.string(),
     }),
     handler: async ({ uuid_template, build_number }, request) => {
-      const hasToken = await request.session?.has('token')
-
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      const token = await requireAuth(request)
       const url = `/documents/variables/${uuid_template}/${build_number}`
       try {
         const request = await http.get<RequestForDocument>(url, token)
@@ -282,16 +215,7 @@ export const documents = {
       validation_rules: z.record(z.any()),
     }),
     handler: async ({ uuid_template, build_number, validation_rules }, request) => {
-      const hasToken = await request.session?.has('token')
-
-      if (!hasToken) {
-        throw new ActionError({
-          code: 'UNAUTHORIZED',
-          message: 'No autorizado. Inicia sesión de nuevo.',
-        })
-      }
-
-      const token = (await request.session?.get('token')) as string
+      const token = await requireAuth(request)
       const url = `/documents/validate/variables/${uuid_template}/${build_number}`
       try {
         const response = await http.post(url, token, validation_rules)

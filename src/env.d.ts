@@ -12,8 +12,9 @@ interface ImportMeta {
 
 declare namespace App {
   interface SessionData {
-    user: InfoUser
+    user: import('@/types/users').Details
     token: string
+    permissions: import('@/lib/permissions/types').PermissionData
     workspaces: Workspace[]
   }
 }
