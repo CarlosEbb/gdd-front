@@ -11,6 +11,7 @@ import Icon from '@/components/ui/Icon.astro'
 import { formatISODateWithIntl } from '@/scripts/utils'
 import Button from '@/components/ui/Button.astro'
 import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.workspaces.list, {})
@@ -22,9 +23,9 @@ const hasWorkspaces = workspaces.length > 0
 <MainLayout title="Espacios de trabajo">
   <Container>
     <Header title="Gestión de espacios de trabajo" subtitle={`Total: ${workspaces.length} espacios`}>
-      <div slot="actions">
+      <PermissionGuard slot="actions" permission="workspaces.create">
         <Button size="sm" data-open-modal="create-workspace" icon="Plus">Crear Espacio</Button>
-      </div>
+      </PermissionGuard>
     </Header>
 
     <DataGrid hasData={hasWorkspaces} isError={error} grid="x2">

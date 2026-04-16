@@ -16,6 +16,7 @@ import Modal from '@/components/modal/Modal.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import Header from '@/components/ui/Header.astro'
 import Card from '@/components/ui/Card.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const { PUBLIC_PROJECT_URL } = import.meta.env
 const { uuid } = Astro.params
@@ -53,8 +54,12 @@ const selectedClient = {
             <h1 class="text-base font-medium text-heading">Detalles cliente</h1>
 
             <div class="flex items-center gap-3">
-              <Link size="sm" href={`/clients/${uuid}/edit`} icon="Pencil"> Editar </Link>
-              <Button size="sm" variant="destructive" data-open-modal="delete-client" icon="Trash2"> Eliminar </Button>
+              <PermissionGuard permission="clients.update">
+                <Link size="sm" href={`/clients/${uuid}/edit`} icon="Pencil"> Editar </Link>
+              </PermissionGuard>
+              <PermissionGuard permission="clients.delete">
+                <Button size="sm" variant="destructive" data-open-modal="delete-client" icon="Trash2"> Eliminar </Button>
+              </PermissionGuard>
             </div>
           </div>
 

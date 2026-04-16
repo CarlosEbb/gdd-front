@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Icon.astro'
 import Avatar from '@/components/ui/Avatar.astro'
 import { Status } from '@/types/users'
 import Modal from '@/components/modal/Modal.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const { PUBLIC_PROJECT_URL, PUBLIC_NAME_PROJECT } = import.meta.env
 const { uuid } = Astro.params
@@ -42,9 +43,11 @@ const statusMap: Record<Status, string> = {
       <div slot="header" class="flex flex-row items-center justify-between">
         <h1 class="text-base font-medium text-heading">Detalles usuario</h1>
 
-        <div class="flex items-center gap-3">
-          <Link size="sm" href={`/users/${uuid}/edit`} icon="Pencil"> Editar </Link>
-        </div>
+        <PermissionGuard permission="users.update">
+          <div class="flex items-center gap-3">
+            <Link size="sm" href={`/users/${uuid}/edit`} icon="Pencil"> Editar </Link>
+          </div>
+        </PermissionGuard>
       </div>
 
       <div class="flex flex-col items-start justify-between gap-6 p-3 sm:p-5 md:flex-row md:items-center">
@@ -74,37 +77,41 @@ const statusMap: Record<Status, string> = {
       </div>
     </Card>
 
-    <Card class="mb-6 border-red-300 shadow-base">
-      <div slot="header" class="flex flex-row items-center justify-between">
-        <h1 class="text-base font-medium text-heading">Eliminar usuario</h1>
-      </div>
-      <div class="p-4">
-        <p class="text-base text-subheading">
-          Retire permanentemente la cuenta del usuario y todo su contenido de la plataforma {PUBLIC_NAME_PROJECT}. Esta acción no es reversible, así que por favor continúe con cautela
-        </p>
-      </div>
-      <div slot="footer" class="flex items-center justify-end">
-        <Button size="sm" variant="destructive" icon="Trash2" data-open-modal="delete-user"> Eliminar </Button>
-      </div>
-    </Card>
+    <PermissionGuard permission="users.delete">
+      <Card class="mb-6 border-red-300 shadow-base">
+        <div slot="header" class="flex flex-row items-center justify-between">
+          <h1 class="text-base font-medium text-heading">Eliminar usuario</h1>
+        </div>
+        <div class="p-4">
+          <p class="text-base text-subheading">
+            Retire permanentemente la cuenta del usuario y todo su contenido de la plataforma {PUBLIC_NAME_PROJECT}. Esta acción no es reversible, así que por favor continúe con cautela
+          </p>
+        </div>
+        <div slot="footer" class="flex items-center justify-end">
+          <Button size="sm" variant="destructive" icon="Trash2" data-open-modal="delete-user"> Eliminar </Button>
+        </div>
+      </Card>
+    </PermissionGuard>
 
-    <Card class:list={['mb-6 shadow-base', selectedUser.status === Status.BLOQUEADO ? 'border-green-300' : 'border-yellow-300']}>
-      <div slot="header" class="flex flex-row items-center justify-between">
-        <h1 class="text-base font-medium text-heading">{selectedUser.status === Status.BLOQUEADO ? 'Habilitar usuario' : 'Deshabilitar usuario'}</h1>
-      </div>
-      <div class="p-4">
-        <p class="text-base text-subheading">
-          {
-            selectedUser.status === Status.BLOQUEADO
-              ? `Habilite la cuenta del usuario y su acceso a la plataforma ${PUBLIC_NAME_PROJECT}. Esta acción puede ser revertida en el futuro.`
-              : `Deshabilite la cuenta del usuario y su acceso a la plataforma ${PUBLIC_NAME_PROJECT}. Esta acción puede ser revertida en el futuro.`
-          }
-        </p>
-      </div>
-      <div slot="footer" class="flex items-center justify-end">
-        <Button size="sm" variant="secondary" icon="Info" data-open-modal="update-status-user"> {selectedUser.status === Status.BLOQUEADO ? 'Habilitar' : 'Deshabilitar'} </Button>
-      </div>
-    </Card>
+    <PermissionGuard permission="users.update">
+      <Card class:list={['mb-6 shadow-base', selectedUser.status === Status.BLOQUEADO ? 'border-green-300' : 'border-yellow-300']}>
+        <div slot="header" class="flex flex-row items-center justify-between">
+          <h1 class="text-base font-medium text-heading">{selectedUser.status === Status.BLOQUEADO ? 'Habilitar usuario' : 'Deshabilitar usuario'}</h1>
+        </div>
+        <div class="p-4">
+          <p class="text-base text-subheading">
+            {
+              selectedUser.status === Status.BLOQUEADO
+                ? `Habilite la cuenta del usuario y su acceso a la plataforma ${PUBLIC_NAME_PROJECT}. Esta acción puede ser revertida en el futuro.`
+                : `Deshabilite la cuenta del usuario y su acceso a la plataforma ${PUBLIC_NAME_PROJECT}. Esta acción puede ser revertida en el futuro.`
+            }
+          </p>
+        </div>
+        <div slot="footer" class="flex items-center justify-end">
+          <Button size="sm" variant="secondary" icon="Info" data-open-modal="update-status-user"> {selectedUser.status === Status.BLOQUEADO ? 'Habilitar' : 'Deshabilitar'} </Button>
+        </div>
+      </Card>
+    </PermissionGuard>
   </Container>
   <Modal modalId="delete-user" title="Eliminar usuario">
     <form class="space-y-6" id="delete-user-form">

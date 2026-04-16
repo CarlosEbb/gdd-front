@@ -12,6 +12,7 @@ import { formatDate } from '@/scripts/utils'
 import Header from '@/components/ui/Header.astro'
 import CardList from '@/components/ui/CardList.astro'
 import Avatar from '@/components/ui/Avatar.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.clients.list, {})
@@ -24,9 +25,9 @@ const totalClients = clients.length
 <MainLayout title="Clientes">
   <Container>
     <Header title="Gestión de clientes" subtitle={`Total: ${totalClients} clientes`}>
-      <div slot="actions">
+      <PermissionGuard slot="actions" permission="clients.create">
         <Link size="sm" icon="Plus" href="/clients/new">Crear Cliente</Link>
-      </div>
+      </PermissionGuard>
     </Header>
 
     <DataGrid hasData={hasClients} isError={error} grid="x1">
@@ -44,9 +45,11 @@ const totalClients = clients.length
             <CardList title={client.name} description={client.rif} secondaryText={client.createdAt ? `Creado: ${formatDate(client.createdAt as string)}` : ''}>
               <Avatar slot="avatar" size="lg" name={client.name} lastName={client.rif} photo={client.logo} />
               <div slot="actions" class="flex gap-1">
-                <Link href={`/clients/${client.uuid}/edit`} variant="outline" size="icon">
-                  <Icon stroke-width={1.5} name="Pencil" size={16} />
-                </Link>
+                <PermissionGuard permission="clients.update">
+                  <Link href={`/clients/${client.uuid}/edit`} variant="outline" size="icon">
+                    <Icon stroke-width={1.5} name="Pencil" size={16} />
+                  </Link>
+                </PermissionGuard>
                 <Link href={`/clients/${client.uuid}`} variant="outline" size="icon">
                   <Icon stroke-width={1.5} name="ChevronRight" size={16} />
                 </Link>

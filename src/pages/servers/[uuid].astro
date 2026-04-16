@@ -12,6 +12,7 @@ import Modal from '@/components/modal/Modal.astro'
 import Icon from '@/components/ui/Icon.astro'
 import Link from '@/components/ui/Link.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const { uuid } = Astro.params
 
@@ -48,8 +49,12 @@ const selectedServer = {
             <h1 class="text-base font-medium text-heading">Detalles server</h1>
 
             <div class="flex items-center gap-3">
-              <Link size="sm" href={`/servers/${uuid}/edit`} icon="Pencil"> Editar </Link>
-              <Button size="sm" variant="destructive" data-open-modal="delete-server" icon="Trash2"> Eliminar </Button>
+              <PermissionGuard permission="servers.update">
+                <Link size="sm" href={`/servers/${uuid}/edit`} icon="Pencil"> Editar </Link>
+              </PermissionGuard>
+              <PermissionGuard permission="servers.delete">
+                <Button size="sm" variant="destructive" data-open-modal="delete-server" icon="Trash2"> Eliminar </Button>
+              </PermissionGuard>
             </div>
           </div>
           <div class="flex items-center justify-between gap-6 p-6">

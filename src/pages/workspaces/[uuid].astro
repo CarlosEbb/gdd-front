@@ -11,6 +11,7 @@ import Table from '@/components/ui/Table.astro'
 import Modal from '@/components/modal/Modal.astro'
 import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
 import Selector from '@/sections/workspaces/Selector.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 const { uuid } = Astro.params
 
 if (!uuid) {
@@ -55,8 +56,12 @@ const getInitials = (name: string) => {
   <Container>
     <Header backHref="/workspaces" title={name} subtitle={`Numero de documentos: ${templates.length}`}>
       <div slot="actions">
-        <Button size="sm" data-open-modal="edit-workspace" icon="Pencil">Editar</Button>
-        <Button size="sm" data-open-modal="delete-workspace" icon="Trash" variant="destructive">Eliminar</Button>
+        <PermissionGuard permission="workspaces.update">
+          <Button size="sm" data-open-modal="edit-workspace" icon="Pencil">Editar</Button>
+        </PermissionGuard>
+        <PermissionGuard permission="workspaces.delete">
+          <Button size="sm" data-open-modal="delete-workspace" icon="Trash" variant="destructive">Eliminar</Button>
+        </PermissionGuard>
       </div>
     </Header>
 

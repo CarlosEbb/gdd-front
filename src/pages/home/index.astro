@@ -4,16 +4,20 @@ import ListWorkspaces from '@/sections/workspaces/List.astro'
 import ListDocuments from '@/sections/documents/List.astro'
 import TitleForPage from '@/components/ui/TitleForPage.astro'
 import Container from '@/components/ui/Container.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const user = await Astro.session?.get('user')
-const name = user.name
+
+const name = user?.name
 ---
 
 <MainLayout title="Inicio">
   <Container>
     <TitleForPage titleStyle="md:text-3xl" class="mb-10" subtitle="Gestiona tus espacios de trabajo y documentos" showBackButton={false} title={`¡Bienvenido, ${name}!`} />
 
-    <ListWorkspaces />
+    <PermissionGuard permission="workspaces.view">
+      <ListWorkspaces />
+    </PermissionGuard>
     <ListDocuments title="Últimos documentos" limit={7} />
   </Container>
 </MainLayout>

@@ -10,6 +10,7 @@ import Link from '@/components/ui/Link.astro'
 import DataGrid from '@/components/ui/DataGrid.astro'
 import Input from '@/components/form/Input.astro'
 import Header from '@/components/ui/Header.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.servers.list, {})
@@ -21,9 +22,9 @@ const hasServers = servers.length > 0
 <MainLayout title="Servidores">
   <Container>
     <Header title="Gestión de servidores" subtitle={`Total: ${servers.length} servidores`}>
-      <div slot="actions">
+      <PermissionGuard slot="actions" permission="servers.create">
         <Link size="sm" href="/servers/new" icon="Plus">Crear Servidor</Link>
-      </div>
+      </PermissionGuard>
     </Header>
 
     <DataGrid hasData={hasServers} isError={error}>

@@ -12,6 +12,7 @@ import { formatDate } from '@/scripts/utils'
 import Avatar from '@/components/ui/Avatar.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const { data, error } = await Astro.callAction(actions.users.list, {})
 
@@ -23,9 +24,9 @@ const totalUsers = users.length
 <MainLayout title="Usuarios">
   <Container>
     <Header title="Gestión de usuarios" subtitle={`Total: ${totalUsers} usuarios`}>
-      <div slot="actions">
+      <PermissionGuard slot="actions" permission="users.create">
         <Link href="/users/new" size="sm" icon="Plus"> Crear usuario </Link>
-      </div>
+      </PermissionGuard>
     </Header>
 
     <StateSwitch isEmpty={!hasUsers} hasError={!!error}>
@@ -33,15 +34,17 @@ const totalUsers = users.length
         <Input name="search" type="search" placeholder="Buscar usuario..." />
       </div>
 
-      <div class="overflow-hidden rounded-main border border-border bg-background">
+      <div class="mb-10 overflow-hidden rounded-main border border-border bg-background">
         {
           users.map((user: Details) => (
             <CardList title={user.name} description={user.email} secondaryText={user.lastConnection ? `Última conexión: ${formatDate(user.lastConnection)}` : ''}>
               <Avatar slot="avatar" size="lg" name={user.name} lastName={user.lastName} photo={user.photo} />
               <div slot="actions" class="flex gap-1">
-                <Link href={`/users/${user.uuid}/edit`} variant="outline" size="icon">
-                  <Icon stroke-width={1.5} name="Pencil" size={16} />
-                </Link>
+                <PermissionGuard permission="users.update">
+                  <Link href={`/users/${user.uuid}/edit`} variant="outline" size="icon">
+                    <Icon stroke-width={1.5} name="Pencil" size={16} />
+                  </Link>
+                </PermissionGuard>
                 <Link href={`/users/${user.uuid}`} variant="outline" size="icon">
                   <Icon stroke-width={1.5} name="ChevronRight" size={16} />
                 </Link>

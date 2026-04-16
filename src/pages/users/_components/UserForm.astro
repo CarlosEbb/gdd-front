@@ -10,6 +10,7 @@ import Avatar from '@/components/ui/Avatar.astro'
 import Icon from '@/components/ui/Icon.astro'
 import type { DetailsClient } from '@/types/clients'
 import type { PermissionCategory } from '@/types/permissions'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 interface Props {
   isEdit?: boolean
@@ -102,38 +103,40 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
     </div>
   </FormBlock>
 
-  <FormBlock title="Asignar clientes" description="Seleccione los clientes que tendrá el usuario" cols={1}>
-    <div class="space-y-3" id="clients-selector">
-      <Input type="search" name="searchClients" placeholder="Buscar cliente por nombre o RIF..." data-search-clients form="none" />
+  <PermissionGuard permissions={['databases.create', 'users.create']}>
+    <FormBlock title="Asignar clientes" description="Seleccione los clientes que tendrá el usuario" cols={1}>
+      <div class="space-y-3" id="clients-selector">
+        <Input type="search" name="searchClients" placeholder="Buscar cliente por nombre o RIF..." data-search-clients form="none" />
 
-      <div class="custom-scrollbar grid max-h-62.5 grid-cols-1 gap-2 overflow-y-auto pr-2 md:grid-cols-2">
-        <StateSwitch hasError={!!clientsError} isEmpty={!hasClients}>
-          {
-            clients.map((client) => (
-              <label
-                class="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-background p-3 transition-all has-checked:border-primary has-checked:bg-primary-foreground"
-                data-client-item
-                data-client-name={client.name.toLowerCase()}
-                data-client-rif={client.rif.toLowerCase()}
-              >
-                <Avatar size="md" name={client.name} lastName={client.rif} photo={client.logo} />
-                <div class="min-w-0 flex-1">
-                  <span class="block truncate text-sm font-medium text-heading">{client.name}</span>
-                  <span class="block truncate text-xs text-subheading">{client.rif}</span>
-                </div>
-                <input type="checkbox" name="clientUuids[]" value={client.uuid} class="shrink-0 accent-primary" checked={client.selected} />
-              </label>
-            ))
-          }
+        <div class="custom-scrollbar grid max-h-62.5 grid-cols-1 gap-2 overflow-y-auto pr-2 md:grid-cols-2">
+          <StateSwitch hasError={!!clientsError} isEmpty={!hasClients}>
+            {
+              clients.map((client) => (
+                <label
+                  class="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-background p-3 transition-all has-checked:border-primary has-checked:bg-primary-foreground"
+                  data-client-item
+                  data-client-name={client.name.toLowerCase()}
+                  data-client-rif={client.rif.toLowerCase()}
+                >
+                  <Avatar size="md" name={client.name} lastName={client.rif} photo={client.logo} />
+                  <div class="min-w-0 flex-1">
+                    <span class="block truncate text-sm font-medium text-heading">{client.name}</span>
+                    <span class="block truncate text-xs text-subheading">{client.rif}</span>
+                  </div>
+                  <input type="checkbox" name="clientUuids[]" value={client.uuid} class="shrink-0 accent-primary" checked={client.selected} />
+                </label>
+              ))
+            }
 
-          <p slot="error" class="col-span-full text-sm text-subheading">Error al cargar los clientes.</p>
-          <p slot="empty" class="col-span-full text-sm text-subheading">No hay clientes disponibles.</p>
-        </StateSwitch>
+            <p slot="error" class="col-span-full text-sm text-subheading">Error al cargar los clientes.</p>
+            <p slot="empty" class="col-span-full text-sm text-subheading">No hay clientes disponibles.</p>
+          </StateSwitch>
+        </div>
+
+        <p id="no-clients-match" style="display: none;" class="text-center text-sm text-subheading">No se encontraron clientes con ese criterio.</p>
       </div>
-
-      <p id="no-clients-match" style="display: none;" class="text-center text-sm text-subheading">No se encontraron clientes con ese criterio.</p>
-    </div>
-  </FormBlock>
+    </FormBlock>
+  </PermissionGuard>
 
   <FormBlock title="Roles" description="Configura el nivel de autorización por módulos para el usuario" cols={1}>
     <StateSwitch hasError={!!permissionsError} isEmpty={!hasPermissions}>
@@ -225,7 +228,7 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
       }
 
       toast.success(data.message)
-      navigate(`/users/${data.data.user.uuid}`)
+      navigate(`/users/${data.data.uuid}`)
       setButtonLoading('#form-user-submit', false)
     }
 
