@@ -13,7 +13,7 @@ export interface InfoProfile {
   country: string
   zipCode: string
   status: string
-  photo: null
+  photo: string | null
   lastConnection: string
   createdAt: string
   updatedAt: string
