@@ -4,12 +4,13 @@ import Select from '../form/Select.astro'
 import Input from '../form/Input.astro'
 import Button from '../ui/Button.astro'
 import Icon from '../ui/Icon.astro'
+import { MARGIN_PRESETS, ORIENTATION, PAPER_SIZES } from '@/constants/file-settings'
 
 const workspaces = (await Astro.session?.get('workspaces')) || []
 ---
 
 <Modal modalId="save-template" title="Crear documento">
-  <form class="space-y-6" id="save-template-form">
+  <form class="space-y-4" id="save-template-form">
     <div>
       <Select
         label="Espacio de trabajo"
@@ -28,27 +29,60 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
       <Input label="Descripción" name="description" placeholder="Ingrese la descripción del documento" required />
     </div>
 
-    <div class="mt-2 w-full">
-      <label
-        for="generate-with-ia-checkbox"
-        class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-custom-blue3 bg-custom-blue3/10 p-4 transition-all hover:shadow-md"
-      >
-        <div class="flex items-center gap-2">
-          <Icon name="Sparkles" class="size-5 text-gray-600" stroke-width={1.5} />
-          <span class="text-sm font-medium text-gray-700">Generar con IA</span>
-          <span class="rounded border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs text-gray-700">Funcionalidad experimental</span>
-        </div>
-        <input
-          type="checkbox"
-          id="generate-with-ia-checkbox"
-          class="size-5 cursor-pointer rounded border-gray-300 text-custom-blue accent-custom-blue focus:ring-2 focus:ring-custom-blue focus:ring-offset-0"
-        />
-      </label>
+    <button
+      type="button"
+      id="toggle-generate-with-ia"
+      class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-custom-blue3 bg-custom-blue3/10 px-4 py-3 text-left transition-all hover:shadow-md"
+    >
+      <div class="flex items-center gap-2">
+        <Icon name="Sparkles" class="size-5 text-gray-600" stroke-width={1.5} />
+        <span class="text-sm font-medium text-gray-700">Generar con IA</span>
+        <span class="rounded border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs text-gray-700">Funcionalidad experimental</span>
+      </div>
+      <Icon name="ChevronDown" class="size-5 text-gray-500 transition-transform duration-200" id="toggle-ia-icon" stroke-width={1.5} />
+    </button>
+
+    <div class="-mt-4 grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out" id="prompt-container">
+      <div class="-mx-1 overflow-hidden px-1 pt-1">
+        <Input label="Crear documento con IA" name="prompt" placeholder="Genera un documento sobre..." />
+        <p class="text-sm text-gray-500">Ingrese el prompt para crear el documento con IA.</p>
+      </div>
     </div>
 
-    <div class="hidden" id="prompt-container">
-      <Input label="Crear documento con IA" name="prompt" placeholder="Genera un documento sobre..." />
-      <p class="text-sm text-gray-500">Ingrese el prompt para crear el documento con IA.</p>
+    <button
+      type="button"
+      id="toggle-document-settings"
+      class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-left transition-all hover:bg-gray-100"
+    >
+      <div class="flex items-center gap-2">
+        <Icon name="Settings" class="size-5 text-gray-600" stroke-width={1.5} />
+        <span class="text-sm font-medium text-gray-700">Configuraciones del documento</span>
+      </div>
+      <Icon name="ChevronDown" class="size-5 text-gray-500 transition-transform duration-200" id="toggle-icon" stroke-width={1.5} />
+    </button>
+
+    <div class="-mt-4 grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out" id="document-settings-container">
+      <div class="-mx-1 space-y-4 overflow-hidden px-1 pt-1">
+        <div>
+          <Select label="Tamaño de papel" value={PAPER_SIZES[0]} name="pageSize" placeholder="Seleccione el tamaño de papel" options={PAPER_SIZES.map((size) => ({ value: size, label: size }))} />
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <Select label="Margen" name="marginType" placeholder="Seleccione un margen" options={MARGIN_PRESETS.map((margin) => ({ value: margin, label: margin }))} value={MARGIN_PRESETS[1]} />
+          </div>
+
+          <div>
+            <Select
+              label="Orientación"
+              name="orientation"
+              placeholder="Seleccione una orientación"
+              value={ORIENTATION[0]}
+              options={ORIENTATION.map((orientation) => ({ value: orientation, label: orientation === 'PORTRAIT' ? 'Vertical' : 'Horizontal' }))}
+            />
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
@@ -67,10 +101,29 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
   function initializeCreateDocumentModal() {
     const modalSaveTemplate = document.getElementById('save-template') as HTMLDialogElement
     const form = document.getElementById('save-template-form') as HTMLFormElement
-    const checkboxGenerateWithIA = document.getElementById('generate-with-ia-checkbox') as HTMLInputElement
+    const toggleGenerateWithIA = document.getElementById('toggle-generate-with-ia') as HTMLButtonElement
     const promptContainer = document.getElementById('prompt-container') as HTMLDivElement
+    const toggleIaIcon = document.getElementById('toggle-ia-icon') as HTMLElement
+    const toggleDocumentSettings = document.getElementById('toggle-document-settings') as HTMLButtonElement
+    const documentSettingsContainer = document.getElementById('document-settings-container') as HTMLDivElement
+    const toggleIcon = document.getElementById('toggle-icon') as HTMLElement
 
     if (!form) return
+
+    const handleToggleDocumentSettings = () => {
+      const isExpanded = documentSettingsContainer.classList.contains('grid-rows-[1fr]')
+      if (isExpanded) {
+        documentSettingsContainer.classList.remove('grid-rows-[1fr]', 'opacity-100', 'mt-4')
+        documentSettingsContainer.classList.add('grid-rows-[0fr]', 'opacity-0', '-mt-4')
+        toggleIcon.classList.remove('rotate-180')
+      } else {
+        documentSettingsContainer.classList.remove('grid-rows-[0fr]', 'opacity-0', '-mt-4')
+        documentSettingsContainer.classList.add('grid-rows-[1fr]', 'opacity-100', 'mt-4')
+        toggleIcon.classList.add('rotate-180')
+      }
+    }
+
+    toggleDocumentSettings.addEventListener('click', handleToggleDocumentSettings)
 
     const handleSaveTemplate = async (e: Event) => {
       e.preventDefault()
@@ -107,22 +160,25 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
       }
     }
 
-    const handleGenerateWithIA = (e: Event) => {
+    const handleToggleGenerateWithIA = () => {
       const promptInput = form.querySelector('input[name="prompt"]') as HTMLInputElement
+      const isExpanded = promptContainer.classList.contains('grid-rows-[1fr]')
 
-      const target = e.target as HTMLInputElement
-
-      if (target.checked) {
-        promptContainer.classList.remove('hidden')
+      if (isExpanded) {
+        promptContainer.classList.remove('grid-rows-[1fr]', 'opacity-100', 'mt-4')
+        promptContainer.classList.add('grid-rows-[0fr]', 'opacity-0', '-mt-4')
+        toggleIaIcon.classList.remove('rotate-180')
+        promptInput?.removeAttribute('name')
       } else {
-        promptContainer.classList.add('hidden')
+        promptContainer.classList.remove('grid-rows-[0fr]', 'opacity-0', '-mt-4')
+        promptContainer.classList.add('grid-rows-[1fr]', 'opacity-100', 'mt-4')
+        toggleIaIcon.classList.add('rotate-180')
+        promptInput?.setAttribute('name', 'prompt')
       }
-
-      const action = target.checked ? 'setAttribute' : 'removeAttribute'
-      promptInput[action]('name', 'prompt')
     }
 
-    checkboxGenerateWithIA.addEventListener('change', handleGenerateWithIA)
+    toggleGenerateWithIA.addEventListener('click', handleToggleGenerateWithIA)
+    toggleDocumentSettings.addEventListener('click', handleToggleDocumentSettings)
 
     form.addEventListener('submit', handleSaveTemplate)
   }
