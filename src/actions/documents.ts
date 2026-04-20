@@ -64,6 +64,9 @@ export const documents = {
       uuid_workspace: z.string(),
       uuid_category: z.string().optional(),
       prompt: z.string().optional(),
+      pageSize: z.string().optional(),
+      marginType: z.string().optional(),
+      orientation: z.string().optional(),
     }),
     handler: async (input, request) => {
       const hasToken = await request.session?.has('token')
