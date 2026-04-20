@@ -73,10 +73,10 @@ const documents = data?.data ?? []
       const description = clone.querySelector('[data-description]')
       const date = clone.querySelector('[data-date]')
 
-      if (link) link.href = `/editor/${doc.uuid}?build_number=${doc.last_version.build_number}&id_workspace=${doc.id_workspace}&name_document=${doc.title}`
+      if (link) link.href = `/editor/${doc.uuid}?build_number=${doc.versions[0].buildNumber}&id_workspace=${doc.uuidWorkspace}&name_document=${doc.title}`
       if (title) title.textContent = doc.title
       if (description) description.textContent = doc.description || 'Sin descripción'
-      if (date) date.textContent = formatDate(doc.updated_at)
+      if (date) date.textContent = formatDate(doc.updatedAt)
 
       return clone
     }
