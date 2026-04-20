@@ -74,6 +74,38 @@ export function formatDate(isoString: string): string {
 }
 
 /**
+ * Convierte una fecha ISO (UTC) a un formato corto español
+ * con el mes abreviado y capitalizado.
+ * @param isoString La fecha en formato ISO (ej: "2025-11-04T15:45:54.868Z")
+ * @returns La fecha formateada (ej: "04 Nov 2025")
+ */
+export function formatShortDate(isoString: string): string {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+
+  if (Number.isNaN(date.getTime())) return ''
+
+  const options: Intl.DateTimeFormatOptions = {
+    day: '2-digit', // "04", "11"
+    month: 'short', // "nov", "abr"
+    year: 'numeric', // "2025"
+    timeZone: 'UTC',
+  }
+
+  const formatter = new Intl.DateTimeFormat('es', options)
+  const parts = formatter.formatToParts(date)
+  const partMap = new Map(parts.map((part) => [part.type, part.value]))
+
+  const day = partMap.get('day') || ''
+  const month = (partMap.get('month') || '').replace('.', '')
+  const year = partMap.get('year') || ''
+
+  const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1)
+
+  return `${day} ${capitalizedMonth} ${year}`
+}
+
+/**
  * Opciones para configurar el estado de loading del botón
  */
 export interface ButtonLoadingOptions {
