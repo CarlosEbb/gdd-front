@@ -1,8 +1,8 @@
 ---
-import { FileText, icons } from '@lucide/astro'
+import { icons } from '@lucide/astro'
 import type { Document } from '@/types/documents'
 import template from '@/assets/images/preview/template-1.png'
-import { formatISODateWithIntl } from '@/scripts/utils'
+import { formatShortDate } from '@/scripts/utils'
 import Icon from './Icon.astro'
 import Avatar from './Avatar.astro'
 const { PUBLIC_PROJECT_URL } = import.meta.env
@@ -31,26 +31,26 @@ const ACTIONS = [
 
 const { document } = Astro.props
 
-const { uuid, last_version, id_workspace, title, created_at, description } = document
-const { path_thumbnails, build_number, name_version, uuid: uuid_version } = last_version
+const { uuid, lastVersion, uuidWorkspace, title, updatedAt, description, owner } = document
+const { pathThumbnails, buildNumber, nameVersion, uuid: uuidVersion } = lastVersion
+const { name: autor, photo } = owner
 
-const thumbnails = `${PUBLIC_PROJECT_URL}${path_thumbnails}` || template.src
-const autor = 'Juan peres'
-const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_workspace}&name_document=${title}`
+const thumbnails = `${PUBLIC_PROJECT_URL}${pathThumbnails}` || template.src
+const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWorkspace}&name_document=${title}`
 ---
 
 <div
-  class="document-card group block cursor-pointer overflow-hidden rounded-main border border-border bg-background transition-all duration-200 hover:shadow-base"
+  class="document-card group flex cursor-pointer flex-col rounded-main border border-border bg-background transition-all duration-200 hover:shadow-base"
   data-url={url}
   data-title={title}
-  data-created-at={created_at}
-  data-workspace-id={id_workspace}
+  data-created-at={updatedAt}
+  data-workspace-id={uuidWorkspace}
   data-uuid={uuid}
-  data-name-version={name_version}
-  data-build-number={build_number}
-  data-uuid-version={uuid_version}
+  data-name-version={nameVersion}
+  data-build-number={buildNumber}
+  data-uuid-version={uuidVersion}
 >
-  <div class="px-3 pt-3">
+  <div class="overflow-hidden px-3 pt-3">
     <div class="relative flex h-48 w-full items-center justify-center overflow-hidden rounded-main bg-foreground">
       <div class="thumbnail-skeleton absolute inset-0 animate-pulse bg-muted"></div>
       <img
@@ -67,10 +67,9 @@ const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_work
   </div>
 
   <div class="mt-2 flex items-center justify-between space-x-2 px-3">
-    <div class="flex items-center gap-x-2">
+    <div class="flex min-w-0 flex-1 items-center gap-x-2">
       <h3 class="truncate text-sm font-medium text-heading">{title}</h3>
     </div>
-
     <div class="relative">
       <button class="flex size-6 items-center justify-center rounded-main text-heading transition-colors duration-150 hover:bg-foreground" data-btn-dropdown>
         <Icon name="EllipsisVertical" stroke-width={1.5} size={18} />
@@ -93,7 +92,7 @@ const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_work
             ))
           }
           <button class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-red-600 transition-colors duration-150 hover:bg-red-500/20" data-action="delete">
-            <Icon name="Trash2" stroke-width={1.5} class="size-4" />
+            <Icon name="Trash2" stroke-width={1.5} class="size-3" />
             <span>Eliminar</span>
           </button>
         </div>
@@ -102,15 +101,15 @@ const url = `/editor/${uuid}?build_number=${build_number}&id_workspace=${id_work
   </div>
 
   <div class="mb-2 px-3">
-    {description && <p class="truncate text-xs text-subheading">{description}</p>}
+    {description && <p class="line-clamp-2 text-xs text-subheading">{description}</p>}
   </div>
 
-  <div class="mt-5 flex items-center justify-between border-t border-border bg-foreground px-3 py-2">
+  <div class="mt-auto flex items-center justify-between rounded-b-main border-t border-border bg-foreground px-3 py-2">
     <div class="flex items-center">
-      <Avatar size="xs" />
-      <p class="ml-2 text-sm text-heading">{autor}</p>
+      <Avatar size="xs" name={autor} photo={photo} />
+      <p class="ml-2 line-clamp-1 text-sm text-heading">{autor}</p>
     </div>
-    <p class="mt-0.5 text-xs text-subheading">{formatISODateWithIntl(created_at)}</p>
+    <p class="mt-0.5 rounded-main border border-border bg-muted px-2 py-1 text-xs text-subheading">{formatShortDate(updatedAt)}</p>
   </div>
 </div>
 
