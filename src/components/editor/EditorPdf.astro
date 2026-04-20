@@ -45,15 +45,15 @@ const removeCurrentDocument = documentsWorkspace?.filter((document: any) => docu
 
 const documentsByWorkspace =
   (removeCurrentDocument?.reduce((acc: any, document: any) => {
-    const workspaceName = getWorkspace?.find((workspace) => Number(workspace.id) === Number(document.id_workspace))?.name
+    const workspaceName = getWorkspace?.find((workspace) => Number(workspace.id) === Number(document.uuidWorkspace))?.name
     if (!acc[workspaceName]) {
       acc[workspaceName] = []
     }
     const infoDocument = {
       uuid: document.uuid,
       title: document.title,
-      buildNumber: document.last_version.build_number,
-      idWorkspace: document.id_workspace,
+      buildNumber: document.lastVersion?.buildNumber,
+      idWorkspace: document.uuidWorkspace,
     }
     acc[workspaceName].push(infoDocument)
     return acc

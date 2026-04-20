@@ -3,6 +3,7 @@ import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
 import type { CreateDocument, CreateNewVersion, Document, GeneratedDocument, RequestForDocument, SchemaFile } from '@/types/documents'
 import { requireAuth, requirePermission } from '@/lib/permissions'
+import { PAPER_SIZES, ORIENTATION, MARGIN_PRESETS } from '@/constants/file-settings'
 
 export const documents = {
   getByWorkspaces: defineAction({
@@ -48,7 +49,9 @@ export const documents = {
       name: z.string(),
       description: z.string(),
       uuid_workspace: z.string(),
-      uuid_category: z.string().optional(),
+      pageSize: z.enum(PAPER_SIZES).optional(),
+      orientation: z.enum(ORIENTATION).optional(),
+      marginType: z.enum(MARGIN_PRESETS).optional(),
       prompt: z.string().optional(),
     }),
     handler: async (input, request) => {
@@ -100,10 +103,11 @@ export const documents = {
     handler: async ({ uuid_template, build_number, compress }, request) => {
       await requirePermission(request, ['templates.view'])
       const token = await requireAuth(request)
-      const url = `/template/file/${uuid_template}/${build_number}${compress ? '?compress=true' : ''}`
+      const url = `/template/file/${uuid_template}/${build_number}`
 
       try {
         const file = await http.get<SchemaFile>(url, token)
+        console.log(file)
         return file
       } catch (error) {
         await handleApiError(error, request)

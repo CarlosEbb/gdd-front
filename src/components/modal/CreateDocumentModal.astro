@@ -4,12 +4,14 @@ import Select from '../form/Select.astro'
 import Input from '../form/Input.astro'
 import Button from '../ui/Button.astro'
 import Icon from '../ui/Icon.astro'
+import SelectionCard from '../form/SelectionCard.astro'
+import { PAPER_SIZES, ORIENTATION, MARGIN_PRESETS } from '@/constants/file-settings'
 
 const workspaces = (await Astro.session?.get('workspaces')) || []
 ---
 
 <Modal modalId="save-template" title="Crear documento">
-  <form class="space-y-6" id="save-template-form">
+  <form class="space-y-4" id="save-template-form">
     <div>
       <Select
         label="Espacio de trabajo"
@@ -25,20 +27,76 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
     </div>
 
     <div>
-      <Input label="Descripción" name="description" placeholder="Carta de presentación para la posición de gerente de proyecto" required />
+      <Input label="Descripción" name="description" placeholder="Una descripción breve del documento" required />
     </div>
 
-    <label class="mt-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-main border border-primary bg-primary-foreground p-3 text-primary hover:bg-primary-foreground/60">
-      <div class="flex items-center gap-2">
-        <Icon name="Sparkles" size={18} />
-        <span>Crear documento con IA</span>
+    <div>
+      <input type="checkbox" name="generate_with_ai" id="generate_with_ai" class="hidden" />
+      <button type="button" class="flex w-full cursor-pointer items-center justify-between border-b border-border pb-1.5" id="generate-with-ai-toggle">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-subheading">
+          <Icon class="text-primary" name="Sparkles" size={18} />
+          Crear documento con IA
+        </h3>
+        <Icon class="text-subheading transition-transform duration-200" name="ChevronDown" size={20} stroke-width={1.5} id="generate-with-ai-icon" />
+      </button>
+      <div class="mt-2 grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out" id="prompt-container">
+        <div class="overflow-hidden rounded-main bg-foreground p-0 shadow-sm transition-[padding] duration-300 ease-in-out" id="prompt-inner">
+          <label for="prompt" class="block text-sm font-medium text-heading">Describe el documento que deseas generar</label>
+          <textarea name="prompt" placeholder="Crea un documento sobre..." class="field-sizing-content w-full rounded-main border border-border bg-background p-2"></textarea>
+          <p class="text-sm text-subheading">Ingrese el prompt para crear el documento con IA.</p>
+        </div>
       </div>
-      <input type="checkbox" name="generate_with_ai" id="generate_with_ai" />
-    </label>
-    <div class="hidden rounded-main bg-foreground p-4 shadow-sm" id="prompt-container">
-      <label for="prompt" class="block text-sm font-medium text-heading">Describe el documento que deseas generar</label>
-      <textarea name="prompt" placeholder="Crea un documento sobre..." class="field-sizing-content w-full rounded-main border border-border bg-background p-2"></textarea>
-      <p class="text-sm text-subheading">Ingrese el prompt para crear el documento con IA.</p>
+    </div>
+
+    <div>
+      <button type="button" class="flex w-full cursor-pointer items-center justify-between border-b border-border pb-1.5" id="page-settings-toggle">
+        <h3 class="text-sm font-semibold text-subheading">Configuración de página</h3>
+        <Icon class="text-subheading transition-transform duration-200" name="ChevronDown" size={20} stroke-width={1.5} id="page-settings-icon" />
+      </button>
+      <div class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out" id="page-settings-content">
+        <div class="overflow-hidden p-1">
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <Select
+                label="Tamaño de papel"
+                name="pageSize"
+                placeholder="Seleccione un tamaño de papel"
+                options={PAPER_SIZES.map((size) => ({ value: size, label: size }))}
+                value={PAPER_SIZES[0]}
+                required
+              />
+            </div>
+
+            <div>
+              <Select
+                label="Margen"
+                name="marginType"
+                placeholder="Seleccione un margen"
+                options={MARGIN_PRESETS.map((margin) => ({ value: margin, label: margin }))}
+                value={MARGIN_PRESETS[1]}
+                required
+              />
+            </div>
+
+            <div class="md:col-span-2">
+              <span class="mb-1 block text-sm font-medium text-heading">Orientación</span>
+              <div class="grid grid-cols-2 gap-4">
+                {
+                  ORIENTATION.map((orientation) => (
+                    <SelectionCard
+                      name="orientation"
+                      value={orientation}
+                      label={orientation === 'PORTRAIT' ? 'Vertical' : 'Horizontal'}
+                      icon={orientation === 'PORTRAIT' ? 'File' : 'StickyNote'}
+                      checked={orientation === 'PORTRAIT'}
+                    />
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </form>
 
@@ -58,9 +116,20 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
     const modalSaveTemplate = document.getElementById('save-template') as HTMLDialogElement
     const form = document.getElementById('save-template-form') as HTMLFormElement
     const btnGenerateWithIA = document.getElementById('generate_with_ai') as HTMLInputElement
+    const generateWithAIToggle = document.getElementById('generate-with-ai-toggle') as HTMLButtonElement
+    const generateWithAIIcon = document.getElementById('generate-with-ai-icon') as HTMLElement
     const promptContainer = document.getElementById('prompt-container') as HTMLDivElement
+    const pageSettingsToggle = document.getElementById('page-settings-toggle') as HTMLButtonElement
+    const pageSettingsContent = document.getElementById('page-settings-content') as HTMLDivElement
+    const pageSettingsIcon = document.getElementById('page-settings-icon') as HTMLElement
 
     if (!form) return
+
+    pageSettingsToggle?.addEventListener('click', () => {
+      const isOpen = pageSettingsContent.classList.toggle('grid-rows-[1fr]')
+      pageSettingsContent.classList.toggle('grid-rows-[0fr]', !isOpen)
+      pageSettingsIcon.classList.toggle('rotate-180')
+    })
 
     const handleSaveTemplate = async (e: Event) => {
       e.preventDefault()
@@ -83,7 +152,11 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
         }
 
         toast.success(data.message)
-        navigate(`/editor/${data.data.template.uuid}?build_number=${data.data.version.build_number}&id_workspace=${data.data.template.id_workspace}&name_document=${data.data.template.title}`)
+        const editorUrl = new URL(`/editor/${data.data.template.uuid}`, window.location.origin)
+        editorUrl.searchParams.set('build_number', data.data.lastVersion.buildNumber)
+        editorUrl.searchParams.set('id_workspace', data.data.template.uuidWorkspace)
+        editorUrl.searchParams.set('name_document', data.data.template.title)
+        navigate(editorUrl.pathname + editorUrl.search)
         modalSaveTemplate.close()
       } catch (error: unknown) {
         if (error instanceof Error) {
@@ -97,15 +170,26 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
       }
     }
 
-    const handleGenerateWithIA = async (e: Event) => {
+    const handleGenerateWithIA = () => {
+      btnGenerateWithIA.checked = !btnGenerateWithIA.checked
       const promptTextarea = form.querySelector('textarea[name="prompt"]') as HTMLTextAreaElement
-      promptContainer.classList.toggle('hidden')
+      const isOpen = promptContainer.classList.toggle('grid-rows-[1fr]')
+      promptContainer.classList.toggle('grid-rows-[0fr]', !isOpen)
+      generateWithAIIcon.classList.toggle('rotate-180')
+      const promptInner = document.getElementById('prompt-inner') as HTMLDivElement
+      if (isOpen) {
+        promptInner.classList.add('p-4')
+        promptInner.classList.remove('p-0')
+      } else {
+        promptInner.classList.remove('p-4')
+        promptInner.classList.add('p-0')
+      }
 
       const action = btnGenerateWithIA.checked ? 'setAttribute' : 'removeAttribute'
       promptTextarea[action]('name', 'prompt')
     }
 
-    btnGenerateWithIA.addEventListener('change', handleGenerateWithIA)
+    generateWithAIToggle.addEventListener('click', handleGenerateWithIA)
 
     form.addEventListener('submit', handleSaveTemplate)
   }
