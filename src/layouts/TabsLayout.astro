@@ -1,6 +1,7 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro'
-import TitleForPage from '@/components/ui/TitleForPage.astro'
+import Header from '@/components/ui/Header.astro'
+import Container from '@/components/ui/Container.astro'
 
 interface Props {
   title: string
@@ -15,15 +16,24 @@ const currentPath = pathname + Astro.url.search
 ---
 
 <MainLayout title={title}>
-  <div class="mx-auto max-w-7xl">
-    <TitleForPage title={titleForPage} />
+  <Container>
+    <Header title={titleForPage} subtitle="Consulta y gestiona la API de los documentos" />
 
-    <section class="mb-10 border-b border-gray-200">
-      <ul class="flex gap-x-4">
+    <section class="mb-10 border-b border-border">
+      <ul class="flex gap-x-8">
         {
           navigation.map((item) => (
             <li>
-              <a href={item.href} class:list={['text-sm', { 'border-b border-blue-muted text-blue-muted': currentPath === item.href }]}>
+              <a
+                href={item.href}
+                class:list={[
+                  'inline-block px-4 py-3 text-sm font-medium transition-colors',
+                  {
+                    'border-b-2 border-primary text-primary': currentPath === item.href,
+                    'text-subheading hover:text-heading': currentPath !== item.href,
+                  },
+                ]}
+              >
                 {item.label}
               </a>
             </li>
@@ -32,8 +42,8 @@ const currentPath = pathname + Astro.url.search
       </ul>
     </section>
 
-    <section>
+    <section class="mb-16">
       <slot />
     </section>
-  </div>
+  </Container>
 </MainLayout>
