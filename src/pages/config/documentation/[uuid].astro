@@ -3,6 +3,7 @@ import Layout from '../_components/Layout.astro'
 import { actions } from 'astro:actions'
 import { Code } from 'astro:components'
 import Icon from '@/components/ui/Icon.astro'
+import Card from '@/components/ui/Card.astro'
 
 const { uuid } = Astro.params
 
@@ -29,149 +30,140 @@ const request = data?.data.variables
 ---
 
 <Layout title="Documentación">
-  <div class="relative">
-    <div class="flex gap-x-3 pe-5 md:gap-x-10">
-      <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-blue-muted text-xl font-bold text-white shadow-lg">1</div>
-        <div class="-my-2 h-full w-0.5 bg-blue-muted/60"></div>
+  <div class="space-y-6">
+    <!-- Step 1: El Endpoint (URL) -->
+    <Card class="overflow-visible">
+      <div class="flex items-start gap-4">
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-sm font-semibold text-primary">1</div>
+        <div class="flex-1">
+          <h3 class="text-base font-semibold text-heading">El Endpoint (URL)</h3>
+          <p class="mt-1 text-sm text-subheading">
+            Todas las peticiones deben realizarse a través de HTTPS. Para crear un nuevo documento, utiliza el <a href="#" class="text-primary underline">endpoint de documentos</a>. Asegúrate de
+            incluir tu API Key en los headers.
+          </p>
+        </div>
       </div>
 
-      <div class="w-full pt-2 pb-16">
-        <h3 class="mb-3 text-2xl font-bold text-slate-900">El Endpoint (URL)</h3>
-        <p class="mb-6 leading-relaxed text-slate-600">
-          Todas las peticiones deben realizarse a través de HTTPS. Para crear un nuevo documento, utiliza el endpoint de documentos. Asegúrate de incluir tu API Key en los headers.
-        </p>
-
-        <div class="overflow-hidden rounded-main bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
-          <div class="flex items-center justify-between border-b border-blue-muted/60 bg-blue-muted/40 px-4 py-3">
-            <div class="flex space-x-2">
-              <div class="h-3 w-3 rounded-full bg-red-500"></div>
-              <div class="h-3 w-3 rounded-full bg-yellow-500"></div>
-              <div class="h-3 w-3 rounded-full bg-green-500"></div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="font-mono text-xs text-blue-muted">POST Request</span>
-              <button class="copy-btn p-1 text-blue-muted transition-colors hover:text-white" title="Copiar URL" data-content={base_url + url}>
-                <Icon name="Copy" stroke-width={1.5} class="size-4" />
-              </button>
-            </div>
+      <div class="mt-4 ml-12 overflow-hidden rounded-main border border-border bg-muted">
+        <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+          <div class="flex items-center gap-2">
+            <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+            <span class="font-mono text-xs text-muted-foreground">POST Request</span>
           </div>
-          <div class="code-scroll overflow-x-auto p-6 font-mono text-sm">
-            <div class="flex items-center gap-3">
-              <span class="bg-brand-500/20 text-brand-400 rounded px-2 py-1 text-xs font-bold tracking-wider uppercase">POST</span>
-              <span class="text-blue-muted">{base_url}<span class="text-brand-400">{url}</span></span>
-            </div>
+          <button class="copy-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar URL" data-content={base_url + url}>
+            <Icon name="Copy" stroke-width={1.5} class="size-4" />
+          </button>
+        </div>
+        <div class="code-scroll overflow-x-auto p-4 font-mono text-sm">
+          <div class="flex items-center gap-2">
+            <span class="text-muted-foreground">1</span>
+            <span class="text-pink-600">POST</span>
+            <span class="text-heading">{base_url}<span class="text-primary">{url}</span></span>
           </div>
         </div>
       </div>
-    </div>
+    </Card>
 
-    <div class="flex gap-x-3 pe-5 md:gap-x-10">
-      <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-blue-muted text-xl font-bold text-white shadow-lg">2</div>
-        <div class="-my-2 h-full w-0.5 bg-blue-muted/60"></div>
-      </div>
-
-      <div class="w-full pt-2 pb-16">
-        <h3 class="mb-3 text-2xl font-bold text-slate-900">La Petición (Request)</h3>
-        <p class="mb-4 leading-relaxed text-slate-600">Envía un objeto JSON en el cuerpo de la petición. todos los campos son obligatorios para iniciar el proceso.</p>
-        <ul class="mb-6 space-y-2">
-          <li class="flex items-center gap-2 text-sm text-slate-600">
-            <svg class="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg
-            >
-            Validación automática de campos requeridos
-          </li>
-          <li class="flex items-center gap-2 text-sm text-slate-600">
-            <svg class="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg
-            >
-            Soporte para variables personalizadas
-          </li>
-        </ul>
-
-        <div class="overflow-hidden rounded-main bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
-          <div class="flex items-center justify-between border-b border-blue-muted/60 bg-blue-muted/40 px-4 py-2">
-            <span class="font-mono text-xs text-blue-muted">body.json</span>
-            <button class="copy-btn p-1 text-blue-muted transition-colors hover:text-white" title="Copiar código" data-content={JSON.stringify(request, null, 2)}>
-              <Icon name="Copy" stroke-width={1.5} class="size-4" />
-            </button>
-          </div>
-          <div class="code-scroll code-container overflow-x-auto p-4">
-            <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(request, null, 2)} />
-          </div>
+    <!-- Step 2: La Petición (Request) -->
+    <Card class="overflow-visible">
+      <div class="flex items-start gap-4">
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-sm font-semibold text-primary">2</div>
+        <div class="flex-1">
+          <h3 class="text-base font-semibold text-heading">La Petición (Request)</h3>
+          <p class="mt-1 text-sm text-subheading">Envía un objeto JSON en el cuerpo de la petición. Todos los campos son obligatorios para iniciar el proceso.</p>
         </div>
       </div>
-    </div>
 
-    <div class="flex gap-x-3 pe-5 md:gap-x-10">
-      <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-4 border-white bg-blue-muted text-xl font-bold text-white shadow-lg">3</div>
-      </div>
-
-      <div class="w-full pt-2 pb-16">
-        <h3 class="mb-3 text-2xl font-bold text-slate-900">La Respuesta (Response)</h3>
-        <p class="mb-6 leading-relaxed text-slate-600">
-          Si todo es correcto, recibirás un código <code>200 OK</code>. La respuesta incluirá un <code>uuid</code> único de documento que deberás y la url para ver el documento.
-        </p>
-
-        <div class="overflow-hidden rounded-main bg-blue-muted/10 shadow-lg ring-1 ring-blue-muted/60">
-          <div class="flex items-center justify-between border-b border-blue-muted/60 bg-blue-muted/40 px-4 py-2">
-            <div class="flex items-center gap-2">
-              <span class="flex h-2 w-2 rounded-full bg-blue-muted"></span>
-              <span class="font-mono text-xs font-bold text-blue-muted">200 OK</span>
-            </div>
-            <button class="copy-btn p-1 text-slate-400 transition-colors hover:text-white" title="Copiar código" data-content={JSON.stringify(responseExample, null, 2)}>
-              <Icon name="Copy" stroke-width={1.5} class="size-4" />
-            </button>
+      <div class="mt-4 ml-12 overflow-hidden rounded-main border border-border bg-muted">
+        <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+          <div class="flex items-center gap-2">
+            <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+            <span class="font-mono text-xs text-muted-foreground">body.json</span>
           </div>
-          <div class="code-scroll code-container overflow-x-auto p-4">
-            <Code theme="catppuccin-latte" lang="json" code={JSON.stringify(responseExample, null, 2)} />
-          </div>
+          <button class="copy-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar código" data-content={JSON.stringify(request, null, 2)}>
+            <Icon name="Copy" stroke-width={1.5} class="size-4" />
+          </button>
+        </div>
+        <div class="code-scroll code-container overflow-x-auto p-4">
+          <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(request, null, 2)} />
         </div>
       </div>
-    </div>
+    </Card>
 
-    <div class="flex gap-x-3 md:gap-x-10">
-      <div class="flex flex-col items-center">
-        <div class="z-10 flex h-12 w-12 shrink-0"></div>
-      </div>
-
-      <div class="w-full pt-2 pb-16">
-        <h3 class="mb-3 text-2xl font-bold text-slate-900">Cómo importar en Postman:</h3>
-        <p class="mb-6 leading-relaxed text-slate-600">Para importar la colección en Postman, haz clic en el botón de descarga y sigue las instrucciones.</p>
-
-        <div class="overflow-hidden rounded-main bg-orange-50 shadow-lg ring-1 ring-orange-800/60">
-          <div class="code-scroll code-container items-start justify-between overflow-x-auto p-4 md:flex">
-            <ol class="space-y-1 text-left text-sm text-orange-800">
-              <li class="flex items-start gap-2">
-                <span class="font-bold">1.</span>
-                <span>Haz clic en el botón de descarga</span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="font-bold">2.</span>
-                <span>Abre Postman (Desktop o Web)</span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="font-bold">3.</span>
-                <span>Ve a <span class="rounded bg-orange-100 px-1.5 py-0.5 font-mono text-xs">File → Import</span></span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="font-bold">4.</span>
-                <span>Selecciona el archivo descargado</span>
-              </li>
-            </ol>
-
-            <button
-              class="postman-btn group mt-4 flex items-center gap-3 rounded-main bg-linear-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl md:mt-0"
-            >
-              <span>Descargar para Postman</span>
-              <Icon name="Download" stroke-width={2} class="size-5 transition-transform group-hover:translate-y-1" />
-            </button>
-          </div>
+    <!-- Step 3: La Respuesta (Response) -->
+    <Card class="overflow-visible">
+      <div class="flex items-start gap-4">
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-sm font-semibold text-primary">3</div>
+        <div class="flex-1">
+          <h3 class="text-base font-semibold text-heading">La Respuesta (Response)</h3>
+          <p class="mt-1 text-sm text-subheading">
+            Si todo es correcto, recibirás un código <code class="rounded bg-muted px-1.5 py-0.5 text-xs">200 OK</code>. La respuesta incluirá un <code class="rounded bg-muted px-1.5 py-0.5 text-xs"
+              >uuid</code
+            > único de documento y la url para ver el documento.
+          </p>
         </div>
       </div>
-    </div>
+
+      <div class="mt-4 ml-12 overflow-hidden rounded-main border border-border bg-muted">
+        <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+          <div class="flex items-center gap-2">
+            <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+            <span class="font-mono text-xs text-muted-foreground">response.json</span>
+          </div>
+          <button class="copy-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar código" data-content={JSON.stringify(responseExample, null, 2)}>
+            <Icon name="Copy" stroke-width={1.5} class="size-4" />
+          </button>
+        </div>
+        <div class="code-scroll code-container overflow-x-auto p-4">
+          <Code theme="catppuccin-latte" lang="json" code={JSON.stringify(responseExample, null, 2)} />
+        </div>
+      </div>
+    </Card>
+
+    <!-- Step 4: Cómo importar en Postman -->
+    <Card class="overflow-visible">
+      <div class="flex items-start gap-4">
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-sm font-semibold text-primary">4</div>
+        <div class="flex-1">
+          <h3 class="text-base font-semibold text-heading">Cómo importar en Postman</h3>
+          <p class="mt-1 text-sm text-subheading">Para importar la colección en Postman, haz clic en el botón de descarga y sigue las instrucciones.</p>
+
+          <button class="postman-btn mt-4 inline-flex items-center gap-2 rounded-main border border-border bg-background px-4 py-2 text-sm font-medium text-heading transition-colors hover:bg-muted">
+            <Icon name="Download" stroke-width={2} class="size-4" />
+            <span>Descargar para Postman</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-4 ml-12 overflow-hidden rounded-main border border-border bg-muted">
+        <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+          <div class="flex items-center gap-2">
+            <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+            <span class="font-mono text-xs text-muted-foreground">Instrucciones</span>
+          </div>
+        </div>
+        <div class="p-4">
+          <ol class="space-y-1 text-sm text-subheading">
+            <li class="flex items-start gap-3">
+              <span class="text-muted-foreground">1.</span>
+              <span>Haz clic en el botón de descarga</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-muted-foreground">2.</span>
+              <span>Abre Postman (Desktop o Web)</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-muted-foreground">3.</span>
+              <span>Ve a <code class="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">File → Import</code></span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-muted-foreground">4.</span>
+              <span>Selecciona el archivo descargado</span>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </Card>
   </div>
 </Layout>
 
