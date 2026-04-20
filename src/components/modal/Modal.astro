@@ -65,6 +65,7 @@ const { modalId, title } = Astro.props
     top: 50%;
     left: 50%;
     max-height: 90vh;
+    overflow: hidden;
 
     /* Estado cerrado (fade-out) */
     opacity: 0;
@@ -114,6 +115,10 @@ const { modalId, title } = Astro.props
 
   /* Estilos para el contenido interno */
   .modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: hidden;
   }
 
   .modal-header {
@@ -123,6 +128,7 @@ const { modalId, title } = Astro.props
     padding: 1rem 1.5rem;
     border-bottom: 1px solid oklch(0.922 0 0);
     background-color: #fafafa;
+    flex-shrink: 0;
   }
 
   .modal-title {
@@ -146,6 +152,8 @@ const { modalId, title } = Astro.props
   .modal-body {
     padding: 1rem 1.5rem 1.5rem;
     overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   .modal-footer {
@@ -156,5 +164,6 @@ const { modalId, title } = Astro.props
     padding: 1rem 1.5rem;
     border-top: 1px solid oklch(0.922 0 0);
     background-color: #fafafa;
+    flex-shrink: 0;
   }
 </style>
