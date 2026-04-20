@@ -6,7 +6,6 @@ import EmptyState from '@/components/ui/EmptyState.astro'
 import Icon from '@/components/ui/Icon.astro'
 import { actions } from 'astro:actions'
 import type { Document } from '@/types/documents'
-import DataGrid from '@/components/ui/DataGrid.astro'
 import type { ActionError } from 'astro:actions'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 
@@ -34,108 +33,8 @@ if (uuidWorkspace) {
   documents = data?.data ?? []
   hasDocuments = documents.length > 0 || false
   error = errorDocuments ?? undefined
-  grid = 'grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+  grid = 'grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
 }
-
-// crear un mock para documents
-documents = [
-  {
-    id: 1,
-    uuid: '1',
-    title: 'Documento 1',
-    name: 'Documento 1',
-    description: 'Descripcion del documento 1',
-    open_date: '2022-01-01',
-    id_workspace: 1,
-    created_at: '2022-01-01',
-    updated_at: '2022-01-01',
-    status: 'active',
-    last_version: {
-      id: 1,
-      id_template: 1,
-      name_version: 'Version 1',
-      build_number: '1.0.0',
-      path_thumbnails: 'path_thumbnails',
-      path_json: 'path_json',
-      created_by: 1,
-      created_at: new Date(),
-      status: 'active',
-      uuid: '1',
-    },
-  },
-  {
-    id: 2,
-    uuid: '2',
-    title: 'Documento 2',
-    name: 'Documento 2',
-    description: 'Descripcion del documento 2',
-    open_date: '2022-01-01',
-    id_workspace: 1,
-    created_at: '2022-01-01',
-    updated_at: '2022-01-01',
-    status: 'active',
-    last_version: {
-      id: 2,
-      id_template: 2,
-      name_version: 'Version 2',
-      build_number: '2.0.0',
-      path_thumbnails: 'path_thumbnails',
-      path_json: 'path_json',
-      created_by: 2,
-      created_at: new Date(),
-      status: 'active',
-      uuid: '2',
-    },
-  },
-  {
-    id: 3,
-    uuid: '3',
-    title: 'Documento 3',
-    name: 'Documento 3',
-    description: 'Descripcion del documento 3',
-    open_date: '2022-01-01',
-    id_workspace: 1,
-    created_at: '2022-01-01',
-    updated_at: '2022-01-01',
-    status: 'active',
-    last_version: {
-      id: 3,
-      id_template: 3,
-      name_version: 'Version 3',
-      build_number: '3.0.0',
-      path_thumbnails: 'path_thumbnails',
-      path_json: 'path_json',
-      created_by: 3,
-      created_at: new Date(),
-      status: 'active',
-      uuid: '3',
-    },
-  },
-  {
-    id: 4,
-    uuid: '4',
-    title: 'Documento 4',
-    name: 'Documento 4',
-    description: 'Descripcion del documento 4',
-    open_date: '2022-01-01',
-    id_workspace: 1,
-    created_at: '2022-01-01',
-    updated_at: '2022-01-01',
-    status: 'active',
-    last_version: {
-      id: 4,
-      id_template: 4,
-      name_version: 'Version 4',
-      build_number: '4.0.0',
-      path_thumbnails: 'path_thumbnails',
-      path_json: 'path_json',
-      created_by: 4,
-      created_at: new Date(),
-      status: 'active',
-      uuid: '4',
-    },
-  },
-]
 
 hasDocuments = true
 error = undefined
