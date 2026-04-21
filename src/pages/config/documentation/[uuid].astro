@@ -13,6 +13,8 @@ if (!uuid) {
 const build_number = Astro.url.searchParams.get('build_number') as string
 
 const url = `/documents/${uuid}/${build_number}`
+const urlUuid =`/documents/${uuid}`
+
 const { PUBLIC_PROJECT_URL: base_url, PUBLIC_PROJECT_URL: project_url } = import.meta.env
 console.log(base_url, project_url)
 
@@ -49,6 +51,10 @@ const request = data?.data.variables
         <h3 class="mb-3 text-xl font-bold text-slate-900 sm:text-2xl">Endpoint (URL)</h3>
         <p class="mb-6 leading-relaxed text-slate-600">
           Todas las peticiones deben realizarse a través de HTTPS. Para crear un nuevo documento, utiliza el endpoint de documentos. Asegúrate de incluir tu API Key en los headers.
+          <br/>
+          <span class="text-xs text-neutral-400">
+            <strong>Nota:</strong> Si la endpoint no se le agrega el numero de version <strong>siempre tomara la ultima version</strong>
+          </span>
         </p>
 
         <div class="w-full max-w-full overflow-hidden rounded-xl bg-custom-blue3/10 shadow-lg ring-1 ring-custom-blue3/60">
@@ -66,9 +72,17 @@ const request = data?.data.variables
             </div>
           </div>
           <div class="code-scroll w-full max-w-full overflow-hidden p-4 font-mono text-sm sm:p-6">
-            <div class="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center">
+
+                        <span class="bg-brand-500/20 text-brand-400 rounded px-2 py-1 mt-5 text-xs font-normal tracking-wider"> * Solicitar por versión</span>
+            <div class="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center mb-5">
               <span class="bg-brand-500/20 text-brand-400 rounded px-2 py-1 text-xs font-bold tracking-wider uppercase">POST</span>
               <span class="min-w-0 break-all text-custom-blue3">{base_url}<span class="text-brand-400">{url}</span></span>
+            </div>
+
+            <span class="bg-brand-500/20 text-brand-400 rounded px-2 py-1 mt-5 text-xs font-normal tracking-wider"> * Solicitar última versión</span>
+            <div class="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center">
+              <span class="bg-brand-500/20 text-brand-400 rounded px-2 py-1 text-xs font-bold tracking-wider uppercase">POST</span>
+              <span class="min-w-0 break-all text-custom-blue3">{base_url}<span class="text-brand-400">{urlUuid}</span></span>
             </div>
           </div>
         </div>
