@@ -10,9 +10,12 @@ interface Props {
   border?: 'border' | 'none'
   position?: 'left' | 'right' | 'default'
   mobileIcon?: keyof typeof icons
+  menuClass?: string
 }
 
-const { buttonLabel = 'Seleccionar', withSearch = false, size = 'default', shadow = 'base', border = 'border', position = 'default', mobileIcon = 'Menu' } = Astro.props
+const { buttonLabel = 'Seleccionar', withSearch = false, size = 'default', shadow = 'base', border = 'border', position = 'default', mobileIcon = 'Menu', menuClass = '' } = Astro.props
+
+const hasTriggerSlot = Astro.slots.has('trigger')
 
 const sizeClasses = {
   default: 'h-10 px-2',
@@ -42,41 +45,52 @@ const positionClasses = {
 <div class="relative inline-block w-full cursor-pointer text-left" data-dropdown-container>
   <button
     class:list={[
-      'inline-flex w-full cursor-pointer items-center justify-between gap-x-1.5 rounded-main bg-background backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
-      sizeClasses[size],
-      shadowClasses[shadow],
-      borderClasses[border],
+      hasTriggerSlot
+        ? 'inline-flex cursor-pointer items-center justify-center rounded-full bg-transparent p-0 transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50'
+        : [
+            'inline-flex w-full cursor-pointer items-center justify-between gap-x-1.5 rounded-main bg-background backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+            sizeClasses[size],
+            shadowClasses[shadow],
+            borderClasses[border],
+          ],
     ]}
     data-dropdown-toggle
   >
     {
-      mobileIcon && (
-        <span class="flex items-center justify-center md:hidden">
-          <Icon name={mobileIcon} class="h-5 w-5 text-heading" />
-        </span>
+      hasTriggerSlot ? (
+        <slot name="trigger" />
+      ) : (
+        <>
+          {mobileIcon && (
+            <span class="flex items-center justify-center md:hidden">
+              <Icon name={mobileIcon} class="h-5 w-5 text-heading" />
+            </span>
+          )}
+          <span class:list={['truncate text-sm text-heading', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class:list={['-mr-1 ml-2 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180', mobileIcon && 'hidden md:block']}
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </>
       )
     }
-    <span class:list={['truncate text-sm text-heading', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class:list={['-mr-1 ml-2 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180', mobileIcon && 'hidden md:block']}
-    >
-      <path d="m6 9 6 6 6-6"></path>
-    </svg>
   </button>
 
   <div
     class:list={[
-      'ring-opacity-5 invisible absolute z-10 mt-1 max-h-72 scale-95 transform overflow-y-auto rounded-main bg-white opacity-0 shadow-lg ring-1 ring-gray-200 transition-all duration-150 ease-out focus:outline-none [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100',
+      'ring-opacity-5 invisible absolute z-10 mt-1 max-h-72 scale-95 transform overflow-y-auto rounded-main bg-background opacity-0 shadow-lg ring-1 ring-border transition-all duration-150 ease-out focus:outline-none [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100',
       positionClasses[position],
       position === 'right' ? 'origin-top-right' : 'origin-top-left',
+      menuClass,
     ]}
     data-dropdown-menu
   >
