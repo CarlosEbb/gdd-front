@@ -4,7 +4,7 @@ import Select from '../form/Select.astro'
 import Input from '../form/Input.astro'
 import Button from '../ui/Button.astro'
 import Icon from '../ui/Icon.astro'
-import { MARGIN_PRESETS, ORIENTATION, PAPER_SIZES } from '@/constants/file-settings'
+import { MARGIN_PRESETS, ORIENTATION, PAPER_SIZES, PAPER_SIZE_LABELS, MARGIN_PRESET_LABELS } from '@/constants/file-settings'
 
 const workspaces = (await Astro.session?.get('workspaces')) || []
 ---
@@ -64,12 +64,24 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
     <div class="-mt-4 grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out" id="document-settings-container">
       <div class="-mx-1 space-y-4 overflow-hidden px-1 pt-1">
         <div>
-          <Select label="Tamaño de papel" value={PAPER_SIZES[0]} name="pageSize" placeholder="Seleccione el tamaño de papel" options={PAPER_SIZES.map((size) => ({ value: size, label: size }))} />
+          <Select
+            label="Tamaño de papel"
+            value={PAPER_SIZES[0]}
+            name="pageSize"
+            placeholder="Seleccione el tamaño de papel"
+            options={PAPER_SIZES.map((size) => ({ value: size, label: PAPER_SIZE_LABELS[size] }))}
+          />
         </div>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <Select label="Margen" name="marginType" placeholder="Seleccione un margen" options={MARGIN_PRESETS.map((margin) => ({ value: margin, label: margin }))} value={MARGIN_PRESETS[1]} />
+            <Select
+              label="Margen"
+              name="marginType"
+              placeholder="Seleccione un margen"
+              options={MARGIN_PRESETS.map((margin) => ({ value: margin, label: MARGIN_PRESET_LABELS[margin] }))}
+              value={MARGIN_PRESETS[1]}
+            />
           </div>
 
           <div>
@@ -134,6 +146,13 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
         .replace(/ /g, '_')
         .replace(/[^a-z0-9_]/g, '')
       formData.append('name', name)
+
+      // remove valores nulos
+      for (const [key, value] of formData.entries()) {
+        if (value === null || value === undefined || value === '') {
+          formData.delete(key)
+        }
+      }
 
       try {
         setButtonLoading('#btn-save-template', true)
