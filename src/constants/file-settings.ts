@@ -12,7 +12,7 @@ export const PAPER_SIZES_MAP = {
   A5: { width: 148, height: 210 },
   B5: { width: 182, height: 257 },
   A4: { width: 210, height: 297 },
-  FICHA: { width: 76.2, height: 127 },
+  // FICHA: { width: 76.2, height: 127 },
 }
 
 // Definir márgenes predefinidos
@@ -21,7 +21,7 @@ export const MARGIN_PRESETS_MAP = {
   NORMAL: { top: 25, bottom: 25, left: 30, right: 30 }, // 2.5cm, 2.5cm, 3cm, 3cm
   ESTRECHO: { top: 12.7, bottom: 12.7, left: 12.7, right: 12.7 }, // 1.27cm
   MODERADO: { top: 25.4, bottom: 25.4, left: 19.1, right: 19.1 }, // 2.54cm, 2.54cm, 1.91cm, 1.91cm
-  ANCHO: { top: 25.4, bottom: 25.4, left: 50.8, right: 50.8 }, // 2.54cm, 2.54cm, 5.08cm, 5.08cm
+  // ANCHO: { top: 25.4, bottom: 25.4, left: 50.8, right: 50.8 }, // 2.54cm, 2.54cm, 5.08cm, 5.08cm
 }
 
 /** Formatea milímetros a centímetros con coma decimal (es-ES) y hasta 2 decimales */
