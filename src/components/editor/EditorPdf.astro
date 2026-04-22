@@ -721,7 +721,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
               isSyncingTemplate = false
               updatePaginationUI()
               if (hadDedup) {
-                toast.info(`Nombres duplicados renombrados: ${renamedList.join(', ')}`)
+                toast.success(`Nombres duplicados renombrados: ${renamedList.join(', ')}`)
               }
             }, 0)
             return
