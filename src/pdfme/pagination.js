@@ -208,6 +208,32 @@ export class PaginationManager {
     return designerSchemas.length !== oldLen
   }
 
+  /**
+   * Remove a page from the document by 1-based page number.
+   * Useful when the native Designer "delete page" is disabled (e.g. the
+   * Designer only has a single page loaded because chunkSize === 1).
+   *
+   * @param {number} pageNumber – 1-based page number to delete
+   * @returns {object|null} new chunked template ready for designer.updateTemplate(), or null if invalid
+   */
+  removePage(pageNumber) {
+    if (!Number.isFinite(pageNumber) || pageNumber < 1 || pageNumber > this.totalPages) return null
+    // Never leave the document with zero pages
+    if (this.totalPages <= 1) return null
+
+    this.#allSchemas.splice(pageNumber - 1, 1)
+
+    // Clamp currentChunk if the document shrank past it
+    const newTotalChunks = Math.max(1, Math.ceil(this.#allSchemas.length / this.#chunkSize))
+    if (this.#currentChunk >= newTotalChunks) {
+      this.#currentChunk = newTotalChunks - 1
+    }
+
+    const schemas = this.getCurrentChunkSchemas()
+    this.#currentChunkLen = schemas.length
+    return { ...this.#baseTemplate, schemas }
+  }
+
   /* ── Name deduplication ─────────────────────────────── */
 
   /**
@@ -287,20 +313,58 @@ export class PaginationManager {
 
   /**
    * All-in-one handler for Designer's onChangeTemplate.
-   * Syncs page changes and deduplicates names.
+   * Syncs page changes, handles overflow when the user adds pages beyond
+   * the current chunk size (auto-navigating to the chunk containing the
+   * newly added page), and deduplicates names.
    *
    * @param {Array<any>} designerSchemas – template.schemas from the Designer
-   * @returns {{ pagesChanged: boolean, dedup: { schemas: Array<any>, renamed: string[] } | null }}
+   * @returns {{
+   *   pagesChanged: boolean,
+   *   dedup: { schemas: Array<any>, renamed: string[] } | null,
+   *   overflow: { targetChunk: number, template: object, addedCount: number } | null
+   * }}
    */
   handleTemplateChange(designerSchemas) {
-    const pagesChanged = this.refreshFromDesigner(designerSchemas)
-    const dedup = this.deduplicateNames(designerSchemas)
+    const start = this.#currentChunk * this.#chunkSize
+    const oldLen = this.#currentChunkLen
 
-    if (dedup) {
-      const start = this.#currentChunk * this.#chunkSize
-      this.#allSchemas.splice(start, dedup.schemas.length, ...dedup.schemas)
+    // Persist edits + added/removed pages into the full array
+    this.#allSchemas.splice(start, oldLen, ...designerSchemas)
+    const pagesChanged = designerSchemas.length !== oldLen
+
+    // Overflow: the user added pages beyond what fits in the current chunk.
+    // Move the view to the chunk containing the last added page so the user
+    // sees the page they just created and the pagination stays consistent.
+    let overflow = null
+    if (designerSchemas.length > this.#chunkSize) {
+      const addedCount = designerSchemas.length - oldLen
+      const lastNewPageIndex = start + designerSchemas.length - 1
+      const targetChunk = Math.floor(lastNewPageIndex / this.#chunkSize)
+
+      this.#currentChunk = targetChunk
+      const schemas = this.getCurrentChunkSchemas()
+      this.#currentChunkLen = schemas.length
+      overflow = {
+        targetChunk,
+        template: { ...this.#baseTemplate, schemas },
+        addedCount: Math.max(addedCount, 1),
+      }
+    } else {
+      this.#currentChunkLen = designerSchemas.length
     }
 
-    return { pagesChanged, dedup }
+    // Deduplicate names against the rest of the document. When overflow
+    // occurred, dedup must run against the NEW current chunk (what will be
+    // rendered in the Designer after we replace its template).
+    const schemasToDedup = overflow ? overflow.template.schemas : designerSchemas
+    const dedup = this.deduplicateNames(schemasToDedup)
+
+    if (dedup) {
+      const dedupStart = this.#currentChunk * this.#chunkSize
+      this.#allSchemas.splice(dedupStart, this.#currentChunkLen, ...dedup.schemas)
+      if (overflow) overflow.template = { ...overflow.template, schemas: dedup.schemas }
+    }
+
+    return { pagesChanged, dedup, overflow }
   }
 }

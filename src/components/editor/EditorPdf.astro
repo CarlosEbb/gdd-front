@@ -149,6 +149,15 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
           >
             <Icon name="ChevronRight" class="size-4" stroke-width={2} />
           </button>
+          <button
+            type="button"
+            id="pagination-delete-page"
+            aria-label="Eliminar página actual"
+            title="Eliminar página actual"
+            class="hidden h-9 w-9 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none disabled:pointer-events-none disabled:opacity-40"
+          >
+            <Icon name="FileX" class="size-4" stroke-width={2} />
+          </button>
           <select
             id="pagination-chunk-size"
             aria-label="Páginas por vista"
@@ -346,6 +355,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
 
     let designerInstance: Designer | undefined = undefined
     let paginationManager: PaginationManager | undefined = undefined
+    let isSyncingTemplate = false
 
     // Pagination UI helpers
     const paginationBar = document.getElementById('pagination-bar') as HTMLElement
@@ -354,6 +364,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
     const paginationPageInput = document.getElementById('pagination-page-input') as HTMLInputElement
     const paginationTotal = document.getElementById('pagination-total') as HTMLSpanElement
     const paginationChunkSize = document.getElementById('pagination-chunk-size') as HTMLSelectElement
+    const paginationDeletePage = document.getElementById('pagination-delete-page') as HTMLButtonElement
 
     function updatePaginationUI() {
       if (!paginationManager || paginationManager.totalPages <= 1) {
@@ -372,6 +383,26 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
       }
       paginationPrev.disabled = paginationManager.currentChunkIndex === 0
       paginationNext.disabled = paginationManager.currentChunkIndex >= paginationManager.totalChunks - 1
+
+      // Mostrar el botón "eliminar página actual" sólo cuando el botón nativo
+      // de pdfme está deshabilitado (chunkSize === 1, que hace que el Designer
+      // crea que hay una única página y no permita borrarla).
+      const showDelete = paginationManager.chunkSize === 1 && paginationManager.totalPages > 1
+      paginationDeletePage.classList.toggle('hidden', !showDelete)
+      paginationDeletePage.classList.toggle('inline-flex', showDelete)
+    }
+
+    function deleteCurrentPage() {
+      if (!paginationManager || !designerInstance) return
+      if (paginationManager.totalPages <= 1) return
+      const currentPage = paginationManager.currentRange.start
+      const newTemplate = paginationManager.removePage(currentPage)
+      if (!newTemplate) return
+      isSyncingTemplate = true
+      designerInstance.updateTemplate(newTemplate as any)
+      isSyncingTemplate = false
+      updatePaginationUI()
+      toast.success('Página eliminada')
     }
 
     function navigateChunk(direction: 'prev' | 'next') {
@@ -594,22 +625,47 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
 
         updatePaginationUI()
 
-        // Sincronizar cambios del Designer (agregar/eliminar páginas + nombres duplicados)
-        let isUpdatingFromDedup = false
-        designerInstance.onChangeTemplate((updatedTemplate: any) => {
-          if (!paginationManager || isUpdatingFromDedup) return
+        // Botón custom para eliminar la página actual (caso chunkSize=1)
+        paginationDeletePage.addEventListener('click', deleteCurrentPage)
 
-          const { pagesChanged, dedup } = paginationManager.handleTemplateChange(updatedTemplate.schemas)
+        // Sincronizar cambios del Designer (agregar/eliminar páginas + nombres duplicados)
+        designerInstance.onChangeTemplate((updatedTemplate: any) => {
+          if (!paginationManager || isSyncingTemplate) return
+
+          const { pagesChanged, dedup, overflow } = paginationManager.handleTemplateChange(updatedTemplate.schemas)
+
+          // Overflow (agregar página que excede el chunkSize): navegar al chunk
+          // que contiene la nueva página. El overflow.template ya incluye los
+          // nombres deduplicados si aplicara.
+          // Se difiere con setTimeout para que el Designer termine su ciclo
+          // interno de render del "add page" antes de reemplazar el template;
+          // de lo contrario la nueva hoja no se pinta (queda en gris).
+          if (overflow && designerInstance) {
+            const overflowTemplate = overflow.template
+            const hadDedup = !!dedup
+            const renamedList = dedup?.renamed ?? []
+            setTimeout(() => {
+              if (!designerInstance) return
+              isSyncingTemplate = true
+              designerInstance.updateTemplate(overflowTemplate as any)
+              isSyncingTemplate = false
+              updatePaginationUI()
+              if (hadDedup) {
+                toast.info(`Nombres duplicados renombrados: ${renamedList.join(', ')}`)
+              }
+            }, 0)
+            return
+          }
 
           if (pagesChanged) {
             updatePaginationUI()
           }
 
           if (dedup && designerInstance) {
-            isUpdatingFromDedup = true
+            isSyncingTemplate = true
             const patched = { ...updatedTemplate, schemas: dedup.schemas }
             designerInstance.updateTemplate(patched)
-            isUpdatingFromDedup = false
+            isSyncingTemplate = false
             toast.info(`Nombres duplicados renombrados: ${dedup.renamed.join(', ')}`)
           }
         })
