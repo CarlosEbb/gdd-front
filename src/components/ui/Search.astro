@@ -1,4 +1,6 @@
 ---
+import Modal from '../modal/Modal.astro'
+import EmptyState from './EmptyState.astro'
 import Icon from './Icon.astro'
 import { FileText } from '@lucide/astro'
 import { actions } from 'astro:actions'
@@ -7,36 +9,67 @@ const { data } = await Astro.callAction(actions.documents.getByUser, { limit: nu
 const documents = data?.data ?? []
 ---
 
-<div class="relative" id="search-container">
-  <div class="pointer-events-none absolute inset-y-0 inset-s-0 z-10 flex items-center ps-4 text-subheading">
-    <Icon name="Search" stroke-width={1.5} size={16} />
-  </div>
-  <input
-    type="search"
-    id="input-search"
-    class="h-full w-full rounded-main border border-border bg-background p-2 ps-11 text-sm text-heading placeholder:text-subheading focus:ring-1 focus:ring-primary focus:outline-none"
-    placeholder="Buscar documentos..."
-    autocomplete="off"
-  />
+<button
+  type="button"
+  id="search-trigger"
+  data-open-modal="search-modal"
+  class="flex h-full w-full cursor-pointer items-center justify-between gap-3 rounded-main border border-border bg-background px-4 py-2 text-left text-sm transition-colors hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none"
+  aria-label="Abrir buscador de documentos"
+>
+  <span class="flex min-w-0 items-center gap-3">
+    <Icon name="Search" class="shrink-0 text-subheading" stroke-width={1.5} size={16} />
+    <span class="truncate text-subheading">Buscar documentos...</span>
+  </span>
 
-  <div id="search-results" class="absolute top-full z-50 mt-2 hidden max-h-96 w-full overflow-y-auto rounded-main border border-border bg-white shadow-lg">
-    <div id="results-list" class="py-2">
-      <!-- Los resultados se insertarán aquí dinámicamente -->
+  <span class="hidden shrink-0 rounded-[calc(var(--radius)-2px)] border border-border bg-muted px-2 py-1 text-xs text-subheading md:inline-flex">Ctrl + K</span>
+</button>
+
+<Modal modalId="search-modal" title="Buscar documentos">
+  <div class="flex h-96 flex-col" id="search-container">
+    <div class="relative">
+      <div class="pointer-events-none absolute inset-y-0 inset-s-0 z-10 flex items-center ps-4 text-subheading">
+        <Icon name="Search" stroke-width={1.5} size={16} />
+      </div>
+      <input
+        type="search"
+        id="input-search"
+        class="h-full w-full rounded-main border border-border bg-background p-2 ps-11 text-sm text-heading placeholder:text-subheading focus:ring-1 focus:ring-primary focus:outline-none"
+        placeholder="Buscar documentos..."
+        autocomplete="off"
+        autofocus
+      />
     </div>
-    <div id="no-results" class="hidden px-4 py-8 text-center text-gray-500">
-      <p class="text-sm">No se encontraron documentos</p>
+
+    <div id="search-results" class="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div id="results-list" class="hidden min-h-0 flex-1 overflow-y-auto">
+        <!-- Los resultados se insertarán aquí dinámicamente -->
+      </div>
+      <div id="no-results" class="flex min-h-0 flex-1 items-center justify-center px-4 py-8 text-center text-subheading">
+        <div id="search-empty-idle" class="w-full">
+          <EmptyState title="Escribe para buscar documentos" description="Los resultados aparecerán aquí al instante." state="info" hiddenAction showBorder={false} />
+        </div>
+        <div id="search-empty-no-match" class="hidden w-full">
+          <EmptyState title="No se encontraron documentos" description="Prueba con otro título o descripción." state="notFound" hiddenAction showBorder={false} />
+        </div>
+      </div>
     </div>
   </div>
-</div>
+
+  <div slot="footer" class="w-full">
+    <p id="search-results-count" class="text-sm text-subheading">0 resultados</p>
+  </div>
+</Modal>
 
 <template id="search-result-template">
-  <a class="flex items-center gap-3 border-b border-gray-100 px-4 py-3 transition-colors duration-150 last:border-b-0 hover:bg-gray-50">
-    <FileText class="size-3 shrink-0 text-blue-500 md:size-4" />
-    <div class="min-w-0 flex-1">
-      <p class="truncate text-sm font-medium text-gray-900" data-title></p>
-      <p class="truncate text-xs text-gray-500" data-description></p>
+  <a class="flex items-center gap-3 rounded-[calc(var(--radius)-2px)] px-3 py-3 transition-colors duration-150 hover:bg-foreground">
+    <div class="flex size-9 shrink-0 items-center justify-center rounded-[calc(var(--radius)-2px)] bg-background text-primary">
+      <FileText class="size-3 md:size-4" />
     </div>
-    <span class="hidden shrink-0 text-xs text-gray-400 md:block" data-date></span>
+    <div class="min-w-0 flex-1">
+      <p class="truncate text-sm font-medium text-heading" data-title></p>
+      <p class="truncate text-xs text-subheading" data-description></p>
+    </div>
+    <span class="hidden shrink-0 text-xs text-subheading md:block" data-date></span>
   </a>
 </template>
 
@@ -50,21 +83,68 @@ const documents = data?.data ?? []
     const dataScript = document.getElementById('search-documents-data')
     const documents: Document[] = dataScript ? JSON.parse(dataScript.textContent || '[]') : []
 
+    const trigger = document.getElementById('search-trigger') as HTMLButtonElement | null
+    const modal = document.getElementById('search-modal') as HTMLDialogElement | null
     const input = document.getElementById('input-search') as HTMLInputElement | null
-    const resultsContainer = document.getElementById('search-results')
     const resultsList = document.getElementById('results-list')
     const noResults = document.getElementById('no-results')
+    const resultsCount = document.getElementById('search-results-count')
+    const emptyIdle = document.getElementById('search-empty-idle')
+    const emptyNoMatch = document.getElementById('search-empty-no-match')
     const searchContainer = document.getElementById('search-container')
     const template = document.getElementById('search-result-template') as HTMLTemplateElement | null
 
-    if (!input || !resultsContainer || !resultsList || !noResults || !template || !searchContainer) return
+    if (!trigger || !modal || !input || !resultsList || !noResults || !resultsCount || !emptyIdle || !emptyNoMatch || !template || !searchContainer) return
+    if (searchContainer.dataset.initialized === 'true') return
+    searchContainer.dataset.initialized = 'true'
 
+    const $trigger = trigger
+    const $modal = modal
     const $input = input
-    const $resultsContainer = resultsContainer
     const $resultsList = resultsList
     const $noResults = noResults
+    const $resultsCount = resultsCount
+    const $emptyIdle = emptyIdle
+    const $emptyNoMatch = emptyNoMatch
     const $template = template
     const $searchContainer = searchContainer
+
+    function openSearchModal() {
+      if (!$modal.open) {
+        $modal.showModal()
+      }
+
+      window.requestAnimationFrame(() => {
+        $input.focus()
+
+        if ($input.value.trim() !== '') {
+          filterDocuments($input.value)
+        }
+      })
+    }
+
+    function updateResultsCount(count: number) {
+      $resultsCount.textContent = `${count} ${count === 1 ? 'resultado' : 'resultados'}`
+    }
+
+    function showIdleState() {
+      $noResults.classList.remove('hidden')
+      $emptyIdle.classList.remove('hidden')
+      $emptyNoMatch.classList.add('hidden')
+    }
+
+    function showNoMatchState() {
+      $noResults.classList.remove('hidden')
+      $emptyIdle.classList.add('hidden')
+      $emptyNoMatch.classList.remove('hidden')
+    }
+
+    function hideResults() {
+      $resultsList.classList.add('hidden')
+      $resultsList.innerHTML = ''
+      showIdleState()
+      updateResultsCount(0)
+    }
 
     function createResultItem(doc: Document) {
       const clone = $template.content.cloneNode(true) as DocumentFragment
@@ -73,7 +153,7 @@ const documents = data?.data ?? []
       const description = clone.querySelector('[data-description]')
       const date = clone.querySelector('[data-date]')
 
-      if (link) link.href = `/editor/${doc.uuid}?build_number=${doc.versions[0].buildNumber}&id_workspace=${doc.uuidWorkspace}&name_document=${doc.title}`
+      if (link) link.href = `/editor/${doc.uuid}?build_number=${doc.lastVersion.buildNumber}&id_workspace=${doc.uuidWorkspace}&name_document=${doc.title}`
       if (title) title.textContent = doc.title
       if (description) description.textContent = doc.description || 'Sin descripción'
       if (date) date.textContent = formatDate(doc.updatedAt)
@@ -83,10 +163,11 @@ const documents = data?.data ?? []
 
     function renderResults(filteredDocs: Document[]) {
       $resultsList.innerHTML = ''
+      updateResultsCount(filteredDocs.length)
 
       if (filteredDocs.length === 0) {
         $resultsList.classList.add('hidden')
-        $noResults.classList.remove('hidden')
+        showNoMatchState()
       } else {
         $resultsList.classList.remove('hidden')
         $noResults.classList.add('hidden')
@@ -101,23 +182,16 @@ const documents = data?.data ?? []
       const term = searchTerm.toLowerCase().trim()
 
       if (term === '') {
-        $resultsContainer.classList.add('hidden')
+        hideResults()
         return
       }
 
       const filtered = documents.filter((doc) => doc.title.toLowerCase().includes(term) || (doc.description && doc.description.toLowerCase().includes(term)))
 
       renderResults(filtered)
-      $resultsContainer.classList.remove('hidden')
     }
 
     $input.addEventListener('input', (e) => filterDocuments((e.target as HTMLInputElement).value))
-
-    document.addEventListener('click', (e) => {
-      if (!$searchContainer.contains(e.target as Node)) {
-        $resultsContainer.classList.add('hidden')
-      }
-    })
 
     $input.addEventListener('focus', () => {
       if ($input.value.trim() !== '') {
@@ -125,7 +199,28 @@ const documents = data?.data ?? []
       }
     })
 
-    $resultsContainer.addEventListener('click', (e) => e.stopPropagation())
+    if (document.body.dataset.searchShortcutInitialized !== 'true') {
+      document.body.dataset.searchShortcutInitialized = 'true'
+
+      document.addEventListener('keydown', (e: KeyboardEvent) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault()
+          openSearchModal()
+        }
+      })
+    }
+
+    $trigger.addEventListener('click', openSearchModal)
+
+    $modal.addEventListener('click', (e: MouseEvent) => {
+      if (!$searchContainer.contains(e.target as Node)) {
+        hideResults()
+      }
+    })
+
+    $modal.addEventListener('close', () => {
+      hideResults()
+    })
   }
 
   document.addEventListener('astro:page-load', initSearchComponent)
