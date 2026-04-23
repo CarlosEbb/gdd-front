@@ -121,7 +121,7 @@ const SHOW_PAGE_FOR_VIEW = false
         id="pagination-delete-page"
         title="Eliminar hoja actual"
         aria-label="Eliminar hoja actual"
-        class="hidden shrink-0 text-red-500 hover:bg-red-50! hover:text-red-600! md:inline-flex"
+        class="hidden shrink-0 text-red-500 hover:bg-red-50! hover:text-red-600!"
       >
         <span class="flex items-center gap-x-2">
           <Icon name="FileX" class="size-4" stroke-width={1.5} />
@@ -370,6 +370,7 @@ const SHOW_PAGE_FOR_VIEW = false
     let designerInstance: Designer | undefined = undefined
     let paginationManager: PaginationManager | undefined = undefined
     let isSyncingTemplate = false
+    let pendingTemplateUpdate: number | null = null
 
     // Pagination UI helpers
     const paginationBar = document.getElementById('pagination-bar') as HTMLElement
@@ -388,10 +389,16 @@ const SHOW_PAGE_FOR_VIEW = false
     }
     const paginationDeletePage = document.getElementById('pagination-delete-page') as HTMLButtonElement
 
+    function setDeletePageButtonVisibility(visible: boolean) {
+      const canShowOnViewport = window.matchMedia('(min-width: 768px)').matches
+      paginationDeletePage.style.display = visible && canShowOnViewport ? 'inline-flex' : 'none'
+    }
+
     function updatePaginationUI() {
       if (!paginationManager || paginationManager.totalPages <= 1) {
         paginationBar.classList.add('hidden')
         paginationBar.classList.remove('flex')
+        setDeletePageButtonVisibility(false)
         return
       }
       paginationBar.classList.remove('hidden')
@@ -410,8 +417,7 @@ const SHOW_PAGE_FOR_VIEW = false
       // de pdfme está deshabilitado (chunkSize === 1, que hace que el Designer
       // crea que hay una única página y no permita borrarla).
       const showDelete = paginationManager.chunkSize === 1 && paginationManager.totalPages > 1
-      paginationDeletePage.classList.toggle('hidden', !showDelete)
-      paginationDeletePage.classList.toggle('inline-flex', showDelete)
+      setDeletePageButtonVisibility(showDelete)
     }
 
     function deleteCurrentPage() {
@@ -455,6 +461,27 @@ const SHOW_PAGE_FOR_VIEW = false
         designerInstance.updateTemplate(newTemplate as any)
       }
       updatePaginationUI()
+    }
+
+    function deferTemplateUpdate(template: any, onApplied?: () => void) {
+      if (pendingTemplateUpdate !== null) {
+        window.clearTimeout(pendingTemplateUpdate)
+      }
+
+      pendingTemplateUpdate = window.setTimeout(() => {
+        pendingTemplateUpdate = null
+        window.requestAnimationFrame(() => {
+          if (!designerInstance) return
+          isSyncingTemplate = true
+          try {
+            designerInstance.updateTemplate(template as any)
+          } finally {
+            isSyncingTemplate = false
+          }
+          updatePaginationUI()
+          onApplied?.()
+        })
+      }, 80)
     }
 
     /**
@@ -742,19 +769,15 @@ const SHOW_PAGE_FOR_VIEW = false
           // interno de render del "add page" antes de reemplazar el template;
           // de lo contrario la nueva hoja no se pinta (queda en gris).
           if (overflow && designerInstance) {
-            const overflowTemplate = overflow.template
+            const overflowPatchedTemplate = overflow.template as any
+            const overflowTemplate = { ...updatedTemplate, ...overflowPatchedTemplate, schemas: overflowPatchedTemplate.schemas }
             const hadDedup = !!dedup
             const renamedList = dedup?.renamed ?? []
-            setTimeout(() => {
-              if (!designerInstance) return
-              isSyncingTemplate = true
-              designerInstance.updateTemplate(overflowTemplate as any)
-              isSyncingTemplate = false
-              updatePaginationUI()
+            deferTemplateUpdate(overflowTemplate, () => {
               if (hadDedup) {
-                toast.success(`Nombres duplicados renombrados: ${renamedList.join(', ')}`)
+                // toast.success(`Nombres duplicados renombrados: ${renamedList.join(', ')}`)
               }
-            }, 0)
+            })
             return
           }
 
@@ -763,11 +786,10 @@ const SHOW_PAGE_FOR_VIEW = false
           }
 
           if (dedup && designerInstance) {
-            isSyncingTemplate = true
             const patched = { ...updatedTemplate, schemas: dedup.schemas }
-            designerInstance.updateTemplate(patched)
-            isSyncingTemplate = false
-            toast.info(`Nombres duplicados renombrados: ${dedup.renamed.join(', ')}`)
+            deferTemplateUpdate(patched, () => {
+              // toast.info(`Nombres duplicados renombrados: ${dedup.renamed.join(', ')}`)
+            })
           }
         })
 

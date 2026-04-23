@@ -270,6 +270,24 @@ export class PaginationManager {
     return names
   }
 
+  #getDuplicateBaseName(name) {
+    return name.replace(/(?:_\d+|_r[a-z0-9]{8})$/, '')
+  }
+
+  #generateDuplicateSuffix() {
+    const timePart = Date.now().toString(36).slice(-4)
+    const randomPart = Math.random().toString(36).slice(2, 6)
+    return `r${timePart}${randomPart}`
+  }
+
+  #buildUniqueDuplicateName(baseName, usedNames) {
+    let candidate = `${baseName}_${this.#generateDuplicateSuffix()}`
+    while (usedNames.has(candidate)) {
+      candidate = `${baseName}_${this.#generateDuplicateSuffix()}`
+    }
+    return candidate
+  }
+
   /**
    * Check the given schemas (current chunk) for duplicate names against
    * the rest of the document. Returns a new schemas array with any
@@ -291,13 +309,8 @@ export class PaginationManager {
         let name = el.name
 
         if (externalNames.has(name) || localNames.has(name)) {
-          const baseName = name.replace(/_\d+$/, '')
-          let counter = 1
-          let candidate = `${baseName}_${counter}`
-          while (externalNames.has(candidate) || localNames.has(candidate)) {
-            counter++
-            candidate = `${baseName}_${counter}`
-          }
+          const baseName = this.#getDuplicateBaseName(name)
+          const candidate = this.#buildUniqueDuplicateName(baseName, new Set([...externalNames, ...localNames]))
           renamed.push(`${name} → ${candidate}`)
           name = candidate
           hadDuplicates = true
