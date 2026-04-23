@@ -90,6 +90,42 @@ export class PaginationManager {
     }
   }
 
+  getOutputTemplate(currentDesignerSchemas) {
+    if (Array.isArray(currentDesignerSchemas)) {
+      this.syncFromDesigner(currentDesignerSchemas)
+    }
+
+    const fullTemplate = this.getFullTemplate()
+    const dedup = this.deduplicateNames(fullTemplate.schemas)
+
+    if (!dedup) {
+      return { template: fullTemplate, renamed: [] }
+    }
+
+    return {
+      template: {
+        ...fullTemplate,
+        schemas: dedup.schemas,
+      },
+      renamed: dedup.renamed,
+    }
+  }
+
+  applyOutputTemplate(template) {
+    if (!template || !Array.isArray(template.schemas)) return
+
+    this.#baseTemplate = { ...template, schemas: [...template.schemas] }
+    this.#allSchemas = [...template.schemas]
+
+    const newTotalChunks = Math.max(1, Math.ceil(this.#allSchemas.length / this.#chunkSize))
+    if (this.#currentChunk >= newTotalChunks) {
+      this.#currentChunk = newTotalChunks - 1
+    }
+
+    const schemas = this.getCurrentChunkSchemas()
+    this.#currentChunkLen = schemas.length
+  }
+
   /* ── Navigation ─────────────────────────────────────── */
 
   /**
@@ -251,25 +287,6 @@ export class PaginationManager {
     return names
   }
 
-  /**
-   * Collect every schema element name from pages OTHER than the current chunk.
-   * @returns {Set<string>}
-   */
-  #getNamesOutsideCurrentChunk() {
-    const start = this.#currentChunk * this.#chunkSize
-    const end = start + this.#currentChunkLen
-    const names = new Set()
-    for (let i = 0; i < this.#allSchemas.length; i++) {
-      if (i >= start && i < end) continue
-      const page = this.#allSchemas[i]
-      if (!Array.isArray(page)) continue
-      for (const el of page) {
-        if (el?.name) names.add(el.name)
-      }
-    }
-    return names
-  }
-
   #getDuplicateBaseName(name) {
     return name.replace(/(?:_\d+|_r[a-z0-9]{8})$/, '')
   }
@@ -288,6 +305,33 @@ export class PaginationManager {
     return candidate
   }
 
+  #deduplicateSchemas(schemas) {
+    const usedNames = new Set()
+    let hadDuplicates = false
+    const renamed = []
+
+    const fixed = schemas.map((page) => {
+      if (!Array.isArray(page)) return page
+      return page.map((el) => {
+        if (!el?.name) return el
+        let name = el.name
+
+        if (usedNames.has(name)) {
+          const baseName = this.#getDuplicateBaseName(name)
+          const candidate = this.#buildUniqueDuplicateName(baseName, usedNames)
+          renamed.push(`${name} → ${candidate}`)
+          name = candidate
+          hadDuplicates = true
+        }
+
+        usedNames.add(name)
+        return name === el.name ? el : { ...el, name }
+      })
+    })
+
+    return hadDuplicates ? { schemas: fixed, renamed } : null
+  }
+
   /**
    * Check the given schemas (current chunk) for duplicate names against
    * the rest of the document. Returns a new schemas array with any
@@ -297,31 +341,7 @@ export class PaginationManager {
    * @returns {{ schemas: Array<any>, renamed: string[] } | null}
    */
   deduplicateNames(chunkSchemas) {
-    const externalNames = this.#getNamesOutsideCurrentChunk()
-    const localNames = new Set()
-    let hadDuplicates = false
-    const renamed = []
-
-    const fixed = chunkSchemas.map((page) => {
-      if (!Array.isArray(page)) return page
-      return page.map((el) => {
-        if (!el?.name) return el
-        let name = el.name
-
-        if (externalNames.has(name) || localNames.has(name)) {
-          const baseName = this.#getDuplicateBaseName(name)
-          const candidate = this.#buildUniqueDuplicateName(baseName, new Set([...externalNames, ...localNames]))
-          renamed.push(`${name} → ${candidate}`)
-          name = candidate
-          hadDuplicates = true
-        }
-
-        localNames.add(name)
-        return name === el.name ? el : { ...el, name }
-      })
-    })
-
-    return hadDuplicates ? { schemas: fixed, renamed } : null
+    return this.#deduplicateSchemas(chunkSchemas)
   }
 
   /**
@@ -366,17 +386,7 @@ export class PaginationManager {
       this.#currentChunkLen = designerSchemas.length
     }
 
-    // Deduplicate names against the rest of the document. When overflow
-    // occurred, dedup must run against the NEW current chunk (what will be
-    // rendered in the Designer after we replace its template).
-    const schemasToDedup = overflow ? overflow.template.schemas : designerSchemas
-    const dedup = this.deduplicateNames(schemasToDedup)
-
-    if (dedup) {
-      const dedupStart = this.#currentChunk * this.#chunkSize
-      this.#allSchemas.splice(dedupStart, this.#currentChunkLen, ...dedup.schemas)
-      if (overflow) overflow.template = { ...overflow.template, schemas: dedup.schemas }
-    }
+    const dedup = null
 
     return { pagesChanged, dedup, overflow }
   }

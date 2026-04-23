@@ -121,7 +121,7 @@ const SHOW_PAGE_FOR_VIEW = false
         id="pagination-delete-page"
         title="Eliminar hoja actual"
         aria-label="Eliminar hoja actual"
-        class="hidden shrink-0 text-red-500 hover:bg-red-50! hover:text-red-600!"
+        class="shrink-0 text-red-500 hover:bg-red-50! hover:text-red-600!"
       >
         <span class="flex items-center gap-x-2">
           <Icon name="FileX" class="size-4" stroke-width={1.5} />
@@ -390,8 +390,7 @@ const SHOW_PAGE_FOR_VIEW = false
     const paginationDeletePage = document.getElementById('pagination-delete-page') as HTMLButtonElement
 
     function setDeletePageButtonVisibility(visible: boolean) {
-      const canShowOnViewport = window.matchMedia('(min-width: 768px)').matches
-      paginationDeletePage.style.display = visible && canShowOnViewport ? 'inline-flex' : 'none'
+      paginationDeletePage.hidden = !visible
     }
 
     function updatePaginationUI() {
@@ -667,6 +666,31 @@ const SHOW_PAGE_FOR_VIEW = false
       return paginationManager.getFullTemplate()
     }
 
+    function getOutputTemplate() {
+      if (!designerInstance) return { template: null, renamed: [] }
+      if (!paginationManager) {
+        return { template: designerInstance.getTemplate(), renamed: [] }
+      }
+
+      return paginationManager.getOutputTemplate(designerInstance.getTemplate().schemas)
+    }
+
+    function syncEditorWithOutputTemplate(template: any) {
+      if (!template || !designerInstance || !paginationManager) return
+
+      paginationManager.applyOutputTemplate(template)
+      const currentTemplate = paginationManager.isSingleChunk ? template : paginationManager.getChunkedTemplate()
+
+      isSyncingTemplate = true
+      try {
+        designerInstance.updateTemplate(currentTemplate as any)
+      } finally {
+        isSyncingTemplate = false
+      }
+
+      updatePaginationUI()
+    }
+
     // Inicializar el editor
     async function initializeEditor() {
       try {
@@ -760,7 +784,7 @@ const SHOW_PAGE_FOR_VIEW = false
         designerInstance.onChangeTemplate((updatedTemplate: any) => {
           if (!paginationManager || isSyncingTemplate) return
 
-          const { pagesChanged, dedup, overflow } = paginationManager.handleTemplateChange(updatedTemplate.schemas)
+          const { pagesChanged, overflow } = paginationManager.handleTemplateChange(updatedTemplate.schemas)
 
           // Overflow (agregar página que excede el chunkSize): navegar al chunk
           // que contiene la nueva página. El overflow.template ya incluye los
@@ -771,25 +795,12 @@ const SHOW_PAGE_FOR_VIEW = false
           if (overflow && designerInstance) {
             const overflowPatchedTemplate = overflow.template as any
             const overflowTemplate = { ...updatedTemplate, ...overflowPatchedTemplate, schemas: overflowPatchedTemplate.schemas }
-            const hadDedup = !!dedup
-            const renamedList = dedup?.renamed ?? []
-            deferTemplateUpdate(overflowTemplate, () => {
-              if (hadDedup) {
-                // toast.success(`Nombres duplicados renombrados: ${renamedList.join(', ')}`)
-              }
-            })
+            deferTemplateUpdate(overflowTemplate)
             return
           }
 
           if (pagesChanged) {
             updatePaginationUI()
-          }
-
-          if (dedup && designerInstance) {
-            const patched = { ...updatedTemplate, schemas: dedup.schemas }
-            deferTemplateUpdate(patched, () => {
-              // toast.info(`Nombres duplicados renombrados: ${dedup.renamed.join(', ')}`)
-            })
           }
         })
 
@@ -801,7 +812,7 @@ const SHOW_PAGE_FOR_VIEW = false
               if (!designerInstance) {
                 throw new Error('Designer no está inicializado')
               }
-              const fullTemplate = getFullSyncedTemplate() as any
+              const { template: fullTemplate } = getOutputTemplate()
               const outOfBounds = findFieldsOutOfPrintableArea(fullTemplate?.schemas ?? [], fullTemplate?.basePdf)
               if (outOfBounds.length) {
                 toast.warn(buildOutOfBoundsMessage(outOfBounds, `No se puede visualizar el documento: ${outOfBounds.length} campo(s) quedaron fuera del margen:`), { duration: 8000 })
@@ -915,7 +926,7 @@ const SHOW_PAGE_FOR_VIEW = false
             case 'generate-pdf':
               if (designer) {
                 try {
-                  const fullTpl = getFullSyncedTemplate() as any
+                  const { template: fullTpl } = getOutputTemplate()
                   const outOfBounds = findFieldsOutOfPrintableArea(fullTpl?.schemas ?? [], fullTpl?.basePdf)
                   if (outOfBounds.length) {
                     toast.error(buildOutOfBoundsMessage(outOfBounds, `No se puede visualizar el documento: ${outOfBounds.length} campo(s) quedaron fuera del margen:`), { duration: 8000 })
@@ -956,9 +967,11 @@ const SHOW_PAGE_FOR_VIEW = false
       })
     }
 
-    const handleSave = async (uuidTemplate: string, templateData: any, nameVersion: string, btnId: string) => {
+    const handleSave = async (uuidTemplate: string, nameVersion: string, btnId: string) => {
       try {
         setButtonLoading(btnId, true)
+
+        const { template: templateData } = getOutputTemplate()
 
         const compressedBlob = await compressJson(templateData)
         const formData = new FormData()
@@ -976,6 +989,7 @@ const SHOW_PAGE_FOR_VIEW = false
         }
 
         nameVersion && modalNewVersionDocument.close()
+        syncEditorWithOutputTemplate(templateData)
         toast.success(data.message)
         const newVersion = data.data.version.build_number
 
@@ -1020,15 +1034,13 @@ const SHOW_PAGE_FOR_VIEW = false
       e.preventDefault()
       const formData = new FormData(formNewVersionDocument)
       const uuidTemplate = formData.get('uuid_template') as string
-      const templateData = getFullSyncedTemplate()
       const nameVersion = formData.get('name_version') as string
-      await handleSave(uuidTemplate, templateData, nameVersion, '#btn-new-version-document')
+      await handleSave(uuidTemplate, nameVersion, '#btn-new-version-document')
     }
 
     const handleSaveNewDocument = async (e: Event) => {
       const uuidTemplate = saveDocumentButton.dataset.uuidTemplate as string
-      const templateData = getFullSyncedTemplate() as any
-      await handleSave(uuidTemplate, templateData, '', '#btn-save-document')
+      await handleSave(uuidTemplate, '', '#btn-save-document')
     }
 
     formNewVersionDocument.addEventListener('submit', handleNewVersion)
