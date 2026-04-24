@@ -38,6 +38,7 @@ const routePolicies: RoutePolicy[] = [
   // --- Documents ---
   { pattern: /^\/documents\/new$/, permissions: ['documents.create'], mode: 'any' },
   { pattern: /^\/documents\/[^/]+\/edit$/, permissions: ['documents.update'], mode: 'any' },
+  { pattern: /^\/documents\/list\/[^/]+$/, permissions: ['documents.view'], mode: 'any' },
   { pattern: /^\/documents(\/|$)/, permissions: ['documents.view'], mode: 'any' },
 
   // --- Templates ---
