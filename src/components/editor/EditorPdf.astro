@@ -351,6 +351,8 @@ const SHOW_PAGE_FOR_VIEW = false
   import { PaginationManager } from '@/pdfme/pagination.js'
   import { PAPER_SIZES_MAP, MARGIN_PRESETS_MAP } from '@/constants/file-settings'
 
+  type OutputTemplateResult = { template: any; renamed: string[] }
+
   function initializePage() {
     const domContainer = document.getElementById('container') as HTMLElement
     const documentationLink = document.getElementById('documentationLink') as HTMLAnchorElement
@@ -371,6 +373,9 @@ const SHOW_PAGE_FOR_VIEW = false
     let paginationManager: PaginationManager | undefined = undefined
     let isSyncingTemplate = false
     let pendingTemplateUpdate: number | null = null
+    let isAutoNavigatingWheel = false
+    let accumulatedWheelDelta = 0
+    let wheelResetTimeout: number | null = null
 
     // Pagination UI helpers
     const paginationBar = document.getElementById('pagination-bar') as HTMLElement
@@ -391,6 +396,68 @@ const SHOW_PAGE_FOR_VIEW = false
 
     function setDeletePageButtonVisibility(visible: boolean) {
       paginationDeletePage.hidden = !visible
+    }
+
+    function resetWheelAccumulation() {
+      accumulatedWheelDelta = 0
+      if (wheelResetTimeout !== null) {
+        window.clearTimeout(wheelResetTimeout)
+        wheelResetTimeout = null
+      }
+    }
+
+    function handleEditorWheel(event: WheelEvent) {
+      event.preventDefault()
+      if (!paginationManager) return
+      if (!domContainer.contains(event.target as Node | null)) return
+      if (isAutoNavigatingWheel || isSyncingTemplate) return
+      if (paginationManager.totalPages <= 1) return
+
+      if (event.deltaY === 0) {
+        resetWheelAccumulation()
+        return
+      }
+
+      const isScrollingDown = event.deltaY > 0
+      const isScrollingUp = event.deltaY < 0
+      const canNavigateNext = paginationManager.currentChunkIndex < paginationManager.totalChunks - 1
+      const canNavigatePrev = paginationManager.currentChunkIndex > 0
+
+      if ((isScrollingDown && !canNavigateNext) || (isScrollingUp && !canNavigatePrev)) {
+        resetWheelAccumulation()
+        return
+      }
+
+      if ((accumulatedWheelDelta > 0 && isScrollingUp) || (accumulatedWheelDelta < 0 && isScrollingDown)) {
+        resetWheelAccumulation()
+      }
+
+      accumulatedWheelDelta += event.deltaY
+
+      if (wheelResetTimeout !== null) {
+        window.clearTimeout(wheelResetTimeout)
+      }
+
+      wheelResetTimeout = window.setTimeout(() => {
+        accumulatedWheelDelta = 0
+        wheelResetTimeout = null
+      }, 180)
+
+      if (Math.abs(accumulatedWheelDelta) < 180) return
+
+      const direction = accumulatedWheelDelta > 0 ? 'next' : 'prev'
+      resetWheelAccumulation()
+      isAutoNavigatingWheel = true
+      const navigated = navigateChunk(direction)
+
+      if (!navigated) {
+        isAutoNavigatingWheel = false
+        return
+      }
+
+      window.setTimeout(() => {
+        isAutoNavigatingWheel = false
+      }, 180)
     }
 
     function updatePaginationUI() {
@@ -439,7 +506,9 @@ const SHOW_PAGE_FOR_VIEW = false
       if (newTemplate) {
         designerInstance.updateTemplate(newTemplate as any)
         updatePaginationUI()
+        return true
       }
+      return false
     }
 
     function goToPage(pageNumber: number) {
@@ -666,13 +735,15 @@ const SHOW_PAGE_FOR_VIEW = false
       return paginationManager.getFullTemplate()
     }
 
-    function getOutputTemplate() {
-      if (!designerInstance) return { template: null, renamed: [] }
+    function getOutputTemplate(): OutputTemplateResult {
+      if (!designerInstance) {
+        throw new Error('Designer no está inicializado')
+      }
       if (!paginationManager) {
         return { template: designerInstance.getTemplate(), renamed: [] }
       }
 
-      return paginationManager.getOutputTemplate(designerInstance.getTemplate().schemas)
+      return paginationManager.getOutputTemplate(designerInstance.getTemplate().schemas) as OutputTemplateResult
     }
 
     function syncEditorWithOutputTemplate(template: any) {
@@ -737,6 +808,7 @@ const SHOW_PAGE_FOR_VIEW = false
             font: fonts,
           },
         })
+        domContainer.addEventListener('wheel', handleEditorWheel, { passive: false })
 
         // Configurar navegación de paginación
         paginationPrev.addEventListener('click', () => navigateChunk('prev'))
