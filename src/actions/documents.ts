@@ -184,6 +184,7 @@ export const documents = {
       uuid_template: z.string(),
     }),
     handler: async ({ uuid_template }, request) => {
+      // await requirePermission(request, ['templates.view'], 'all')
       const token = await requireAuth(request)
       const url = `/documents/getTemplate/${uuid_template}`
       try {
@@ -202,7 +203,7 @@ export const documents = {
     }),
     handler: async ({ uuid_template, build_number }, request) => {
       const token = await requireAuth(request)
-      const url = `/documents/variables/${uuid_template}/${build_number}`
+      const url = `/documents/variables/${uuid_template}`
       try {
         const request = await http.get<RequestForDocument>(url, token)
         return request
