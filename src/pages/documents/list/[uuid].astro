@@ -9,6 +9,7 @@ import StateSwitch from '@/components/ui/StateSwitch.astro'
 const { uuid } = Astro.params
 
 const { PUBLIC_PROJECT_URL } = import.meta.env
+
 if (!uuid) {
   return Astro.redirect('/home')
 }
