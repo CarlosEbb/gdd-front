@@ -4,22 +4,18 @@ import SCardDocument from '@/components/skeleton/SCardDocument.astro'
 
 interface Props {
   title?: string
+  subtitle?: string
   limit?: number | null
   uuidWorkspace?: string | null
 }
 
-const { title = null, limit = null, uuidWorkspace = null } = Astro.props
-let grid = ''
-
-if (uuidWorkspace) {
-  grid = 'xs:grid-cols-2 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-3'
-} else {
-  grid = 'grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-}
+const { title = null, subtitle = null, limit = null, uuidWorkspace = null } = Astro.props
+const grid = uuidWorkspace ? 'xs:grid-cols-2 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-3' : 'grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
 ---
 
 <section class="mb-10">
-  {title && <h2 class="mb-4 text-lg font-semibold text-heading">{title}</h2>}
+  {title && <h2 class="text-lg font-semibold text-heading">{title}</h2>}
+  {subtitle && <p class="mb-4 text-sm text-subheading">{subtitle}</p>}
   <ListDocuments limit={limit} uuidWorkspace={uuidWorkspace} server:defer>
     <div class={`mb-10 grid ${grid}`} slot="fallback">
       <SCardDocument number={limit ?? 7} />
