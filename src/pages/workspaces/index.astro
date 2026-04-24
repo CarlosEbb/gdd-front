@@ -55,7 +55,7 @@ const hasWorkspaces = workspaces.length > 0
             </div>
 
             <div class="mt-4 flex flex-col items-start justify-start gap-2">
-              <a href={`/clients/${workspace.client?.uuid}`} class="relative z-20 cursor-pointer rounded-main bg-foreground p-1 text-sm font-medium text-heading">
+              <a href={`/clients/${workspace.client?.uuid}`} class="relative z-20 cursor-pointer rounded-main bg-foreground p-1 text-sm font-medium text-heading hover:underline">
                 {workspace.client?.name || 'N/A'}
               </a>
               <a href={`/servers/${workspace.dataBase?.server?.uuid}`} class="relative z-20 cursor-pointer text-sm text-subheading hover:underline">
