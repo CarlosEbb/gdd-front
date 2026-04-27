@@ -376,10 +376,10 @@ const currentPath = Astro.url.pathname
         }
 
         toast.success(data.message)
-        const { uuid, id_workspace, title: templateTitle } = data.data.template
-        const { build_number } = data.data.version
+        const { uuid, idWorkspace, title: templateTitle } = data.data.template
+        const { buildNumber } = data.data.lastVersion
 
-        navigate(`/editor/${uuid}?build_number=${build_number}&id_workspace=${id_workspace}&name_document=${templateTitle}`)
+        navigate(`/editor/${uuid}?build_number=${buildNumber}&id_workspace=${idWorkspace}&name_document=${templateTitle}`)
         elements.modalCreateTemplate?.close()
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Error al guardar la plantilla'
