@@ -13,12 +13,12 @@ interface Props {
 
 const ACTIONS = [
   {
-    name: 'Ver documentación',
+    name: 'Documentación',
     icon: 'FileCode',
     action: 'view-documentation',
   },
   {
-    name: 'Ver documento',
+    name: 'Visualizar',
     icon: 'FileText',
     action: 'view',
   },
@@ -100,16 +100,16 @@ const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWork
     </div>
   </div>
 
-  <div class="mb-2 px-3">
+  <div class="mb-2 px-3 pb-2">
     {description && <p class="line-clamp-2 text-xs text-subheading">{description}</p>}
   </div>
 
   <div class="mt-auto flex items-center justify-between rounded-b-main border-t border-border bg-foreground px-3 py-2">
     <div class="flex items-center">
       <Avatar size="xs" name={autor} photo={photo} />
-      <p class="ml-2 line-clamp-1 text-sm text-heading">{autor}</p>
+      <p class="ml-2 line-clamp-1 text-xs text-heading">{autor}</p>
     </div>
-    <p class="mt-0.5 rounded-main border border-border bg-muted px-2 py-1 text-xs text-subheading">{formatShortDate(updatedAt)}</p>
+    <p class="mt-0.5 rounded-main border border-border bg-muted px-2 py-1 text-[10px] text-subheading">{formatShortDate(updatedAt)}</p>
   </div>
 </div>
 
