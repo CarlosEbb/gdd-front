@@ -5,23 +5,42 @@ import Icon from './Icon.astro'
 import { FileText } from '@lucide/astro'
 import { actions } from 'astro:actions'
 
+type Size = 'xs' | 'sm' | 'full'
+
+interface Props {
+  size?: Size
+  class?: string
+}
+
+const { size = 'full', class: className = '' } = Astro.props
+
 const { data } = await Astro.callAction(actions.documents.getByUser, { limit: null })
 const documents = data?.data ?? []
+
+const sizeClasses: Record<Size, string> = {
+  xs: 'h-9 w-9 justify-center px-0 py-0',
+  sm: 'h-9 w-56 justify-between px-3 py-1',
+  full: 'h-full w-full justify-between px-4 py-1',
+}
 ---
 
 <button
   type="button"
   id="search-trigger"
   data-open-modal="search-modal"
-  class="flex h-full w-full cursor-pointer items-center justify-between gap-3 rounded-main border border-border bg-background px-4 py-1 text-left text-sm transition-colors hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none"
+  class:list={[
+    'flex cursor-pointer items-center gap-3 rounded-main border border-border bg-background text-left text-sm transition-colors hover:bg-muted focus:ring-1 focus:ring-primary focus:outline-none',
+    sizeClasses[size],
+    className,
+  ]}
   aria-label="Abrir buscador de documentos"
 >
   <span class="flex min-w-0 items-center gap-3">
     <Icon name="Search" class="shrink-0 text-subheading" stroke-width={1.5} size={16} />
-    <span class="truncate text-subheading">Buscar documentos...</span>
+    {size !== 'xs' && <span class="truncate text-subheading">{size === 'sm' ? 'Buscar...' : 'Buscar documentos...'}</span>}
   </span>
 
-  <span class="hidden shrink-0 rounded-[calc(var(--radius)-2px)] border border-border bg-muted px-2 py-1 text-xs text-subheading md:inline-flex">Ctrl + K</span>
+  {(size === 'full' || size === 'sm') && <span class="hidden shrink-0 rounded-[calc(var(--radius)-2px)] border border-border bg-muted px-2 py-1 text-xs text-subheading md:inline-flex">Ctrl + K</span>}
 </button>
 
 <Modal modalId="search-modal" title="Buscar documentos">
