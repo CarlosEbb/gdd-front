@@ -10,9 +10,7 @@ import EmptyState from '@/components/ui/EmptyState.astro'
 
 const { uuid } = Astro.params
 
-if (!uuid) {
-  return Astro.redirect('/home')
-}
+if (!uuid) return Astro.redirect('/home')
 
 const build_number = Astro.url.searchParams.get('build_number') as string
 const url = `/variables/${uuid}/${build_number}`
@@ -29,7 +27,7 @@ const responseExample = {
 }
 
 const { data, error } = await Astro.callAction(actions.documents.getRequestForDocument, { uuid_template: uuid, build_number: build_number })
-const request = data?.data.variables
+const request = data?.data?.variables
 ---
 
 <Layout title="Documentación">
@@ -171,9 +169,17 @@ const request = data?.data.variables
       </Card>
     </div>
 
-    <EmptyState slot="error" title="Error al cargar la documentación" description="No se pudo cargar la documentación para este template." />
+    <EmptyState slot="error" title="Error al cargar la documentación" description="No se pudo cargar la documentación para este documento." />
 
-    <EmptyState slot="empty" title="No hay documentación disponible" description="No se encontró documentación para este template." />
+    <EmptyState
+      slot="empty"
+      title="Documentación no disponible"
+      state="info"
+      action="create"
+      hrefText="Crear versión"
+      href={`/config/version/${uuid}?build_number=${build_number}`}
+      description={data?.message || 'No se encontró documentación para este documento.'}
+    />
   </StateSwitch>
 </Layout>
 
