@@ -4,6 +4,16 @@ import type { PermissionData } from '@/lib/permissions/types'
 import { hasModuleAccess, hasPermission } from '@/lib/permissions/policy'
 import PermissionGuard from './PermissionGuard.astro'
 
+type SidebarVariant = 'drawer' | 'compact' | 'full'
+
+interface Props {
+  variant?: SidebarVariant
+  initialVisible?: boolean
+  showToggleButton?: boolean
+}
+
+const { variant = 'compact', initialVisible = false, showToggleButton = true } = Astro.props
+
 type MenuItem = {
   name: string
   href: string
@@ -32,26 +42,61 @@ const OPTIONS_MENU = ALL_MENU_ITEMS.filter((item) => {
 })
 
 const currentPath = Astro.url.pathname
+
+// Clases del overlay según la variante.
+// - drawer: overlay activo en todos los breakpoints.
+// - compact/full: overlay solo bajo lg (móvil), igual que el comportamiento histórico.
+const overlayClass = variant === 'drawer' ? 'fixed inset-0 z-40 hidden bg-black/50' : 'fixed inset-0 z-40 hidden bg-black/50 lg:hidden'
+
+// Clases del botón flotante interno: se oculta en desktop solo cuando hay barra fija (compact/full).
+const internalToggleClass =
+  variant === 'drawer'
+    ? 'fixed bottom-4 left-4 z-50 flex items-center justify-center rounded-full bg-primary p-3 text-background shadow-lg transition-all duration-200 hover:shadow-xl'
+    : 'fixed bottom-4 left-4 z-50 flex items-center justify-center rounded-full bg-primary p-3 text-background shadow-lg transition-all duration-200 hover:shadow-xl lg:hidden'
+
+// Clases del aside según la variante.
+const asideBase = 'fixed left-0 top-0 z-40 h-screen w-64 bg-background border-r border-sidebar-border transition-transform duration-200'
+const hiddenClass = '-translate-x-full'
+const asideVariantClass =
+  variant === 'drawer'
+    ? '' // Siempre drawer: sin clases responsivas; usa w-64 base.
+    : variant === 'full'
+      ? 'lg:bottom-0 lg:top-auto lg:h-[calc(100vh-57px)] lg:translate-x-0'
+      : 'lg:bottom-0 lg:top-auto lg:h-[calc(100vh-57px)] lg:w-16 lg:translate-x-0 xl:w-[85px]'
+
+// Estado inicial: solo el modo drawer respeta initialVisible (oculto por defecto).
+// En compact/full el sidebar nace oculto en móvil pero visible en desktop por las clases lg:translate-x-0.
+const isInitiallyHidden = variant === 'drawer' ? !initialVisible : true
+const asideClass = `${asideBase} ${isInitiallyHidden ? hiddenClass : ''} ${asideVariantClass}`.trim()
+
+// Clases del item del menú: en compact las labels se ocultan en lg y reaparecen en xl, y los items pasan a columna.
+// En drawer/full el hover se aplica al <a> completo (ancho total). En compact se mantiene en el icono.
+const menuLinkClass =
+  variant === 'compact'
+    ? 'group flex min-w-0 items-center justify-start gap-1 overflow-hidden rounded-main text-xs text-subheading transition-all duration-200 lg:flex-col lg:justify-center lg:gap-0'
+    : 'group flex min-w-0 items-center justify-start gap-2 overflow-hidden rounded-main px-2 py-1.5 text-xs text-subheading transition-all duration-200 hover:bg-foreground'
+
+const menuLabelClass = variant === 'compact' ? 'block w-full truncate text-left md:block lg:hidden xl:block xl:text-center' : 'block w-full truncate text-left'
+
+// En variantes drawer/full el hover ya vive en el <a>; el icon span no debe pintarse al hover.
+const menuIconWrapperClass =
+  variant === 'compact'
+    ? 'flex items-center justify-center rounded-main border border-background p-2 group-hover:border-border group-hover:bg-foreground'
+    : 'flex items-center justify-center rounded-main border border-transparent p-2'
 ---
 
-<div id="menu-overlay" data-sidebar-overlay class="fixed inset-0 z-40 hidden bg-black/50 lg:hidden"></div>
+<div id="menu-overlay" data-sidebar-overlay class={overlayClass}></div>
 
-<button
-  type="button"
-  data-sidebar-toggle
-  aria-controls="menubar"
-  aria-expanded="false"
-  class="fixed bottom-4 left-4 z-50 flex items-center justify-center rounded-full bg-primary p-3 text-background shadow-lg transition-all duration-200 hover:shadow-xl lg:hidden"
->
-  <Menu class="size-6" />
-  <span class="sr-only">Abrir menú</span>
-</button>
+{
+  showToggleButton && (
+    <button type="button" data-sidebar-toggle aria-controls="menubar" aria-expanded={initialVisible ? 'true' : 'false'} class={internalToggleClass}>
+      <Menu class="size-6" />
+      <span class="sr-only">Abrir menú</span>
+    </button>
+  )
+}
 
-<aside
-  id="menubar"
-  data-sidebar
-  class={`fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full bg-background border-r border-sidebar-border transition-transform duration-200 lg:bottom-0 lg:top-auto lg:h-[calc(100vh-57px)] lg:w-16 lg:translate-x-0 xl:w-[85px]`}
->
+<aside id="menubar" data-sidebar data-sidebar-variant={variant} class={asideClass}>
   <div class="flex flex-col">
     <div class="flex w-full items-center justify-between p-2 lg:hidden">
       <div class="px-2 text-sm font-semibold text-primary">Menú</div>
@@ -78,16 +123,10 @@ const currentPath = Astro.url.pathname
         {
           OPTIONS_MENU.map((option) => (
             <li>
-              <a
-                class:list={[
-                  'group flex min-w-0 items-center justify-start gap-1 overflow-hidden rounded-main text-xs text-subheading transition-all duration-200 lg:flex-col lg:justify-center lg:gap-0',
-                ]}
-                href={option.href}
-                title={option.name}
-              >
+              <a class:list={[menuLinkClass]} href={option.href} title={option.name}>
                 <span
                   class:list={[
-                    'flex items-center justify-center rounded-main border border-background p-2 group-hover:border-border group-hover:bg-foreground',
+                    menuIconWrapperClass,
                     {
                       'rounded-main border border-border bg-foreground font-semibold transition-all duration-200': option.href === currentPath,
                     },
@@ -95,7 +134,7 @@ const currentPath = Astro.url.pathname
                 >
                   <option.icon class="size-5" stroke-width="1.5" />
                 </span>
-                <span class:list={['block w-full truncate text-left md:block lg:hidden xl:block xl:text-center', option.href === currentPath ? 'font-semibold' : '']}>{option.name}</span>
+                <span class:list={[menuLabelClass, option.href === currentPath ? 'font-semibold' : '']}>{option.name}</span>
               </a>
             </li>
           ))
@@ -107,45 +146,66 @@ const currentPath = Astro.url.pathname
 
 <script>
   const initSidebarDrawer = () => {
-    const sidebar = document.querySelector('[data-sidebar]')
-    const overlay = document.querySelector('[data-sidebar-overlay]')
-    const toggle = document.querySelector('[data-sidebar-toggle]')
-    const closeBtn = document.querySelector('[data-sidebar-close]')
+    const sidebar = document.querySelector('[data-sidebar]') as HTMLElement | null
+    const overlay = document.querySelector('[data-sidebar-overlay]') as HTMLElement | null
+    const toggles = Array.from(document.querySelectorAll<HTMLElement>('[data-sidebar-toggle]'))
+    const closeBtn = document.querySelector('[data-sidebar-close]') as HTMLElement | null
 
-    if (!sidebar || !overlay || !toggle) return
+    if (!sidebar || !overlay || toggles.length === 0) return
 
-    const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches
+    const variant = (sidebar.getAttribute('data-sidebar-variant') || 'compact') as 'drawer' | 'compact' | 'full'
+    const isDrawerOnly = variant === 'drawer'
+
+    // En modo drawer el sidebar siempre se comporta como overlay (no hay layout fijo).
+    const isDesktop = () => !isDrawerOnly && window.matchMedia('(min-width: 1024px)').matches
+
+    const setExpanded = (value: boolean) => {
+      toggles.forEach((t) => t.setAttribute('aria-expanded', value ? 'true' : 'false'))
+    }
 
     const open = () => {
       if (isDesktop()) return
       sidebar.classList.remove('-translate-x-full')
       overlay.classList.remove('hidden')
-      toggle.setAttribute('aria-expanded', 'true')
+      setExpanded(true)
     }
 
     const close = () => {
       overlay.classList.add('hidden')
-      toggle.setAttribute('aria-expanded', 'false')
+      setExpanded(false)
       if (isDesktop()) return
       sidebar.classList.add('-translate-x-full')
     }
 
     const isOpen = () => !sidebar.classList.contains('-translate-x-full')
 
-    // Estado inicial
-    close()
+    // Respeta el estado inicial renderizado en SSR (initialVisible) en lugar de forzar close().
+    if (isOpen()) {
+      overlay.classList.remove('hidden')
+      setExpanded(true)
+    } else {
+      overlay.classList.add('hidden')
+      setExpanded(false)
+    }
 
     // Evita duplicar listeners entre navegaciones con view transitions
-    if (toggle.getAttribute('data-bound') === 'true') return
-    toggle.setAttribute('data-bound', 'true')
-
-    toggle.addEventListener('click', () => {
-      if (isOpen()) close()
-      else open()
+    toggles.forEach((toggle) => {
+      if (toggle.getAttribute('data-bound') === 'true') return
+      toggle.setAttribute('data-bound', 'true')
+      toggle.addEventListener('click', () => {
+        if (isOpen()) close()
+        else open()
+      })
     })
 
-    overlay.addEventListener('click', close)
-    closeBtn?.addEventListener('click', close)
+    if (overlay.getAttribute('data-bound') !== 'true') {
+      overlay.setAttribute('data-bound', 'true')
+      overlay.addEventListener('click', close)
+    }
+    if (closeBtn && closeBtn.getAttribute('data-bound') !== 'true') {
+      closeBtn.setAttribute('data-bound', 'true')
+      closeBtn.addEventListener('click', close)
+    }
 
     if (sidebar.getAttribute('data-links-bound') !== 'true') {
       sidebar.setAttribute('data-links-bound', 'true')
@@ -159,13 +219,15 @@ const currentPath = Astro.url.pathname
       })
     }
 
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') close()
-    })
-
-    // Si cambias de tamaño a desktop, cierra overlay y deja el layout estable
-    const onResize = () => close()
-    window.addEventListener('resize', onResize, { passive: true })
+    if (sidebar.getAttribute('data-keys-bound') !== 'true') {
+      sidebar.setAttribute('data-keys-bound', 'true')
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close()
+      })
+      // Si cambias de tamaño a desktop, cierra overlay y deja el layout estable
+      const onResize = () => close()
+      window.addEventListener('resize', onResize, { passive: true })
+    }
   }
 
   document.addEventListener('astro:page-load', initSidebarDrawer)
