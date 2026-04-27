@@ -1,9 +1,13 @@
 import type { PropPanel } from '@pdfme/common'
 import type { RichTextSchema } from './types'
 import { formatoButtonsWidget } from './formatoWidget'
+import { variablesSampleDataWidget } from './variablesSampleDataWidget'
 
 export const propPanel: PropPanel<RichTextSchema> = {
-  widgets: { formatoButtons: formatoButtonsWidget },
+  widgets: {
+    formatoButtons: formatoButtonsWidget,
+    variablesSampleData: variablesSampleDataWidget,
+  },
   schema: ({ options }) => {
     const fontNames = Object.keys(((options as any)?.font as Record<string, unknown>) || {})
     const fontEnum = fontNames.length > 0 ? fontNames : ['Roboto']
@@ -57,16 +61,28 @@ export const propPanel: PropPanel<RichTextSchema> = {
         bind: false,
         span: 24,
       },
+      variablesDivider: {
+        type: 'void',
+        widget: 'Divider',
+      },
+      variablesSample: {
+        type: 'object',
+        widget: 'variablesSampleData',
+        bind: false,
+        span: 24,
+      },
     }
   },
   defaultSchema: {
     name: '',
     type: 'richText',
-    content: 'Escribe aquí tu <b>texto</b>',
+    text: 'Escribe aquí tu <b>texto</b>',
+    variables: [],
+    content: '',
     position: { x: 0, y: 0 },
     width: 80,
     height: 20,
-    fontSize: 12,
+    fontSize: 13,
     fontName: 'Roboto',
     fontNameBold: 'Roboto-Bold',
     fontColor: '#000000',

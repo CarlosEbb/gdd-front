@@ -1,6 +1,11 @@
 import type { PDFRenderProps } from '@pdfme/common'
 import type { RichTextSchema, RichTextRun } from './types'
-import { parseRuns } from './helper'
+import { parseRuns, substituteVariables, parseVariableValues } from './helper'
+
+const looksLikeJson = (s: string): boolean => {
+  const trimmed = s.trim()
+  return trimmed.startsWith('{') && trimmed.endsWith('}') && /"\s*:/.test(trimmed)
+}
 
 // pdfme usa un fork propio de pdf-lib, por lo que se utiliza `any` para la
 // fuente embebida y se construye el color RGB manualmente evitando choques
@@ -55,14 +60,14 @@ const wrapRuns = (runs: RichTextRun[], fonts: { regular: EmbeddedFont; bold: Emb
 
   const measure = (text: string, bold: boolean) => getFont(bold).widthOfTextAtSize(text, fontSize)
 
-  const pushToken = (text: string, bold: boolean) => {
+  const pushToken = (text: string, bold: boolean, underline: boolean, strikethrough: boolean) => {
     if (!text) return
     const w = measure(text, bold)
     const last = current[current.length - 1]
-    if (last && last.bold === bold) {
+    if (last && last.bold === bold && !!last.underline === underline && !!last.strikethrough === strikethrough) {
       last.text += text
     } else {
-      current.push({ text, bold })
+      current.push({ text, bold, underline, strikethrough })
     }
     currentWidth += w
   }
@@ -74,17 +79,19 @@ const wrapRuns = (runs: RichTextRun[], fonts: { regular: EmbeddedFont; bold: Emb
   }
 
   for (const run of runs) {
+    const u = !!run.underline
+    const s = !!run.strikethrough
     // Dividir el run en tokens (palabras + espacios) conservando espacios.
     const tokens = run.text.match(/\s+|\S+/g) || []
     for (const token of tokens) {
       const tokenWidth = measure(token, run.bold)
       if (currentWidth + tokenWidth <= maxWidth || currentWidth === 0) {
-        pushToken(token, run.bold)
+        pushToken(token, run.bold, u, s)
       } else {
         breakLine()
         // No iniciar línea con espacios.
         if (/^\s+$/.test(token)) continue
-        pushToken(token, run.bold)
+        pushToken(token, run.bold, u, s)
       }
     }
   }
@@ -112,7 +119,19 @@ export const pdfRender = async (arg: PDFRenderProps<RichTextSchema>) => {
     strikethrough = false,
   } = schema
 
-  if (!value) return
+  // Resolver la plantilla:
+  // - Prefiere `schema.text` (formato nuevo).
+  // - Si no existe, cae al `value` cuando es HTML directo (legacy richText).
+  // - Si `value` parece JSON, asumimos plantilla con variables y `value` lleva
+  //   los valores; en ese caso `schema.text` debería existir.
+  const valueIsJson = typeof value === 'string' && looksLikeJson(value)
+  const template = typeof schema.text === 'string' && schema.text.length > 0 ? schema.text : typeof value === 'string' && !valueIsJson ? value : ''
+
+  if (!template) return
+
+  const variables = Array.isArray(schema.variables) ? schema.variables : []
+  const values = variables.length > 0 ? parseVariableValues(value) : {}
+  const html = variables.length > 0 ? substituteVariables(template, values) : template
 
   const [regular, bold] = await Promise.all([embedFontCached(arg, fontName), embedFontCached(arg, fontNameBold)])
   const fonts = { regular, bold }
@@ -123,7 +142,7 @@ export const pdfRender = async (arg: PDFRenderProps<RichTextSchema>) => {
   const xPt = mmToPt(position.x)
   const yTopPt = page.getHeight() - mmToPt(position.y)
 
-  const sourceLines = parseRuns(value)
+  const sourceLines = parseRuns(html)
   const wrapped: RichTextRun[][] = []
   for (const line of sourceLines) {
     const wrappedLine = wrapRuns(line.runs, fonts, fontSize, maxWidthPt)
@@ -191,20 +210,25 @@ export const pdfRender = async (arg: PDFRenderProps<RichTextSchema>) => {
         ;(page as any).drawText(textToDraw, { x: runX, y: cursorY, size: fontSize, font, color })
       }
 
-      // Subrayado y tachado: líneas horizontales bajo/centro del run.
-      if (underline) {
+      // Subrayado/tachado por-run (misma API que el plugin text nativo).
+      const runUnderline = !!run.underline || underline
+      const runStrike = !!run.strikethrough || strikethrough
+      const thickness = (1 / 12) * fontSize
+      if (runStrike && runWidth > 0) {
+        const lineY = cursorY + fontSize / 3
         ;(page as any).drawLine({
-          start: { x: runX, y: cursorY - fontSize * 0.12 },
-          end: { x: runX + runWidth, y: cursorY - fontSize * 0.12 },
-          thickness: Math.max(0.5, fontSize * 0.05),
+          start: { x: runX, y: lineY },
+          end: { x: runX + runWidth, y: lineY },
+          thickness,
           color,
         })
       }
-      if (strikethrough) {
+      if (runUnderline && runWidth > 0) {
+        const lineY = cursorY - fontSize / 12
         ;(page as any).drawLine({
-          start: { x: runX, y: cursorY + fontSize * 0.3 },
-          end: { x: runX + runWidth, y: cursorY + fontSize * 0.3 },
-          thickness: Math.max(0.5, fontSize * 0.05),
+          start: { x: runX, y: lineY },
+          end: { x: runX + runWidth, y: lineY },
+          thickness,
           color,
         })
       }
