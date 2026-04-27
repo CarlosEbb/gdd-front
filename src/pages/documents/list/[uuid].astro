@@ -6,13 +6,12 @@ import { formatISODateWithIntl } from '@/scripts/utils'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import Container from '@/components/ui/Container.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
+import Header from '@/components/ui/Header.astro'
 const { uuid } = Astro.params
 
 const { PUBLIC_PROJECT_URL } = import.meta.env
 
-if (!uuid) {
-  return Astro.redirect('/home')
-}
+if (!uuid) return Astro.redirect('/home')
 
 const { data, error } = await Astro.callAction(actions.documents.getListGeneratedDocuments, { uuid_template: uuid })
 
@@ -33,7 +32,7 @@ const currentPath = Astro.url.pathname
 
 <MainLayout title="Documentos generados">
   <Container>
-    <TitleForPage title={`Documentos generados`} />
+    <Header title="Documentos generados" />
     <StateSwitch hasError={error !== null} isEmpty={documents.length === 0}>
       <div class="mt-6 flow-root sm:mt-8">
         <div class="">
