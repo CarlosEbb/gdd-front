@@ -1,5 +1,5 @@
 ---
-import { House, FileText, FolderOpen, type Icon as IconType, CirclePlus, Menu, X, Briefcase, Server, Users, CircleUser } from '@lucide/astro'
+import { House, FileText, FolderOpen, type Icon as IconType, CirclePlus, Menu, X, Briefcase, Server, Users, SquareLibrary } from '@lucide/astro'
 import type { PermissionData } from '@/lib/permissions/types'
 import { hasModuleAccess, hasPermission } from '@/lib/permissions/policy'
 import PermissionGuard from './PermissionGuard.astro'
@@ -19,7 +19,7 @@ const ALL_MENU_ITEMS: MenuItem[] = [
   { href: '/users', name: 'Usuarios', icon: Users, module: 'users' },
   { href: '/clients', name: 'Clientes', icon: Briefcase, module: 'clients' },
   { href: '/servers', name: 'Servidores', icon: Server, module: 'servers' },
-  { href: '/workspaces', name: 'Espacios', icon: FolderOpen, module: 'workspaces' },
+  { href: '/workspaces', name: 'Espacios', icon: SquareLibrary, module: 'workspaces' },
 ]
 
 const permissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
