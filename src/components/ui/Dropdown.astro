@@ -11,9 +11,20 @@ interface Props {
   position?: 'left' | 'right' | 'default'
   mobileIcon?: keyof typeof icons
   menuClass?: string
+  hideLabel?: boolean
 }
 
-const { buttonLabel = 'Seleccionar', withSearch = false, size = 'default', shadow = 'base', border = 'border', position = 'default', mobileIcon = 'Menu', menuClass = '' } = Astro.props
+const {
+  buttonLabel = 'Seleccionar',
+  withSearch = false,
+  size = 'default',
+  shadow = 'base',
+  border = 'border',
+  position = 'default',
+  mobileIcon = 'Menu',
+  menuClass = '',
+  hideLabel = false,
+} = Astro.props
 
 const hasTriggerSlot = Astro.slots.has('trigger')
 
@@ -62,24 +73,26 @@ const positionClasses = {
       ) : (
         <>
           {mobileIcon && (
-            <span class="flex items-center justify-center md:hidden">
+            <span class:list={['flex items-center justify-center', !hideLabel && 'md:hidden']}>
               <Icon name={mobileIcon} class="h-5 w-5 text-heading" />
             </span>
           )}
-          <span class:list={['truncate text-sm text-heading', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class:list={['-mr-1 ml-2 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180', mobileIcon && 'hidden md:block']}
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          {!hideLabel && <span class:list={['truncate', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>}
+          {!hideLabel && (
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class:list={['-mr-1 ml-2 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180', mobileIcon && 'hidden md:block']}
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          )}
         </>
       )
     }
