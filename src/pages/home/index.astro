@@ -18,6 +18,7 @@ const name = user?.name
     <PermissionGuard permission="workspaces.view">
       <ListWorkspaces />
     </PermissionGuard>
+
     <ListDocuments title="Últimos documentos" subtitle="Consulta los documentos que has creado recientemente" limit={8} />
   </Container>
 </MainLayout>
