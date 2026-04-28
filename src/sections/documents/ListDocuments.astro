@@ -2,6 +2,7 @@
 import Modal from '@/components/modal/Modal.astro'
 import Button from '@/components/ui/Button.astro'
 import CardDocument from '@/components/ui/CardDocument.astro'
+import ListDocument from '@/components/ui/ListDocument.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import Icon from '@/components/ui/Icon.astro'
 import { actions } from 'astro:actions'
@@ -54,8 +55,18 @@ const currentPath = '/home'
     action="create"
   />
 
-  <div class={`mb-10 grid ${grid}`} data-documents-container>
-    {documents.map((document) => <CardDocument document={document} />)}
+  <div class="mb-10">
+    <div class="data-[state=inactive]:hidden" role="tabpanel" data-tabs-content="grid" data-state="active">
+      <div class={`grid ${grid}`} data-documents-container>
+        {documents.map((document) => <CardDocument document={document} />)}
+      </div>
+    </div>
+
+    <div class="data-[state=inactive]:hidden" role="tabpanel" data-tabs-content="list" data-state="inactive">
+      <div class="overflow-hidden rounded-main border border-border bg-background" data-documents-container>
+        {documents.map((document) => <ListDocument document={document} />)}
+      </div>
+    </div>
   </div>
 </StateSwitch>
 

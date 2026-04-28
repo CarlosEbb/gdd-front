@@ -1,11 +1,10 @@
 ---
 import { icons } from '@lucide/astro'
 import type { Document } from '@/types/documents'
-import template from '@/assets/images/preview/template-1.png'
 import { formatShortDate } from '@/scripts/utils'
 import Icon from './Icon.astro'
 import Avatar from './Avatar.astro'
-const { PUBLIC_PROJECT_URL } = import.meta.env
+import CardList from './CardList.astro'
 
 interface Props {
   document: Document
@@ -35,12 +34,15 @@ const { uuid, lastVersion, uuidWorkspace, title, updatedAt, description, owner }
 const { pathThumbnails, buildNumber, nameVersion, uuid: uuidVersion } = lastVersion
 const { name: autor, photo } = owner
 
-const thumbnails = `${PUBLIC_PROJECT_URL}${pathThumbnails}` || template.src
 const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWorkspace}&name_document=${title}`
 ---
 
-<div
-  class="document-card group flex cursor-pointer flex-col rounded-main border border-border bg-background transition-all duration-200 hover:shadow-base"
+<CardList
+  title={title}
+  description={description}
+  secondaryText={formatShortDate(updatedAt)}
+  img={pathThumbnails}
+  class="document-list-item group cursor-pointer hover:bg-foreground"
   data-url={url}
   data-title={title}
   data-created-at={updatedAt}
@@ -50,28 +52,18 @@ const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWork
   data-build-number={buildNumber}
   data-uuid-version={uuidVersion}
 >
-  <div class="overflow-hidden px-3 pt-3">
-    <div class="relative flex h-48 w-full items-center justify-center overflow-hidden rounded-main bg-foreground">
-      <div class="thumbnail-skeleton absolute inset-0 animate-pulse bg-muted"></div>
-      <img
-        src={thumbnails}
-        class="thumbnail-img relative z-10 h-full w-full object-contain opacity-0 transition-opacity duration-200"
-        alt={title}
-        width="200"
-        height="128"
-        loading="lazy"
-        decoding="async"
-        onload="this.classList.remove('opacity-0'); this.previousElementSibling.classList.add('hidden')"
-      />
+  <div slot="actions" class="flex items-center gap-2">
+    <div class="hidden items-center sm:flex">
+      <Avatar size="xs" name={autor} photo={photo} />
+      <p class="ml-2 line-clamp-1 max-w-[140px] text-xs text-heading">{autor}</p>
     </div>
-  </div>
 
-  <div class="mt-2 flex items-center justify-between space-x-2 px-3">
-    <div class="flex min-w-0 flex-1 items-center gap-x-2">
-      <h3 class="truncate text-sm font-medium text-heading">{title}</h3>
-    </div>
     <div class="relative">
-      <button class="flex size-6 items-center justify-center rounded-main text-heading transition-colors duration-150 hover:bg-foreground" data-btn-dropdown>
+      <button
+        class="flex size-8 items-center justify-center rounded-main text-heading transition-colors duration-150 hover:bg-muted"
+        data-btn-dropdown
+        aria-label="Acciones del documento"
+      >
         <Icon name="EllipsisVertical" stroke-width={1.5} size={18} />
       </button>
 
@@ -99,19 +91,7 @@ const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWork
       </div>
     </div>
   </div>
-
-  <div class="mb-2 px-3 pb-2">
-    {description && <p class="line-clamp-2 text-xs text-subheading">{description}</p>}
-  </div>
-
-  <div class="mt-auto flex items-center justify-between rounded-b-main border-t border-border bg-foreground px-3 py-2">
-    <div class="flex items-center">
-      <Avatar size="xs" name={autor} photo={photo} />
-      <p class="ml-2 line-clamp-1 text-xs text-heading">{autor}</p>
-    </div>
-    <p class="mt-0.5 rounded-main border border-border bg-muted px-2 py-1 text-[10px] text-subheading">{formatShortDate(updatedAt)}</p>
-  </div>
-</div>
+</CardList>
 
 <script>
   import { initDocumentCardActions } from '@/scripts/document-card-actions'
