@@ -10,9 +10,10 @@ export interface Props extends HTMLAttributes<'button'> {
   loadingText?: string
   showTextOnLoading?: boolean
   icon?: keyof typeof icons
+  iconPosition?: 'left' | 'right'
 }
 
-const { variant = 'default', size = 'default', class: className, rounded = 'default', loadingText, showTextOnLoading = true, icon, ...props } = Astro.props
+const { variant = 'default', size = 'default', class: className, rounded = 'default', loadingText, showTextOnLoading = true, icon, iconPosition = 'left', ...props } = Astro.props
 
 const baseClasses =
   'inline-flex items-center font-normal cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none disabled:bg-neutral-200 disabled:border-border disabled:text-neutral-600'
@@ -31,7 +32,7 @@ const sizeClasses = {
   default: 'h-12 px-4 py-2.5 ',
   sm: 'h-8 px-1.5',
   lg: 'h-10 px-8',
-  icon: 'h-9 w-9',
+  icon: 'h-8 w-8',
 }
 
 const iconSizes = {
@@ -60,9 +61,16 @@ const roundedClasses = {
     </svg>
   </span>
   <span data-button-content class="flex items-center gap-2 px-1.5">
+    {
+      icon && iconPosition === 'left' && (
+        <span data-button-icon>
+          <Icon name={icon} size={iconSizes[size]} />
+        </span>
+      )
+    }
     <slot />
     {
-      icon && (
+      icon && iconPosition === 'right' && (
         <span data-button-icon>
           <Icon name={icon} size={iconSizes[size]} />
         </span>
