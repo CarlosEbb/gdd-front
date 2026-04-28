@@ -11,7 +11,7 @@ export const users = {
       const token = await requireAuth(request)
 
       try {
-        const users = await http.get<Details[]>(`/users`, token)
+        const users = await http.get<Details[]>(`/users`, token, request)
 
         return users
       } catch (error) {
@@ -49,7 +49,7 @@ export const users = {
           }
         })
 
-        const userCreated = await http.post<Details>(`/users/register`, token, formData)
+        const userCreated = await http.post<Details>(`/users/register`, token, request, formData)
         return userCreated
       } catch (error) {
         handleApiError(error, request)
@@ -80,7 +80,7 @@ export const users = {
         if (input.zipCode) formData.append('zipCode', input.zipCode)
         if (input.img_profile_file && input.img_profile_file.size > 0) formData.append('img_profile_file', input.img_profile_file)
 
-        const userUpdated = await http.put<Details>(`/users/${input.uuid}`, token, formData)
+        const userUpdated = await http.put<Details>(`/users/${input.uuid}`, token, request, formData)
 
         await request.session?.set('user', userUpdated.data)
 
@@ -99,7 +99,7 @@ export const users = {
       const token = await requireAuth(request)
 
       try {
-        const response = await http.del(`/users/${uuid}`, token)
+        const response = await http.del(`/users/${uuid}`, token, request)
         return {
           code: response.code,
           message: response.message,
@@ -121,7 +121,7 @@ export const users = {
       const token = await requireAuth(request)
 
       try {
-        const user = await http.get<GetUserByUuidResponse>(`/users/${uuid}`, token)
+        const user = await http.get<GetUserByUuidResponse>(`/users/${uuid}`, token, request)
 
         return user
       } catch (error) {
@@ -140,7 +140,7 @@ export const users = {
       const token = await requireAuth(request)
 
       try {
-        const user = await http.patch<Details>(`/users/${uuid}/status`, token, { status })
+        const user = await http.patch<Details>(`/users/${uuid}/status`, token, request, { status })
         return user
       } catch (error) {
         handleApiError(error, request)

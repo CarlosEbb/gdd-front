@@ -11,7 +11,7 @@ export const clients = {
       const token = await requireAuth(request)
 
       try {
-        const clients = await http.get<DetailsClient[]>(`/clients`, token)
+        const clients = await http.get<DetailsClient[]>(`/clients`, token, request)
         return clients
       } catch (error) {
         handleApiError(error, request)
@@ -27,7 +27,7 @@ export const clients = {
       const token = await requireAuth(request)
 
       try {
-        const client = await http.get<DetailsClient>(`/clients/${uuid}`, token)
+        const client = await http.get<DetailsClient>(`/clients/${uuid}`, token, request)
         return client
       } catch (error) {
         handleApiError(error, request)
@@ -63,7 +63,7 @@ export const clients = {
           payload.set('logo', input.logo)
         }
 
-        const client = await http.post<DetailsClient>(`/clients`, token, payload)
+        const client = await http.post<DetailsClient>(`/clients`, token, request, payload)
 
         return client
       } catch (error) {
@@ -81,7 +81,7 @@ export const clients = {
       const token = await requireAuth(request)
 
       try {
-        const client = await http.del(`/clients/${uuid}`, token)
+        const client = await http.del(`/clients/${uuid}`, token, request)
         return {
           code: client.code,
           message: client.message,
@@ -110,7 +110,7 @@ export const clients = {
       const token = await requireAuth(request)
 
       try {
-        const client = await http.put<DetailsClient>(`/clients/${input.uuid}`, token, input)
+        const client = await http.put<DetailsClient>(`/clients/${input.uuid}`, token, request, input)
         return client
       } catch (error) {
         handleApiError(error, request)

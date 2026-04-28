@@ -30,7 +30,7 @@ export const profile = {
         if (input.zipCode) formData.append('zipCode', input.zipCode)
         if (input.img_profile_file && input.img_profile_file.size > 0) formData.append('img_profile_file', input.img_profile_file)
 
-        const userUpdated = await http.put<InfoProfile>('/users/profile', token, formData)
+        const userUpdated = await http.put<InfoProfile>('/users/profile', token, request, formData)
         await request.session?.set('user', userUpdated.data as Details)
 
         return userUpdated
@@ -49,7 +49,7 @@ export const profile = {
       const token = await requireAuth(request)
 
       try {
-        const response = await http.post(`/users/reset-password-request`, token, input)
+        const response = await http.post(`/users/reset-password-request`, token, request, input)
 
         return response
       } catch (error) {
@@ -67,7 +67,7 @@ export const profile = {
       const token = await requireAuth(request)
 
       try {
-        const response = await http.post(`/users/change-password`, token, input)
+        const response = await http.post(`/users/change-password`, token, request, input)
 
         return response
       } catch (error) {

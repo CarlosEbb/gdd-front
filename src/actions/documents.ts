@@ -15,7 +15,7 @@ export const documents = {
       const token = await requireAuth(request)
 
       try {
-        const documents = await http.get<Document[]>(`/template/${uuid}`, token)
+        const documents = await http.get<Document[]>(`/template/${uuid}`, token, request)
 
         return documents
       } catch (error) {
@@ -33,7 +33,7 @@ export const documents = {
       const url = limit === null ? '/template' : `/template?limit=${limit}`
 
       try {
-        const documents = await http.get<Document[]>(url, token)
+        const documents = await http.get<Document[]>(url, token, request)
 
         return documents
       } catch (error) {
@@ -59,7 +59,7 @@ export const documents = {
       const token = await requireAuth(request)
 
       try {
-        const newDocument = await http.post<CreateDocument>('/template', token, input)
+        const newDocument = await http.post<CreateDocument>('/template', token, request, input)
 
         return newDocument
       } catch (error) {
@@ -86,7 +86,7 @@ export const documents = {
       }
 
       try {
-        const newVersion = await http.post<CreateNewVersion>(`/template/${uuid_template}/version`, token, formData)
+        const newVersion = await http.post<CreateNewVersion>(`/template/${uuid_template}/version`, token, request, formData)
         return newVersion
       } catch (error) {
         await handleApiError(error, request)
@@ -106,7 +106,7 @@ export const documents = {
       const url = `/template/file/${uuid_template}/${build_number}`
 
       try {
-        const file = await http.get<SchemaFile>(url, token)
+        const file = await http.get<SchemaFile>(url, token, request)
         console.log(file)
         return file
       } catch (error) {
@@ -126,7 +126,7 @@ export const documents = {
       const token = await requireAuth(request)
 
       try {
-        const deletedDocument = await http.del<void>(`/template/${input.uuid_template}`, token, input)
+        const deletedDocument = await http.del<void>(`/template/${input.uuid_template}`, token, request, input)
         return {
           code: deletedDocument.code,
           message: deletedDocument.message,
@@ -160,7 +160,7 @@ export const documents = {
       const token = await requireAuth(request)
       const url = `/template/generatePDF/${uuid_template}/${build_number}`
       try {
-        const pdf = await http.download(url, token)
+        const pdf = await http.download(url, token, request)
 
         const arrayBuffer = await pdf.arrayBuffer()
         const uint8Array = new Uint8Array(arrayBuffer)
@@ -188,7 +188,7 @@ export const documents = {
       const token = await requireAuth(request)
       const url = `/documents/getTemplate/${uuid_template}`
       try {
-        const documents = await http.get<GeneratedDocument[]>(url, token)
+        const documents = await http.get<GeneratedDocument[]>(url, token, request)
         return documents
       } catch (error) {
         await handleApiError(error, request)
@@ -205,8 +205,8 @@ export const documents = {
       const token = await requireAuth(request)
       const url = `/documents/variables/${uuid_template}`
       try {
-        const request = await http.get<RequestForDocument>(url, token)
-        return request
+        const response = await http.get<RequestForDocument>(url, token, request)
+        return response
       } catch (error) {
         await handleApiError(error, request)
       }
@@ -223,7 +223,7 @@ export const documents = {
       const token = await requireAuth(request)
       const url = `/documents/validate/variables/${uuid_template}/${build_number}`
       try {
-        const response = await http.post(url, token, validation_rules)
+        const response = await http.post(url, token, request, validation_rules)
         return response
       } catch (error) {
         await handleApiError(error, request)

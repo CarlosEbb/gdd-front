@@ -16,6 +16,7 @@ export const auth = {
         const info: ApiResponse<AuthResponse> = await http.post<AuthResponse>(
           `/users/login`,
           '',
+          request,
           {
             email: input.email,
             password: input.password,
@@ -55,7 +56,7 @@ export const auth = {
 
       const token = (await request.session?.get('token')) as string
       try {
-        const response = await http.post(`/users/logout`, token, {})
+        const response = await http.post(`/users/logout`, token, request, {})
 
         await request.session?.destroy()
         return {

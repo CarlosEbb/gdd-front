@@ -18,7 +18,7 @@ export const servers = {
       const token = await requireAuth(request)
 
       try {
-        const response: ApiResponse<createServer> = await http.post<createServer>(`/servers`, token, input)
+        const response: ApiResponse<createServer> = await http.post<createServer>(`/servers`, token, request, input)
         return response
       } catch (error) {
         handleApiError(error, request)
@@ -31,7 +31,7 @@ export const servers = {
       const token = await requireAuth(request)
 
       try {
-        const servers = await http.get<DetailsServer[]>(`/servers`, token)
+        const servers = await http.get<DetailsServer[]>(`/servers`, token, request)
 
         return servers
       } catch (error) {
@@ -48,7 +48,7 @@ export const servers = {
       const token = await requireAuth(request)
 
       try {
-        const serverInfo = await http.get<DetailsServer>(`/servers/${uuid}`, token)
+        const serverInfo = await http.get<DetailsServer>(`/servers/${uuid}`, token, request)
 
         return serverInfo
       } catch (error) {
@@ -69,7 +69,7 @@ export const servers = {
       const token = await requireAuth(request)
 
       try {
-        const response: ApiResponse<createServer> = await http.put<createServer>(`/servers/${input.uuid}`, token, input)
+        const response: ApiResponse<createServer> = await http.put<createServer>(`/servers/${input.uuid}`, token, request, input)
         return response
       } catch (error) {
         handleApiError(error, request)
@@ -86,7 +86,7 @@ export const servers = {
       const token = await requireAuth(request)
 
       try {
-        const response: ApiResponse<null> = await http.del(`/servers/${uuid}`, token)
+        const response: ApiResponse<null> = await http.del(`/servers/${uuid}`, token, request)
         return {
           code: response.code,
           message: response.message,
@@ -108,7 +108,7 @@ export const servers = {
       const token = await requireAuth(request)
 
       try {
-        const serverInfo = await http.get<DetailsServer[]>(`/servers/ip/${ip}`, token)
+        const serverInfo = await http.get<DetailsServer[]>(`/servers/ip/${ip}`, token, request)
 
         return serverInfo
       } catch (error) {

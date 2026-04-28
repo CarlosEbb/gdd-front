@@ -10,7 +10,7 @@ export const templates = {
       const token = await requireAuth(request)
 
       try {
-        const templates = await http.get<Templates[]>('/category/all', token)
+        const templates = await http.get<Templates[]>('/category/all', token, request)
         return templates
       } catch (error) {
         handleApiError(error, request)

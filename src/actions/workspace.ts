@@ -19,7 +19,7 @@ export const workspaces = {
       const workspaces = (await request.session?.get('workspaces')) || []
 
       try {
-        const newWorkspace = await http.post<Workspace>('/workspaces', token, {
+        const newWorkspace = await http.post<Workspace>('/workspaces', token, request, {
           name: input.name,
           icon: input.icon,
           clientUuid: input.clientUuid,
@@ -42,7 +42,7 @@ export const workspaces = {
       const token = await requireAuth(request)
 
       try {
-        const workspaces = await http.get<Workspace[]>('/workspaces', token)
+        const workspaces = await http.get<Workspace[]>('/workspaces', token, request)
         await request.session?.set('workspaces', workspaces.data)
         return workspaces
       } catch (error) {
@@ -60,7 +60,7 @@ export const workspaces = {
       const token = await requireAuth(request)
 
       try {
-        const workspace = await http.get<Workspace>(`/workspaces/${uuid}`, token)
+        const workspace = await http.get<Workspace>(`/workspaces/${uuid}`, token, request)
 
         return workspace
       } catch (error) {
@@ -82,7 +82,7 @@ export const workspaces = {
       const token = await requireAuth(request)
 
       try {
-        const updatedWorkspace = await http.put<Workspace>(`/workspaces/${uuid}`, token, {
+        const updatedWorkspace = await http.put<Workspace>(`/workspaces/${uuid}`, token, request, {
           name,
           icon,
           clientUuid,
@@ -114,7 +114,7 @@ export const workspaces = {
       const token = await requireAuth(request)
 
       try {
-        const deletedWorkspace = await http.del<void>(`/workspaces/${uuid}`, token)
+        const deletedWorkspace = await http.del<void>(`/workspaces/${uuid}`, token, request)
 
         const workspaces = (await request.session?.get('workspaces')) || []
         const updatedWorkspaces = workspaces.filter((workspace) => workspace.uuid !== uuid)

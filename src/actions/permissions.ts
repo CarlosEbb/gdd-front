@@ -10,7 +10,7 @@ export const permissions = {
       const token = await requireAuth(request)
 
       try {
-        const permissions = await http.get<PermissionCategory[]>('/permissions', token)
+        const permissions = await http.get<PermissionCategory[]>('/permissions', token, request)
         return permissions
       } catch (error) {
         handleApiError(error, request)

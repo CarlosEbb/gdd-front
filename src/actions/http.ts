@@ -6,6 +6,7 @@ interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   token: string
   body?: unknown
   isPublic?: boolean
+  ctx?: ActionAPIContext
 }
 
 export class ApiError extends Error {
@@ -48,6 +49,10 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic:
   const headers = new Headers()
   const authorization = isPublic ? '' : `Bearer ${options.token}`
   headers.set('Authorization', authorization)
+
+  if (!isPublic && options.ctx?.clientAddress) {
+    headers.set('x-client-ip', options.ctx.clientAddress)
+  }
 
   const isFormData = options.body instanceof FormData
   let requestBody: BodyInit | undefined
@@ -112,7 +117,7 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic:
   return result
 }
 
-async function apiFetchBlob(endpoint: string, token: string, method: 'GET' | 'POST' = 'GET'): Promise<Blob> {
+async function apiFetchBlob(endpoint: string, token: string, ctx?: ActionAPIContext, method: 'GET' | 'POST' = 'GET'): Promise<Blob> {
   const API_PROJECT_URL = import.meta.env.API_URL ?? (globalThis as any).process?.env?.API_URL
 
   if (!API_PROJECT_URL) {
@@ -123,6 +128,10 @@ async function apiFetchBlob(endpoint: string, token: string, method: 'GET' | 'PO
 
   const headers = new Headers()
   headers.set('Authorization', `Bearer ${token}`)
+
+  if (ctx?.clientAddress) {
+    headers.set('x-client-ip', ctx.clientAddress)
+  }
 
   const config: RequestInit = {
     method,
@@ -149,28 +158,28 @@ async function apiFetchBlob(endpoint: string, token: string, method: 'GET' | 'PO
 }
 
 export const http = {
-  get: <T>(endpoint: string, token: string, isPublic: boolean = false): Promise<ApiResponse<T>> => {
-    return apiFetch<T>(endpoint, { method: 'GET', token }, isPublic)
+  get: <T>(endpoint: string, token: string, ctx: ActionAPIContext, isPublic: boolean = false): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'GET', token, ctx }, isPublic)
   },
 
-  post: <T>(endpoint: string, token: string, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
-    return apiFetch<T>(endpoint, { method: 'POST', token, body }, isPublic)
+  post: <T>(endpoint: string, token: string, ctx: ActionAPIContext, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'POST', token, ctx, body }, isPublic)
   },
 
-  put: <T>(endpoint: string, token: string, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
-    return apiFetch<T>(endpoint, { method: 'PUT', token, body }, isPublic)
+  put: <T>(endpoint: string, token: string, ctx: ActionAPIContext, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'PUT', token, ctx, body }, isPublic)
   },
 
-  del: <T>(endpoint: string, token: string, body?: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
-    return apiFetch<T>(endpoint, { method: 'DELETE', token, body }, isPublic)
+  del: <T>(endpoint: string, token: string, ctx: ActionAPIContext, body?: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'DELETE', token, ctx, body }, isPublic)
   },
 
-  download: (endpoint: string, token: string, method: 'GET' | 'POST' = 'GET'): Promise<Blob> => {
-    return apiFetchBlob(endpoint, token, method)
+  download: (endpoint: string, token: string, ctx: ActionAPIContext, method: 'GET' | 'POST' = 'GET'): Promise<Blob> => {
+    return apiFetchBlob(endpoint, token, ctx, method)
   },
 
-  patch: <T>(endpoint: string, token: string, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
-    return apiFetch<T>(endpoint, { method: 'PATCH', token, body }, isPublic)
+  patch: <T>(endpoint: string, token: string, ctx: ActionAPIContext, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'PATCH', token, ctx, body }, isPublic)
   },
 }
 
