@@ -10,6 +10,10 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
+interface Window {
+  __applyTheme?: () => void
+}
+
 declare namespace App {
   interface SessionData {
     user: import('@/types/users').Details

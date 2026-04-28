@@ -20,6 +20,25 @@ const optionalTitle = title === null ? PUBLIC_NAME_PROJECT : `${title} | ${PUBLI
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href={'@/assets/images/favicon.ico'} />
     <title>{optionalTitle}</title>
+    <script is:inline>
+      ;(function () {
+        const STORAGE_KEY = 'gdd-theme'
+
+        function applyTheme() {
+          const stored = localStorage.getItem(STORAGE_KEY)
+          const theme = stored === 'light' || stored === 'dark' ? stored : 'system'
+          const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+          document.documentElement.classList.toggle('dark', isDark)
+          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
+        }
+
+        window.__applyTheme = applyTheme
+        applyTheme()
+
+        document.addEventListener('astro:after-swap', applyTheme)
+      })()
+    </script>
     <script src="@/scripts/modal.ts"></script>
     <ClientRouter />
   </head>

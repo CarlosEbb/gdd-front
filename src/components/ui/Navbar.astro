@@ -90,6 +90,52 @@ const email = user?.email ?? ''
 </script>
 
 <script>
+  type Theme = 'system' | 'light' | 'dark'
+
+  const STORAGE_KEY = 'gdd-theme'
+  const ACTIVE_CLASSES = ['bg-muted', 'text-heading']
+
+  const getTheme = (): Theme => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
+  }
+
+  const updateActiveButton = (theme: Theme) => {
+    document.querySelectorAll<HTMLButtonElement>('button[data-theme]').forEach((btn) => {
+      const isActive = btn.dataset.theme === theme
+      btn.classList.toggle('text-subheading', !isActive)
+      ACTIVE_CLASSES.forEach((cls) => btn.classList.toggle(cls, isActive))
+    })
+  }
+
+  let mediaQuery: MediaQueryList | null = null
+  const handleSystemChange = () => {
+    if (getTheme() === 'system') window.__applyTheme?.()
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    updateActiveButton(getTheme())
+
+    document.querySelectorAll<HTMLButtonElement>('button[data-theme]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const theme = (btn.dataset.theme as Theme) ?? 'system'
+        localStorage.setItem(STORAGE_KEY, theme)
+        window.__applyTheme?.()
+        updateActiveButton(theme)
+      })
+    })
+
+    mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    mediaQuery.addEventListener('change', handleSystemChange)
+  })
+
+  document.addEventListener('astro:before-swap', () => {
+    mediaQuery?.removeEventListener('change', handleSystemChange)
+    mediaQuery = null
+  })
+</script>
+
+<script>
   let progressInterval: NodeJS.Timeout | undefined
 
   document.addEventListener('astro:before-preparation', () => {

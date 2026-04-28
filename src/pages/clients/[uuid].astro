@@ -102,21 +102,21 @@ const selectedClient = {
 
           <div slot="footer" class="flex flex-col gap-4 px-2 text-sm transition-colors sm:flex-row sm:items-center sm:gap-8 sm:px-4">
             <div class="flex items-center gap-2">
-              <Icon name="FileText" class="h-4 w-4 text-gray-400" />
-              <span class="text-gray-500">Límite documentos:</span>
-              <span class="font-semibold text-gray-900">{selectedClient.nroDocumentsMax}</span>
+              <Icon name="FileText" class="h-4 w-4 text-subheading" />
+              <span class="text-subheading">Límite documentos:</span>
+              <span class="font-semibold text-heading">{selectedClient.nroDocumentsMax}</span>
             </div>
 
             <div class="flex items-center gap-2">
-              <Icon name="LayoutGrid" class="h-4 w-4 text-gray-400" />
-              <span class="text-gray-500">Espacios de trabajo:</span>
-              <span class="font-semibold text-gray-900">{selectedClient.nroWorkspacesMax}</span>
+              <Icon name="LayoutGrid" class="h-4 w-4 text-subheading" />
+              <span class="text-subheading">Espacios de trabajo:</span>
+              <span class="font-semibold text-heading">{selectedClient.nroWorkspacesMax}</span>
             </div>
 
             <div class="flex items-center gap-2 sm:ml-auto">
-              <Icon name="Calendar" class="h-4 w-4 text-gray-400" />
-              <span class="text-gray-500">Registro:</span>
-              <span class="font-medium text-gray-900">{formatDate(selectedClient.createdAt as string)}</span>
+              <Icon name="Calendar" class="h-4 w-4 text-subheading" />
+              <span class="text-subheading">Registro:</span>
+              <span class="font-medium text-heading">{formatDate(selectedClient.createdAt as string)}</span>
             </div>
           </div>
         </Card>

@@ -45,14 +45,14 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
       <img
         src={photo}
         alt="Foto de perfil"
-        class={`aspect-square size-28 rounded-full border border-gray-200 object-cover ${isHiddenPhoto}`}
+        class={`aspect-square size-28 rounded-full border border-border object-cover ${isHiddenPhoto}`}
         id="photo-profile"
         data-has-existing-photo={String(!hasPhoto)}
         data-original-photo={photo}
       />
 
       <div
-        class={`flex aspect-square size-28 items-center justify-center rounded-full border border-gray-200 bg-linear-to-bl from-blue-muted/30 to-blue-accent/30 object-cover text-5xl font-semibold ${isHiddenPhoto ? '' : 'hidden'}`}
+        class={`flex aspect-square size-28 items-center justify-center rounded-full border border-border bg-linear-to-bl from-blue-muted/30 to-blue-accent/30 object-cover text-5xl text-heading font-semibold ${isHiddenPhoto ? '' : 'hidden'}`}
         id="initials-profile"
       >
         {isEdit ? initials : ''}
@@ -60,7 +60,7 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
 
       <div class="w-11/12 overflow-hidden md:w-auto">
         <div class="flex items-center gap-2">
-          <label class="black cursor-pointer rounded-main bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">
+          <label class="black cursor-pointer rounded-main bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-border">
             <span class="sr-only">Cambiar foto</span>
             <input type="file" form="form-user" accept="image/jpeg, image/png" name="img_profile_file" class="cursor-pointer" />
           </label>

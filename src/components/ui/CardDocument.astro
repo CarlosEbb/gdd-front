@@ -82,12 +82,9 @@ const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWork
         <div class="py-1">
           {
             ACTIONS.map((action) => (
-              <button
-                class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-gray-700 transition-colors duration-150 hover:bg-neutral-100 hover:text-gray-800"
-                data-action={action.action}
-              >
+              <button class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-heading transition-colors duration-150 hover:bg-muted" data-action={action.action}>
                 <Icon name={action.icon as keyof typeof icons} stroke-width={1.5} class="size-4" />
-                <span>{action.name}</span>
+                {action.name}
               </button>
             ))
           }
