@@ -17,7 +17,7 @@ const email = user?.email ?? ''
   <div id="progress-bar" class="pointer-events-none fixed top-0 left-0 z-50 h-[3px] w-0 bg-primary opacity-0 transition-all duration-200 ease-out"></div>
   <div class="flex h-full items-center justify-center">
     <a href="/home">
-      <Image transition:name="image-transition" transition:animate="fade" src={logo} alt={PUBLIC_NAME_PROJECT} class="aspect-auto h-10 max-w-24 object-contain md:max-w-32" draggable="false" />
+      <img transition:name="image-transition" transition:animate="fade" src={logo.src} alt={PUBLIC_NAME_PROJECT} class="aspect-auto h-10 max-w-24 object-contain md:max-w-32" draggable="false" />
     </a>
   </div>
 
