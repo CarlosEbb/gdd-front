@@ -20,17 +20,16 @@ const currentYear = new Date().getFullYear()
     <div class="flex min-h-[calc(100vh-285px)] w-full max-w-none flex-col overflow-hidden bg-transparent md:max-w-xl md:rounded-main md:bg-white md:shadow-2xl lg:max-w-4xl lg:flex-row">
       <div class="relative hidden h-64 overflow-hidden lg:block lg:h-auto lg:w-1/2 lg:bg-none">
         <div class="absolute h-full w-full rotate-0 pe-2">
-          <Image src={bgAuth} format="webp" alt="Salto angel" class="h-full w-64 rounded-main object-cover select-none lg:w-full" draggable="false" />
+          <img src={bgAuth.src} alt="Salto angel" class="h-full w-64 rounded-main object-cover select-none lg:w-full" draggable="false" />
         </div>
       </div>
 
       <div class="relative flex flex-1 flex-col justify-center overflow-hidden p-8 md:bg-background">
         <header class="flex flex-col items-center">
-          <Image
-            src={logo}
+          <img
+            src={logo.src}
             transition:name="image-transition"
             transition:animate="fade"
-            format="webp"
             alt="CreaDocs"
             class="mb-7 aspect-auto w-64 object-cover select-none md:w-64 lg:w-72 xl:w-80"
             draggable="false"
