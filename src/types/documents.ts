@@ -14,10 +14,14 @@ export interface Document {
 }
 
 export interface Owner {
+  id?: number
+  uuid?: string
   name: string
   lastName: string
   photo: string
+  email?: string
 }
+
 export interface LastVersion {
   id: number
   uuid: string
@@ -108,6 +112,88 @@ export interface GeneratedDocument {
 export interface RequestForDocument {
   variables: Record<string, any>
   elementos: string[]
+}
+
+export interface DocumentVersion {
+  template: Template
+  versions: InfoVersion[]
+}
+
+export interface InfoVersion {
+  id: number
+  uuid: string
+  nameVersion: string
+  buildNumber: string
+  pathThumbnails: string
+  pathJson: string
+  ipAddress: string
+  idUser: number
+  uuidUser: string
+  idTemplate: number
+  uuidTemplate: string
+  idValidation: null
+  uuidValidation: null
+  createdAt: string
+  updatedAt: string
+  isPublished: boolean
+  publishedBy: PublishedBy | null
+}
+
+export interface PublishedBy {
+  id: number
+  uuid: string
+  name: string
+  lastName: string
+  photo: string | null
+}
+
+export interface Template {
+  title: string
+  name: string
+  description: string
+}
+
+export interface DocumentVersionHistory {
+  id: number
+  uuid: string
+  nameVersion: string
+  buildNumber: string
+  pathThumbnails: string
+  pathJson: string
+  ipAddress: null | string
+  idUser: number | null
+  uuidUser: null | string
+  idTemplate: number
+  uuidTemplate: string
+  idValidation: null
+  uuidValidation: null
+  createdAt: string
+  updatedAt: string
+  user: User | null
+  publication: Publication | null
+}
+
+export interface Publication {
+  id: number
+  uuid: string
+  publishedDate: string
+  idUser: number
+  uuidUser: string
+  idTemplate: number
+  uuidTemplate: string
+  idVersion: number
+  uuidVersion: string
+  createdAt: string
+  updatedAt: string
+  user: User
+}
+
+export interface User {
+  id: number
+  uuid: string
+  name: string
+  lastName: string
+  email?: string
 }
 
 type Status = 'active' | 'deleted'
