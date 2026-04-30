@@ -12,12 +12,21 @@ interface Props {
 const { title, navigation, titleForPage } = Astro.props
 
 const pathname = Astro.url.pathname
-const currentPath = pathname + Astro.url.search
+const currentPath = pathname
+const hasActions = Astro.slots.has('actions')
 ---
 
 <MainLayout title={title}>
   <Container>
-    <Header title={titleForPage} subtitle="Consulta y gestiona la API de los documentos" />
+    <Header title={titleForPage} subtitle="Consulta y gestiona la API de los documentos">
+      {
+        hasActions && (
+          <Fragment slot="actions">
+            <slot name="actions" />
+          </Fragment>
+        )
+      }
+    </Header>
 
     <section class="mb-10 border-b border-border">
       <ul class="flex gap-x-8">
