@@ -8,26 +8,30 @@ type Props = {
   workspace: Workspace
   index: number
 }
-
 const GRADIENTS: Record<number, any> = {
-  0: { gradientBg: 'to-purple-50 dark:to-purple-950 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-purple-100', colorIcon: 'text-purple-600' },
-  1: { gradientBg: 'to-blue-50 dark:to-blue-950 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-blue-100', colorIcon: 'text-blue-600' },
-  2: { gradientBg: 'to-red-50 dark:to-red-950 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-red-100', colorIcon: 'text-red-600' },
-  3: { gradientBg: 'to-green-50 dark:to-green-950 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-green-100', colorIcon: 'text-green-600' },
+  0: { gradientBg: 'to-purple-50 dark:to-purple-950/20 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-purple-100', colorIcon: 'text-purple-600' },
+  1: { gradientBg: 'to-blue-50 dark:to-blue-950/20 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-blue-100', colorIcon: 'text-blue-600' },
+  2: { gradientBg: 'to-red-50 dark:to-red-950/20 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-red-100', colorIcon: 'text-red-600' },
+  3: { gradientBg: 'to-green-50 dark:to-green-950/20 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-green-100', colorIcon: 'text-green-600' },
 }
 
 const { workspace, index } = Astro.props
 ---
 
 <a
-  class={`flex cursor-pointer items-center gap-2 rounded-lg border border-border p-4 md:p-3 text-center hover:shadow-base transition-all duration-300 bg-background bg-linear-to-tr ${GRADIENTS[index].gradientBg}`}
+  class={`group relative p-6 bg-background border border-border rounded-main cursor-pointer flex flex-col items-center text-center overflow-hidden space-y-3 bg-linear-to-t ${GRADIENTS[index % 4].gradientBg}`}
   href={`/workspaces/${workspace.uuid}`}
 >
-  <div class={`rounded-xl ${GRADIENTS[index].bgIcon} p-2`}>
-    <Icon name={workspace.icon as keyof typeof icons} class={`size-5 ${GRADIENTS[index].colorIcon}`} stroke-width={1.5} />
+  <div>
+    <Icon name={workspace.icon as keyof typeof icons} class={`size-10 ${GRADIENTS[index % 4].colorIcon}`} />
   </div>
-  <div class="flex flex-col items-start justify-start">
+  <div class="flex flex-col text-center">
     <span class="text-sm font-medium text-heading" transition:animate="fade" transition:name="title">{workspace.name}</span>
     <span class="text-xs text-subheading">{formatISODateWithIntl(workspace.updatedAt)}</span>
+  </div>
+
+  <div class="flex w-full items-center justify-between border-t border-border pt-4 text-xs font-bold text-subheading">
+    <span>Documentos</span>
+    <span class="text-heading">{workspace.templates.length}</span>
   </div>
 </a>
