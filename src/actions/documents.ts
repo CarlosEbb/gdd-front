@@ -1,7 +1,7 @@
 import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
-import type { CreateDocument, CreateNewVersion, Document, GeneratedDocument, RequestForDocument, SchemaFile } from '@/types/documents'
+import type { CreateDocument, CreateNewVersion, Document, DocumentVersion, DocumentVersionHistory, GeneratedDocument, RequestForDocument, SchemaFile } from '@/types/documents'
 import { requireAuth, requirePermission } from '@/lib/permissions'
 import { PAPER_SIZES, ORIENTATION, MARGIN_PRESETS } from '@/constants/file-settings'
 
@@ -224,6 +224,38 @@ export const documents = {
       const url = `/documents/validate/variables/${uuid_template}/${build_number}`
       try {
         const response = await http.post(url, token, request, validation_rules)
+        return response
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
+
+  getVersions: defineAction({
+    input: z.object({
+      uuid_template: z.string(),
+    }),
+    handler: async ({ uuid_template }, request) => {
+      const token = await requireAuth(request)
+      const url = `/template/${uuid_template}/versions/user`
+      try {
+        const response = await http.get<DocumentVersion>(url, token, request)
+        return response
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
+
+  getHistory: defineAction({
+    input: z.object({
+      uuid_template: z.string(),
+    }),
+    handler: async ({ uuid_template }, request) => {
+      const token = await requireAuth(request)
+      const url = `/template/${uuid_template}/versions/history`
+      try {
+        const response = await http.get<DocumentVersionHistory[]>(url, token, request)
         return response
       } catch (error) {
         await handleApiError(error, request)
