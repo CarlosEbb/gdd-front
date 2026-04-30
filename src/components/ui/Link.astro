@@ -16,7 +16,7 @@ export interface Props extends HTMLAttributes<'a'> {
 const { variant = 'default', size = 'default', class: className, href, rounded = 'default', target = '_self', icon, iconPosition = 'left', ...props } = Astro.props
 
 const baseClasses =
-  'inline-flex items-center font-normal cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+  'inline-flex items-center font-normal cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-1 focus-visible:ring-slate-950 focus:ring-offset-1 disabled:pointer-events-none disabled:opacity-50'
 
 const variantClasses = {
   default: 'border border-primary bg-primary text-white hover:bg-primary/80',

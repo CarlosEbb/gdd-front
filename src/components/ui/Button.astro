@@ -16,7 +16,7 @@ export interface Props extends HTMLAttributes<'button'> {
 const { variant = 'default', size = 'default', class: className, rounded = 'default', loadingText, showTextOnLoading = true, icon, iconPosition = 'left', ...props } = Astro.props
 
 const baseClasses =
-  'inline-flex items-center font-normal cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none disabled:bg-neutral-200 disabled:border-border disabled:text-neutral-600'
+  'inline-flex items-center font-normal cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-1 focus-visible:ring-slate-950 focus:ring-offset-1 disabled:cursor-not-allowed disabled:pointer-events-none disabled:bg-neutral-200 disabled:border-border disabled:text-neutral-600'
 
 const variantClasses = {
   default: 'border border-primary bg-primary text-white hover:bg-primary/80',
