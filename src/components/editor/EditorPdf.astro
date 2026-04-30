@@ -22,7 +22,6 @@ const { uuid } = Astro.props
 const urlParams = Astro.url.searchParams
 const buildNumber = urlParams.get('build_number') as string
 const hasBuildNumber = urlParams.has('build_number')
-const idWorkspace = urlParams.get('id_workspace') as string
 const nameDocument = urlParams.get('name_document') as string
 let schemaFile: SchemaFile | null = null
 
@@ -36,35 +35,7 @@ if (hasBuildNumber) {
   schemaFile = data?.data || null
 }
 
-const getWorkspace = await Astro.session?.get('workspaces')
-
-const { data: documents, error: errorDocuments } = await Astro.callAction(actions.documents.getByUser, { limit: null })
-if (errorDocuments) {
-  console.error('Error al obtener los documentos:', errorDocuments)
-  return
-}
-
-const documentsWorkspace = documents?.data
-const removeCurrentDocument = documentsWorkspace?.filter((document: any) => document.uuid !== uuid)
-
-const documentsByWorkspace =
-  (removeCurrentDocument?.reduce((acc: any, document: any) => {
-    const workspaceName = getWorkspace?.find((workspace) => Number(workspace.id) === Number(document.uuidWorkspace))?.name
-    if (!acc[workspaceName]) {
-      acc[workspaceName] = []
-    }
-    const infoDocument = {
-      uuid: document.uuid,
-      title: document.title,
-      buildNumber: document.lastVersion?.buildNumber,
-      idWorkspace: document.uuidWorkspace,
-    }
-    acc[workspaceName].push(infoDocument)
-    return acc
-  }, {}) as Record<string, { uuid: string; title: string; buildNumber: string; idWorkspace: number }[]>) || {}
-
 const SHOW_PAGE_FOR_VIEW = false
-const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 0
 ---
 
 <Sidebar variant="drawer" initialVisible={false} showToggleButton={false} />
@@ -80,7 +51,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
         </a>
       </div>
     </div>
-    <div class="ms-auto flex shrink-0 items-center gap-x-1">
+    <div class="ms-auto flex shrink-0 items-center gap-x-3">
       <Button
         type="button"
         size="sm"
@@ -154,7 +125,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
       </Button>
       <div class="hidden shrink-0 items-center gap-x-0.5 md:flex">
         <Search size="sm" class="me-1" />
-        <div class="mx-1 hidden h-8 w-px shrink-0 bg-gray-200 lg:block"></div>
+        <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
         <Button type="button" size="sm" icon="FileText" variant="ghost" id="generatePdfBtn" title="Visualizar PDF" class="shrink-0">
           <span class="hidden xl:inline">Visualizar</span>
         </Button>
@@ -174,12 +145,12 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
         />
       </div>
 
-      <div class="mx-1 hidden h-8 w-px shrink-0 bg-gray-200 lg:block"></div>
+      <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
 
-      <div class="hidden shrink-0 items-center gap-x-0.5 lg:flex">
+      <div class="hidden shrink-0 items-center gap-x-2 lg:flex">
         <Button type="button" size="icon" variant="ghost" data-open-modal="delete-document" title="Eliminar documento" class="!hover:bg-red-50 !hover:text-red-600 text-red-500" icon="Trash" />
 
-        <div class="mx-1 hidden h-8 w-px shrink-0 bg-gray-200 lg:block"></div>
+        <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
 
         <Link href={`/config/documentation/${uuid}?build_number=${buildNumber}`} id="documentationLink" size="sm" variant="ghost" title="Documentación" icon="FileInput">
           <span class="hidden xl:inline">Documentación</span>
@@ -192,52 +163,40 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
 
       <div class="lg:hidden">
         <Dropdown buttonLabel="Más opciones" size="sm" position="right" mobileIcon="Ellipsis" hideLabel>
-          <div class="mx-2 border-b border-gray-200 p-2.5 lg:hidden">
-            <h3 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Documento</h3>
+          <div class="mx-2 border-b border-border p-2.5 lg:hidden">
+            <h3 class="mb-2 text-xs font-semibold tracking-wide text-subheading uppercase">Documento</h3>
             <ul class="space-y-1">
               <li class="md:hidden">
-                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="new-version">
+                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" data-mobile-action="new-version">
                   <Icon name="GitBranch" class="size-4" stroke-width={1.5} />
                   Crear versión
                 </button>
               </li>
               <li class="md:hidden">
-                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="generate-pdf">
+                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" data-mobile-action="generate-pdf">
                   <Icon name="FileText" class="size-4" stroke-width={1.5} />
                   Visualizar
                 </button>
               </li>
               <li class="md:hidden">
-                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="fullscreen">
-                  <Icon name="Expand" class="size-4" stroke-width={1.5} />
-                  Pantalla completa
-                </button>
-              </li>
-              <li class="md:hidden">
-                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="document-settings">
+                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" data-mobile-action="document-settings">
                   <Icon name="Settings" class="size-4" stroke-width={1.5} />
                   Configuración del documento
-                </button>
-              </li>
-              <li>
-                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="insert-pdf">
-                  <Icon name="FileInput" class="size-4" stroke-width={1.5} />
-                  Insertar PDF
                 </button>
               </li>
             </ul>
           </div>
           <div class="mx-2 p-2.5">
-            <h3 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase lg:hidden">Configuración</h3>
+            <h3 class="mb-2 text-xs font-semibold tracking-wide text-subheading uppercase lg:hidden">Configuración</h3>
             <ul class="space-y-1">
               <li>
-                <a href={`/config/documentation/${uuid}?build_number=${buildNumber}`} class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
+                <a href={`/config/documentation/${uuid}?build_number=${buildNumber}`} class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted">
                   <Icon name="FileInput" class="size-4" stroke-width={1.5} />
                   Documentación
                 </a>
               </li>
               <li>
-                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-red-600 hover:bg-red-50" data-mobile-action="delete">
+                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-destructive hover:bg-destructive/20" data-mobile-action="delete">
                   <Icon name="Trash2" class="size-4" stroke-width={1.5} />
                   Eliminar
                 </button>
@@ -261,7 +220,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
       <Input label="Versión" name="name_version" placeholder="Ingrese la versión del documento" required />
       <input type="hidden" name="uuid_template" value={uuid} />
     </div>
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+    <div class="flex justify-end space-x-4 border-t border-border pt-4">
       <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
       <Button type="submit" size="sm" id="btn-new-version-document" loadingText="Guardando...">Crear versión</Button>
     </div>
@@ -277,7 +236,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
       <input type="hidden" name="uuid_template" value={uuid} />
       <input type="hidden" name="name_version" value={buildNumber} />
     </div>
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+    <div class="flex justify-end space-x-4 border-t border-border pt-4">
       <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
       <Button type="submit" size="sm" id="btn-delete-document" loadingText="Eliminando...">Eliminar documento</Button>
     </div>
@@ -303,7 +262,7 @@ const validateDocumentsByWorkspace = Object.keys(documentsByWorkspace).length > 
       Los cambios se aplican al documento actual. Recuerda presionar <b>Guardar</b> para persistirlos.
     </p>
 
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+    <div class="flex justify-end space-x-4 border-t border-border pt-4">
       <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
       <Button type="submit" size="sm" id="btn-apply-document-settings">Aplicar</Button>
     </div>
