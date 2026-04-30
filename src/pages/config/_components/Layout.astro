@@ -1,6 +1,7 @@
 ---
+import Dropdown from '@/components/ui/Dropdown.astro'
 import TabsLayout from '@/layouts/TabsLayout.astro'
-
+import { actions } from 'astro:actions'
 interface Props {
   title: string
 }
@@ -11,13 +12,34 @@ const { title } = Astro.props
 const build_number = Astro.url.searchParams.get('build_number') as string
 
 const NAVIGATION = [
-  { href: `/config/documentation/${uuid}?build_number=${build_number}`, label: 'Documentación' },
-  { href: `/config/validation/${uuid}?build_number=${build_number}`, label: 'Validaciones' },
-  { href: `/config/security/${uuid}?build_number=${build_number}`, label: 'Seguridad' },
-  { href: `/config/version/${uuid}?build_number=${build_number}`, label: 'Versiones' },
+  { href: `/config/documentation/${uuid}`, label: 'Documentación' },
+  { href: `/config/validation/${uuid}`, label: 'Validaciones' },
+  { href: `/config/security/${uuid}`, label: 'Seguridad' },
+  { href: `/config/version/${uuid}`, label: 'Versiones' },
 ]
+
+const { data } = await Astro.callAction(actions.documents.getByUser, { limit: null })
+const documents = data?.data ?? []
+const getCurrentUrl = Astro.url.pathname
+const [_, page, tab] = getCurrentUrl.split('/')
 ---
 
 <TabsLayout title={title} navigation={NAVIGATION} titleForPage="Gestionar documento">
+  <div slot="actions">
+    <Dropdown shadow="none" buttonLabel="Cambiar documento">
+      <ul>
+        {
+          documents.map((document) => (
+            <li>
+              <a href={`/${page}/${tab}/${document.uuid}?build_number=${build_number}`} class="flex items-center gap-x-2 px-4 py-2 text-sm text-heading hover:bg-foreground">
+                {document.name}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </Dropdown>
+  </div>
+
   <slot />
 </TabsLayout>
