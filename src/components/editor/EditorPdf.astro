@@ -41,7 +41,7 @@ const SHOW_PAGE_FOR_VIEW = false
 <Sidebar variant="drawer" initialVisible={false} showToggleButton={false} />
 
 <nav class="flex h-14" id="editor-nav">
-  <div class="flex w-full items-center border-b border-border bg-foreground px-2">
+  <div class="flex w-full items-center border-b border-border bg-background px-2">
     <div class="flex items-center gap-2">
       <Button variant="ghost" size="icon" class="shrink-0" aria-label="Abrir menú" data-sidebar-toggle icon="Menu" />
 
@@ -120,21 +120,20 @@ const SHOW_PAGE_FOR_VIEW = false
         </div>
         <div class="mx-1 h-8 w-px shrink-0 bg-gray-200"></div>
       </div>
-      <Button type="button" size="sm" variant="ghost" id="pagination-create-page" title="Crear pagina" aria-label="Crear pagina" icon="FilePlus">
+      <Button type="button" size="sm" variant="transparent" id="pagination-create-page" title="Crear pagina" aria-label="Crear pagina" icon="FilePlus">
         <span class="hidden xl:inline">Crear pagina</span>
       </Button>
       <div class="hidden shrink-0 items-center gap-x-0.5 md:flex">
         <Search size="sm" class="me-1" />
         <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
-        <Button type="button" size="sm" icon="FileText" variant="ghost" id="generatePdfBtn" title="Visualizar PDF" class="shrink-0">
+        <Button type="button" size="sm" icon="FileText" variant="transparent" id="generatePdfBtn" title="Visualizar PDF" class="shrink-0">
           <span class="hidden xl:inline">Visualizar</span>
         </Button>
-        <Button type="button" icon="Expand" size="icon" variant="ghost" id="toggleFullscreenBtn" title="Pantalla completa" class="shrink-0" />
-        <Button type="button" size="icon" variant="ghost" id="btn-document-settings" data-open-modal="document-settings" title="Configuración del documento" class="shrink-0" icon="Settings" />
+        <Button type="button" size="icon" variant="transparent" id="btn-document-settings" data-open-modal="document-settings" title="Configuración del documento" class="shrink-0" icon="Settings" />
         <Button
           type="button"
           size="icon"
-          variant="ghost"
+          variant="transparent"
           id="btn-new-version-document"
           loadingText=""
           showTextOnLoading={false}
@@ -148,11 +147,11 @@ const SHOW_PAGE_FOR_VIEW = false
       <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
 
       <div class="hidden shrink-0 items-center gap-x-2 lg:flex">
-        <Button type="button" size="icon" variant="ghost" data-open-modal="delete-document" title="Eliminar documento" class="!hover:bg-red-50 !hover:text-red-600 text-red-500" icon="Trash" />
+        <Button type="button" size="icon" variant="transparent" data-open-modal="delete-document" title="Eliminar documento" class="!hover:bg-red-50 !hover:text-red-600 text-red-500" icon="Trash" />
 
         <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
 
-        <Link href={`/config/documentation/${uuid}?build_number=${buildNumber}`} id="documentationLink" size="sm" variant="ghost" title="Documentación" icon="FileInput">
+        <Link href={`/config/documentation/${uuid}?build_number=${buildNumber}`} id="documentationLink" size="sm" variant="transparent" title="Documentación" icon="FileInput">
           <span class="hidden xl:inline">Documentación</span>
         </Link>
 
@@ -272,6 +271,7 @@ const SHOW_PAGE_FOR_VIEW = false
 <script type="application/json" id="schema-file-data" set:html={JSON.stringify(schemaFile)} />
 <script>
   import { callAction, setButtonLoading, compressJson } from '@/scripts/utils.js'
+  import { getComputedColorInHex } from '@/scripts/color-utils.js'
   import { toast } from '@/scripts/toast'
   import { actions } from 'astro:actions'
   import { navigate } from 'astro:transitions/client'
@@ -749,6 +749,17 @@ const SHOW_PAGE_FOR_VIEW = false
           svg,
         }
 
+        // Leer tema local
+        const storedTheme = localStorage.getItem('gdd-theme')
+        const isDark = storedTheme === 'dark' || (storedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+        const primaryColor = getComputedColorInHex('--primary') || '#2c62db'
+        // Variables predeterminadas basadas en Tailwind, para dark mode adaptado
+        const colorBgBase = isDark ? '#121212' : '#ffffff'
+        const colorTextBase = isDark ? '#ededed' : '#171717'
+        const colorBorder = isDark ? '#333333' : '#e5e7eb'
+        const colorBgLayout = isDark ? '#1f1f1f' : '#f9fafb'
+
         // Inicializar paginación
         paginationManager = new PaginationManager(template)
         const initialTemplate = paginationManager.isSingleChunk ? template : paginationManager.getChunkedTemplate()
@@ -761,6 +772,18 @@ const SHOW_PAGE_FOR_VIEW = false
           options: {
             lang: 'es',
             font: fonts,
+            theme: {
+              token: {
+                colorPrimary: primaryColor,
+                colorBgBase: colorBgBase,
+                colorTextBase: colorTextBase,
+                colorBorder: colorBorder,
+                colorBgLayout: colorBgLayout,
+                colorBgElevated: isDark ? '#262626' : '#ffffff',
+                colorBgSpotlight: isDark ? '#262626' : '#ffffff',
+                colorFillSecondary: isDark ? '#333333' : '#f3f4f6',
+              },
+            },
           },
         })
         domContainer.addEventListener('wheel', handleEditorWheel, { passive: false })
@@ -1083,3 +1106,30 @@ const SHOW_PAGE_FOR_VIEW = false
     initializePage()
   })
 </script>
+
+<style is:global>
+  /* Estos estilos se aplicarán al contenedor del editor (que contiene iframes y divs internos de pdfme)
+     Especialmente útiles para forzar fondos oscuros en áreas donde la API theme.token no llega. */
+  .dark #container {
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+  }
+
+  .dark #container * {
+    scrollbar-color: var(--border) var(--background);
+  }
+
+  /* Ajuste para los modales de antd que usa internamente pdfme si llegaran a salir del div principal */
+  .dark .ant-modal-content,
+  .dark .ant-popover-inner,
+  .dark .ant-select-dropdown {
+    background-color: var(--background) !important;
+    color: var(--heading) !important;
+    border: 1px solid var(--border) !important;
+  }
+
+  .dark .ant-menu-sub {
+    background-color: var(--background) !important;
+    color: var(--heading) !important;
+  }
+</style>
