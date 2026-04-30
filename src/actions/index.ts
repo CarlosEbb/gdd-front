@@ -7,6 +7,7 @@ import { servers } from './servers'
 import { clients } from './clients'
 import { profile } from './profile'
 import { permissions } from './permissions'
+import { publications } from './publications'
 
 export const server = {
   auth,
@@ -18,4 +19,5 @@ export const server = {
   clients,
   profile,
   permissions,
+  publications,
 }
