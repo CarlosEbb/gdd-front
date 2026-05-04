@@ -7,7 +7,7 @@ import { actions } from 'astro:actions'
 import DataGrid from '@/components/ui/DataGrid.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import type { DetailsClient } from '@/types/clients'
-import Input from '@/components/form/Input.astro'
+import SearchFilter from '@/components/form/SearchFilter.astro'
 import { formatDate } from '@/scripts/utils'
 import Header from '@/components/ui/Header.astro'
 import CardList from '@/components/ui/CardList.astro'
@@ -36,13 +36,20 @@ const totalClients = clients.length
       <EmptyState slot="empty-state" title="No hay clientes disponibles" description="No tienes ningún cliente registrado." href={currentPath} state="notFound" />
 
       <div slot="header" class="mb-4">
-        <Input name="search" type="search" placeholder="Buscar cliente..." />
+        <SearchFilter placeholder="Buscar cliente..." target=".client-item" keys={['name', 'rif']} />
       </div>
 
       <div class="overflow-hidden rounded-main border border-border bg-background">
         {
           clients.map((client: DetailsClient) => (
-            <CardList title={client.name} description={client.rif} secondaryText={client.createdAt ? `Creado: ${formatDate(client.createdAt as string)}` : ''}>
+            <CardList
+              class="client-item"
+              data-name={client.name}
+              data-rif={client.rif}
+              title={client.name}
+              description={client.rif}
+              secondaryText={client.createdAt ? `Creado: ${formatDate(client.createdAt as string)}` : ''}
+            >
               <Avatar slot="avatar" size="lg" name={client.name} lastName={client.rif} photo={client.logo} />
               <div slot="actions" class="flex gap-1">
                 <PermissionGuard permission="clients.update">

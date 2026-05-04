@@ -4,7 +4,7 @@ import Container from '@/components/ui/Container.astro'
 import CardList from '@/components/ui/CardList.astro'
 import Link from '@/components/ui/Link.astro'
 import Icon from '@/components/ui/Icon.astro'
-import Input from '@/components/form/Input.astro'
+import SearchFilter from '@/components/form/SearchFilter.astro'
 import Header from '@/components/ui/Header.astro'
 import { actions } from 'astro:actions'
 import type { Details } from '@/types/users'
@@ -31,13 +31,20 @@ const totalUsers = users.length
 
     <StateSwitch isEmpty={!hasUsers} hasError={!!error}>
       <div class="mb-4">
-        <Input name="search" type="search" placeholder="Buscar usuario..." />
+        <SearchFilter placeholder="Buscar usuario..." target=".user-item" keys={['name', 'email']} />
       </div>
 
       <div class="mb-10 overflow-hidden rounded-main border border-border bg-background">
         {
           users.map((user: Details) => (
-            <CardList title={user.name} description={user.email} secondaryText={user.lastConnection ? `Última conexión: ${formatDate(user.lastConnection)}` : ''}>
+            <CardList
+              class="user-item"
+              data-name={`${user.name} ${user.lastName ?? ''}`}
+              data-email={user.email}
+              title={user.name}
+              description={user.email}
+              secondaryText={user.lastConnection ? `Última conexión: ${formatDate(user.lastConnection)}` : ''}
+            >
               <Avatar slot="avatar" size="lg" name={user.name} lastName={user.lastName} photo={user.photo} />
               <div slot="actions" class="flex gap-1">
                 <PermissionGuard permission="users.update">

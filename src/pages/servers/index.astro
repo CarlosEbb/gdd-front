@@ -8,7 +8,7 @@ import Container from '@/components/ui/Container.astro'
 import Icon from '@/components/ui/Icon.astro'
 import Link from '@/components/ui/Link.astro'
 import DataGrid from '@/components/ui/DataGrid.astro'
-import Input from '@/components/form/Input.astro'
+import SearchFilter from '@/components/form/SearchFilter.astro'
 import Header from '@/components/ui/Header.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
@@ -33,11 +33,11 @@ const hasServers = servers.length > 0
       <EmptyState slot="empty-state" title="No hay servidores disponibles" description="No tienes ningún servidor registrado." href={currentPath} state="notFound" />
 
       <div slot="header" class="mb-4">
-        <Input name="search" type="search" placeholder="Buscar servidor..." />
+        <SearchFilter placeholder="Buscar servidor..." target=".server-item" keys={['ip', 'puerto']} />
       </div>
       {
         servers.map((server: DetailsServer) => (
-          <List icon="Server" title={`Puerto: ${server.puerto}`} subtitle={`IP: ${server.ip}`}>
+          <List class="server-item" data-ip={server.ip} data-puerto={String(server.puerto)} icon="Server" title={`Puerto: ${server.puerto}`} subtitle={`IP: ${server.ip}`}>
             <div slot="actions">
               <Link href={`/servers/${server.uuid}`} variant="transparent" size="icon">
                 <Icon name="ChevronRight" stroke-width={1.5} size={16} />

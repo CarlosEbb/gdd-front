@@ -5,7 +5,7 @@ import Header from '@/components/ui/Header.astro'
 import { actions } from 'astro:actions'
 import DataGrid from '@/components/ui/DataGrid.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
-import Input from '@/components/form/Input.astro'
+import SearchFilter from '@/components/form/SearchFilter.astro'
 import Card from '@/components/ui/Card.astro'
 import Icon from '@/components/ui/Icon.astro'
 import { formatISODateWithIntl } from '@/scripts/utils'
@@ -29,16 +29,12 @@ const hasWorkspaces = workspaces.length > 0
     </Header>
 
     <DataGrid hasData={hasWorkspaces} isError={error} grid="x2">
-      <EmptyState slot="error-state" title="Error al cargar los espacios" description="Intenta nuevamente." href={currentPath} state="error" />
-
-      <EmptyState slot="empty-state" title="No hay espacios disponibles" description="No tienes ningún espacio registrado." href={currentPath} state="notFound" />
-
       <div slot="header" class="mb-4">
-        <Input name="search" type="search" placeholder="Buscar espacio..." />
+        <SearchFilter placeholder="Buscar espacio..." target=".workspace-item" keys="name" />
       </div>
       {
         workspaces.map((workspace: any) => (
-          <Card href={`/workspaces/${workspace.uuid}`}>
+          <Card href={`/workspaces/${workspace.uuid}`} class="workspace-item" data-name={workspace.name}>
             <div class="flex items-center gap-3">
               <div class="flex size-9 items-center justify-center rounded-main border border-border text-heading">
                 <Icon name={workspace.icon || 'Folder'} stroke-width={1.6} size={18} />
@@ -69,6 +65,10 @@ const hasWorkspaces = workspaces.length > 0
           </Card>
         ))
       }
+
+      <EmptyState slot="error-state" title="Error al cargar los espacios" description="Intenta nuevamente." href={currentPath} state="error" />
+
+      <EmptyState slot="empty-state" title="No hay espacios disponibles" description="No tienes ningún espacio registrado." href={currentPath} state="notFound" />
     </DataGrid>
 
     <WorkspaceFormModal mode="create" />
