@@ -3,7 +3,6 @@ import MainLayout from '@/layouts/MainLayout.astro'
 import Container from '@/components/ui/Container.astro'
 import CardList from '@/components/ui/CardList.astro'
 import Link from '@/components/ui/Link.astro'
-import Icon from '@/components/ui/Icon.astro'
 import SearchFilter from '@/components/form/SearchFilter.astro'
 import Header from '@/components/ui/Header.astro'
 import { actions } from 'astro:actions'
@@ -48,13 +47,9 @@ const totalUsers = users.length
               <Avatar slot="avatar" size="lg" name={user.name} lastName={user.lastName} photo={user.photo} />
               <div slot="actions" class="flex gap-1">
                 <PermissionGuard permission="users.update">
-                  <Link href={`/users/${user.uuid}/edit`} variant="outline" size="icon">
-                    <Icon stroke-width={1.5} name="Pencil" size={16} />
-                  </Link>
+                  <Link href={`/users/${user.uuid}/edit`} variant="outline" size="sm" iconOnly icon="Pencil" />
                 </PermissionGuard>
-                <Link href={`/users/${user.uuid}`} variant="outline" size="icon">
-                  <Icon stroke-width={1.5} name="ChevronRight" size={16} />
-                </Link>
+                <Link href={`/users/${user.uuid}`} variant="outline" size="sm" iconOnly icon="ChevronRight" />
               </div>
             </CardList>
           ))

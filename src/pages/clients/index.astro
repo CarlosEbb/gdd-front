@@ -53,11 +53,11 @@ const totalClients = clients.length
               <Avatar slot="avatar" size="lg" name={client.name} lastName={client.rif} photo={client.logo} />
               <div slot="actions" class="flex gap-1">
                 <PermissionGuard permission="clients.update">
-                  <Link href={`/clients/${client.uuid}/edit`} variant="outline" size="icon">
+                  <Link href={`/clients/${client.uuid}/edit`} variant="outline" size="sm" iconOnly>
                     <Icon stroke-width={1.5} name="Pencil" size={16} />
                   </Link>
                 </PermissionGuard>
-                <Link href={`/clients/${client.uuid}`} variant="outline" size="icon">
+                <Link href={`/clients/${client.uuid}`} variant="outline" size="sm" iconOnly>
                   <Icon stroke-width={1.5} name="ChevronRight" size={16} />
                 </Link>
               </div>
