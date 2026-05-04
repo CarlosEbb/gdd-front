@@ -1,0 +1,185 @@
+---
+import Input from './Input.astro'
+import EmptyState from '../ui/EmptyState.astro'
+
+interface Props {
+  name?: string
+  placeholder?: string
+  target: string
+  keys: string | string[]
+  scope?: string
+  emptyTarget?: string
+  emptyTitle?: string
+  emptyDescription?: string
+  showEmptyState?: boolean
+  minLength?: number
+  debounce?: number
+  id?: string
+  class?: string
+}
+
+const {
+  name = 'search',
+  placeholder = 'Buscar...',
+  target,
+  keys,
+  scope,
+  emptyTarget,
+  emptyTitle = 'Sin resultados',
+  emptyDescription = 'No se encontraron coincidencias para tu búsqueda.',
+  showEmptyState = true,
+  minLength = 0,
+  debounce = 200,
+  id,
+  class: className,
+} = Astro.props
+
+const keysList = Array.isArray(keys) ? keys : [keys]
+const renderInternalEmpty = showEmptyState && !emptyTarget
+---
+
+<div
+  data-search-filter
+  data-target={target}
+  data-keys={JSON.stringify(keysList)}
+  data-scope={scope}
+  data-empty-target={emptyTarget}
+  data-min-length={String(minLength)}
+  data-debounce={String(debounce)}
+  class={className}
+>
+  <Input name={name} type="search" placeholder={placeholder} id={id} autocomplete="off" />
+
+  {
+    renderInternalEmpty && (
+      <div data-search-filter-empty hidden class="mt-4">
+        <EmptyState title={emptyTitle} description={emptyDescription} state="notFound" hiddenAction showBorder={false} />
+      </div>
+    )
+  }
+</div>
+
+<script>
+  type FilterConfig = {
+    wrapper: HTMLElement
+    input: HTMLInputElement
+    target: string
+    keys: string[]
+    scope: ParentNode
+    emptyEl: HTMLElement | null
+    minLength: number
+    debounceMs: number
+  }
+
+  const normalize = (value: string): string =>
+    value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+
+  const parseKeys = (raw: string | undefined): string[] => {
+    if (!raw) return []
+    try {
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? parsed.map(String) : [String(parsed)]
+    } catch {
+      return [raw]
+    }
+  }
+
+  const toDatasetKey = (key: string): string => key.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
+
+  const applyFilter = (config: FilterConfig): void => {
+    const term = normalize(config.input.value)
+    const items = config.scope.querySelectorAll<HTMLElement>(config.target)
+    const shouldFilter = term.length >= config.minLength && term.length > 0
+
+    let visibleCount = 0
+
+    items.forEach((item) => {
+      if (!shouldFilter) {
+        item.hidden = false
+        visibleCount++
+        return
+      }
+
+      const match = config.keys.some((key) => {
+        const value = item.dataset[toDatasetKey(key)] ?? ''
+        return normalize(value).includes(term)
+      })
+
+      item.hidden = !match
+      if (match) visibleCount++
+    })
+
+    if (config.emptyEl) {
+      const showEmpty = shouldFilter && visibleCount === 0
+      config.emptyEl.hidden = !showEmpty
+    }
+  }
+
+  const debounce = <T extends (...args: any[]) => void>(fn: T, wait: number): T => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+    return ((...args: Parameters<T>) => {
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => fn(...args), wait)
+    }) as T
+  }
+
+  const initSearchFilter = (wrapper: HTMLElement): void => {
+    if (wrapper.dataset.searchFilterInitialized === 'true') return
+
+    const input = wrapper.querySelector<HTMLInputElement>('input[type="search"]')
+    if (!input) return
+
+    const target = wrapper.dataset.target
+    if (!target) return
+
+    const keys = parseKeys(wrapper.dataset.keys)
+    if (keys.length === 0) return
+
+    const scopeSelector = wrapper.dataset.scope
+    const scope: ParentNode = scopeSelector ? (document.querySelector(scopeSelector) ?? document) : document
+
+    const emptySelector = wrapper.dataset.emptyTarget
+    const emptyEl = emptySelector ? document.querySelector<HTMLElement>(emptySelector) : wrapper.querySelector<HTMLElement>('[data-search-filter-empty]')
+
+    const minLength = Number(wrapper.dataset.minLength ?? '0') || 0
+    const debounceMs = Number(wrapper.dataset.debounce ?? '200') || 0
+
+    const config: FilterConfig = {
+      wrapper,
+      input,
+      target,
+      keys,
+      scope,
+      emptyEl,
+      minLength,
+      debounceMs,
+    }
+
+    wrapper.dataset.searchFilterInitialized = 'true'
+
+    const run = () => applyFilter(config)
+    const runDebounced = debounceMs > 0 ? debounce(run, debounceMs) : run
+
+    input.addEventListener('input', runDebounced)
+
+    // Reaplicar filtro cuando el DOM del scope cambia (listas async).
+    const observerTarget = scope instanceof Document ? document.body : (scope as Element)
+    const observer = new MutationObserver(() => {
+      if (input.value.trim() === '') return
+      run()
+    })
+    observer.observe(observerTarget, { childList: true, subtree: true })
+
+    if (input.value.trim() !== '') run()
+  }
+
+  const initAll = (): void => {
+    document.querySelectorAll<HTMLElement>('[data-search-filter]').forEach(initSearchFilter)
+  }
+
+  document.addEventListener('astro:page-load', initAll)
+</script>
