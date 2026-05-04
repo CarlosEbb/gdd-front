@@ -15,15 +15,24 @@ interface Props {
 
 const { title = null, subtitle = null, limit = null, uuidWorkspace = null } = Astro.props
 const grid = uuidWorkspace ? 'xs:grid-cols-2 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-3' : 'grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+const hasFilters = Astro.slots.has('filters')
 ---
 
 <section class="mb-10" data-documents-view-tabs>
   <Tabs defaultValue="grid">
-    <div class="mb-4 flex flex-wrap items-start justify-between gap-4">
-      <div class="min-w-0 flex-1">
-        {title && <h2 class="text-lg font-semibold text-heading">{title}</h2>}
-        {subtitle && <p class="text-sm text-subheading">{subtitle}</p>}
-      </div>
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+      {
+        hasFilters ? (
+          <div class="min-w-0 flex-1">
+            <slot name="filters" />
+          </div>
+        ) : (
+          <div class="min-w-0 flex-1">
+            {title && <h2 class="text-lg font-semibold text-heading">{title}</h2>}
+            {subtitle && <p class="text-sm text-subheading">{subtitle}</p>}
+          </div>
+        )
+      }
       <TabsList>
         <TabsTrigger value="grid" class="gap-x-2">
           <Icon name="LayoutGrid" stroke-width={1.5} size={16} />

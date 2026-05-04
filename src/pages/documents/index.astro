@@ -22,30 +22,28 @@ const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id,
     </Header>
 
     <section data-documents-filters>
-      <div class="mb-4 flex flex-col flex-wrap items-center gap-x-3 gap-y-2 md:gap-y-0 lg:flex-row">
-        <div class="flex-1">
-          <SearchFilter name="filter-title" placeholder="Buscar por título" target=".document-card, .document-list-item" keys="title" scope="[data-documents-view-tabs]" showEmptyState={false} />
-        </div>
-        <div>
-          <Input name="filter-date" type="date" placeholder="Buscar por fecha de creación" />
-        </div>
-        <div>
-          <Select name="workspace" options={workspacesOptions} placeholder="Filtrar por espacio de trabajo" />
-        </div>
+      <ListDocuments limit={null}>
+        <div slot="filters" class="flex flex-col flex-wrap items-center gap-x-3 gap-y-2 md:gap-y-0 lg:flex-row">
+          <div class="flex-1">
+            <SearchFilter name="filter-title" placeholder="Buscar por título" target=".document-card, .document-list-item" keys="title" scope="[data-documents-view-tabs]" showEmptyState={false} />
+          </div>
+          <div>
+            <Input name="filter-date" type="date" placeholder="Buscar por fecha de creación" />
+          </div>
+          <div>
+            <Select name="workspace" options={workspacesOptions} placeholder="Filtrar por espacio de trabajo" />
+          </div>
 
-        <div class="flex items-end gap-2">
-          <Button id="sort-button" variant="secondary" size="lg" aria-label="Ordenar" data-order="desc" icon="ArrowUpDown"> Ordenar </Button>
-          <span id="reset-filters" class="hidden">
-            <Button variant="secondary" size="icon" aria-label="Restablecer filtros" icon="RefreshCw" />
-          </span>
+          <div class="flex items-end gap-2">
+            <Button id="sort-button" variant="secondary" size="lg" aria-label="Ordenar" data-order="desc" icon="ArrowUpDown"> Ordenar </Button>
+            <span id="reset-filters" class="hidden">
+              <Button variant="secondary" size="icon" aria-label="Restablecer filtros" icon="RefreshCw" />
+            </span>
+          </div>
         </div>
-      </div>
-
-      <div>
-        <ListDocuments limit={null} />
-        <div id="no-results-message" class="hidden">
-          <EmptyState title="Sin resultados" description="No se encontraron documentos que coincidan con los filtros aplicados." hrefText="Limpiar filtros" action="close" state="notFound" href="#" />
-        </div>
+      </ListDocuments>
+      <div id="no-results-message" class="hidden">
+        <EmptyState title="Sin resultados" description="No se encontraron documentos que coincidan con los filtros aplicados." hrefText="Limpiar filtros" action="close" state="notFound" href="#" />
       </div>
     </section>
   </Container>
