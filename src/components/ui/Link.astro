@@ -5,15 +5,16 @@ import { icons } from '@lucide/astro'
 
 export interface Props extends HTMLAttributes<'a'> {
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient' | 'transparent'
-  size?: 'default' | 'sm' | 'lg' | 'icon'
+  size?: 'default' | 'sm' | 'lg'
   href?: string
   rounded?: 'default' | 'full'
   target?: '_blank' | '_self' | '_parent' | '_top'
   icon?: keyof typeof icons
   iconPosition?: 'left' | 'right'
+  iconOnly?: boolean
 }
 
-const { variant = 'default', size = 'default', class: className, href, rounded = 'default', target = '_self', icon, iconPosition = 'left', ...props } = Astro.props
+const { variant = 'default', size = 'default', class: className, href, rounded = 'default', target = '_self', icon, iconPosition = 'left', iconOnly = false, ...props } = Astro.props
 
 const baseClasses =
   'inline-flex items-center font-normal cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-1 focus-visible:ring-slate-950 focus:ring-offset-1 disabled:pointer-events-none disabled:opacity-50'
@@ -32,20 +33,24 @@ const sizeClasses = {
   default: 'h-12 px-4 py-2.5 ',
   sm: 'h-8 px-1.5',
   lg: 'h-10 px-8',
-  icon: 'h-9 w-9',
+}
+
+const iconOnlyClasses = {
+  sm: 'h-8 w-8',
+  default: 'h-10 w-10',
+  lg: 'h-10 w-10',
 }
 
 const iconSizes = {
   default: 16,
   sm: 17,
   lg: 18,
-  icon: 16,
 }
 
 const iconStrokeWidth = 1.5
 ---
 
-<a class:list={[baseClasses, variantClasses[variant], sizeClasses[size], className]} href={href} target={target} {...props}>
+<a class:list={[baseClasses, variantClasses[variant], iconOnly ? iconOnlyClasses[size] : sizeClasses[size], className]} href={href} target={target} {...props}>
   <span class="flex items-center gap-2 px-1.5">
     {icon && iconPosition === 'left' && <Icon name={icon} size={iconSizes[size]} stroke-width={iconStrokeWidth} />}
     <slot />
