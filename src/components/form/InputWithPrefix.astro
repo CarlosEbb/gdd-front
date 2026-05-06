@@ -140,7 +140,9 @@ const stateClasses = serverError
         let customMessage = ''
 
         if (validity.valueMissing) {
-          customMessage = select.dataset.errorPrefixRequired || 'Debes seleccionar una opción.'
+          // Los data-* del componente se aplican al input vía ...rest,
+          // por eso el mensaje del prefix se lee desde input.dataset.
+          customMessage = input.dataset.errorPrefixRequired || 'Debes seleccionar una opción.'
         }
 
         errorEl.textContent = customMessage || select.validationMessage
