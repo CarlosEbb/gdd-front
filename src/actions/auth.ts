@@ -3,6 +3,7 @@ import { z } from 'astro:schema'
 import type { ApiResponse } from '@/types/response'
 import type { AuthResponse } from '@/types/users'
 import { handleApiError, http } from './http'
+import { requireAuth } from '@/lib/permissions'
 
 export const auth = {
   login: defineAction({
@@ -66,6 +67,38 @@ export const auth = {
             redirect: '/',
           },
         }
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+
+  resetPassword: defineAction({
+    accept: 'form',
+    input: z.object({
+      email: z.string().email(),
+    }),
+    handler: async (input, request) => {
+      try {
+        const response = await http.post(`/users/reset-password-request`, '', request, input, true)
+
+        return response
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+
+  changePassword: defineAction({
+    input: z.object({
+      token: z.string(),
+      newPassword: z.string(),
+    }),
+    handler: async (input, request) => {
+      try {
+        const response = await http.post(`/users/change-password`, '', request, input, true)
+
+        return response
       } catch (error) {
         handleApiError(error, request)
       }

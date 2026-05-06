@@ -39,40 +39,4 @@ export const profile = {
       }
     },
   }),
-
-  resetPassword: defineAction({
-    accept: 'form',
-    input: z.object({
-      email: z.string().email(),
-    }),
-    handler: async (input, request) => {
-      const token = await requireAuth(request)
-
-      try {
-        const response = await http.post(`/users/reset-password-request`, token, request, input)
-
-        return response
-      } catch (error) {
-        handleApiError(error, request)
-      }
-    },
-  }),
-
-  changePassword: defineAction({
-    input: z.object({
-      token: z.string(),
-      newPassword: z.string(),
-    }),
-    handler: async (input, request) => {
-      const token = await requireAuth(request)
-
-      try {
-        const response = await http.post(`/users/change-password`, token, request, input)
-
-        return response
-      } catch (error) {
-        handleApiError(error, request)
-      }
-    },
-  }),
 }
