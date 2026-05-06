@@ -53,6 +53,7 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
         placeholderInput="1234567"
         valuePrefix={rifPrefix}
         valueInput={rifNumber}
+        requiredPrefix
         requiredInput
         typeInput="text"
         patternInput="^\\d{8}-\\d$"
@@ -60,6 +61,7 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
         maxlengthInput={10}
         placeholderPrefix="Tipo"
         inputmode="numeric"
+        data-error-prefix-required="Debes seleccionar el tipo de RIF"
         data-error-input-pattern="El formato del RIF debe ser J-12345678-9"
       />
     </div>
@@ -153,10 +155,15 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
 
     if (rifInput) {
       rifInput.value = formatRifNumber(rifInput.value)
-
-      rifInput.addEventListener('input', () => {
-        rifInput.value = formatRifNumber(rifInput.value)
-      })
+      form.addEventListener(
+        'input',
+        (e) => {
+          if (e.target === rifInput) {
+            rifInput.value = formatRifNumber(rifInput.value)
+          }
+        },
+        true
+      )
     }
 
     const handleSubmit = async (e: Event) => {
