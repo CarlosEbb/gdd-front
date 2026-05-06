@@ -218,8 +218,7 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
       }
 
       setButtonLoading('#form-user-submit', true)
-      const action = isEdit ? actions.users.update(dataForm) : actions.users.register(dataForm)
-      const { data, error } = await callAction(action)
+      const { data, error } = isEdit ? await callAction(actions.users.update(dataForm)) : await callAction(actions.users.register(dataForm))
 
       if (error) {
         toast.error(error.message)
@@ -228,7 +227,7 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
       }
 
       toast.success(data.message)
-      navigate(`/users/${data.data.uuid}`)
+      navigate(data.data.redirect)
       setButtonLoading('#form-user-submit', false)
     }
 
