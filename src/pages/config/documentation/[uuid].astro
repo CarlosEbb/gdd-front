@@ -13,8 +13,8 @@ const { uuid } = Astro.params
 if (!uuid) return Astro.redirect('/home')
 
 const build_number = Astro.url.searchParams.get('build_number') as string
-const url = `/variables/${uuid}/${build_number}`
-const urlLatest = `/variables/${uuid}`
+const url = `/documents/${uuid}/${build_number}`
+const urlLatest = `/documents/${uuid}`
 const { API_URL: base_url, PUBLIC_PROJECT_URL: PUBLIC_PROJECT_URL } = import.meta.env
 
 const responseExample = {
@@ -283,7 +283,7 @@ const request = data?.data?.variables
 
         const downloadLink = document.createElement('a')
         downloadLink.href = blobUrl
-        downloadLink.download = `${PUBLIC_NAME_PROJECT}-Documento-${uuid}.postman_collection.json`
+        downloadLink.download = `${PUBLIC_NAME_PROJECT}-Documento-${uuid}.collection.json`
         downloadLink.style.display = 'none'
         document.body.appendChild(downloadLink)
 
@@ -294,7 +294,7 @@ const request = data?.data?.variables
           URL.revokeObjectURL(blobUrl)
         }, 100)
 
-        toast.success('¡Colección descargada! Ahora impórtala en Postman.')
+        toast.success('¡Colección descargada!')
       })
 
       button.dataset.listenerAdded = 'true'
