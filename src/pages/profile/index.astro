@@ -187,7 +187,7 @@ const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
     const formResetPassword = e.currentTarget as HTMLFormElement
     const dataForm = new FormData(formResetPassword)
     setButtonLoading('#reset-password-btn', true)
-    const { data, error } = await callAction(actions.profile.resetPassword(dataForm))
+    const { data, error } = await callAction(actions.auth.resetPassword(dataForm))
 
     if (error) {
       toast.error(error.message)
