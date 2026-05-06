@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button.astro'
 import Link from '@/components/ui/Link.astro'
 import { formatISODateWithIntl } from '@/scripts/utils'
 import Modal from '@/components/modal/Modal.astro'
+import CreateVersionModal from '@/components/modal/CreateVersionModal.astro'
 import Icon from '@/components/ui/Icon.astro'
 import Card from '@/components/ui/Card.astro'
 import Avatar from '@/components/ui/Avatar.astro'
@@ -124,6 +125,7 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
           filteredVersionsUnpublished.map((version) => (
             <CardList title={version.nameVersion} description={version.buildNumber.toString()} secondaryText={formatISODateWithIntl(version.createdAt)}>
               <div slot="actions" class="flex items-center gap-2">
+                <Button size="sm" variant="outline" icon="GitBranch" data-open-modal="new-version-document" data-build-number={version.buildNumber.toString()} title="Crear versión a partir de esta" />
                 <Button size="sm" data-open-modal="publish-version" data-version-uuid-template={version.uuidTemplate} data-version-uuid={version.uuid}>
                   Publicar
                 </Button>
@@ -154,6 +156,8 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
       <Button type="submit" size="sm" form="publish-version-form" id="btn-publish-version" loadingText="Publicando..."> Publicar </Button>
     </div>
   </Modal>
+
+  <CreateVersionModal uuidTemplate={uuid} mode="clone" />
 
   <Modal modalId="unpublish-version" title="Despublicar versión">
     <form class="space-y-6" id="unpublish-version-form">

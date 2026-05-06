@@ -1,5 +1,6 @@
 ---
 import Modal from '@/components/modal/Modal.astro'
+import CreateVersionModal from '@/components/modal/CreateVersionModal.astro'
 import { actions } from 'astro:actions'
 import Button from '../ui/Button.astro'
 import Input from '../form/Input.astro'
@@ -140,19 +141,7 @@ const SHOW_PAGE_FOR_VIEW = false
           class="shrink-0"
           icon="Settings"
         />
-        <Button
-          type="button"
-          size="sm"
-          iconOnly
-          variant="transparent"
-          id="btn-new-version-document"
-          loadingText=""
-          showTextOnLoading={false}
-          data-open-modal="new-version-document"
-          class="hidden shrink-0 md:inline-flex"
-          title="Crear versión"
-          icon="GitBranch"
-        />
+        <Button type="button" size="sm" iconOnly variant="transparent" data-open-modal="new-version-document" class="hidden shrink-0 md:inline-flex" title="Crear versión" icon="GitBranch" />
       </div>
 
       <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
@@ -233,18 +222,7 @@ const SHOW_PAGE_FOR_VIEW = false
 
 <div id="container" class="h-[calc(100vh-56px)] w-full"></div>
 
-<Modal title="Crear versión" modalId="new-version-document">
-  <form id="new-version-document-form">
-    <div>
-      <Input label="Versión" name="name_version" placeholder="Ingrese la versión del documento" required />
-      <input type="hidden" name="uuid_template" value={uuid} />
-    </div>
-    <div class="flex justify-end space-x-4 border-t border-border pt-4">
-      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-      <Button type="submit" size="sm" id="btn-new-version-document" loadingText="Guardando...">Crear versión</Button>
-    </div>
-  </form>
-</Modal>
+<CreateVersionModal uuidTemplate={uuid} mode="editor" />
 
 <Modal title="Eliminar documento" modalId="delete-document">
   <form class="space-y-6" id="delete-document-form">
@@ -309,7 +287,6 @@ const SHOW_PAGE_FOR_VIEW = false
   function initializePage() {
     const domContainer = document.getElementById('container') as HTMLElement
     const documentationLink = document.getElementById('documentationLink') as HTMLAnchorElement
-    const formNewVersionDocument = document.getElementById('new-version-document-form') as HTMLFormElement
     const formDeleteDocument = document.getElementById('delete-document-form') as HTMLFormElement
     const modalNewVersionDocument = document.getElementById('new-version-document') as HTMLDialogElement
     const modalDeleteDocument = document.getElementById('delete-document') as HTMLDialogElement
@@ -1103,12 +1080,9 @@ const SHOW_PAGE_FOR_VIEW = false
       }
     }
 
-    const handleNewVersion = async (e: Event) => {
-      e.preventDefault()
-      const formData = new FormData(formNewVersionDocument)
-      const uuidTemplate = formData.get('uuid_template') as string
-      const nameVersion = formData.get('name_version') as string
-      await handleSave(uuidTemplate, nameVersion, '#btn-new-version-document')
+    const handleNewVersion = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { uuidTemplate: string; nameVersion: string; btnId: string }
+      handleSave(detail.uuidTemplate, detail.nameVersion, detail.btnId)
     }
 
     const handleSaveNewDocument = async (e: Event) => {
@@ -1116,7 +1090,7 @@ const SHOW_PAGE_FOR_VIEW = false
       await handleSave(uuidTemplate, '', '#btn-save-document')
     }
 
-    formNewVersionDocument.addEventListener('submit', handleNewVersion)
+    document.addEventListener('create-version:submit', handleNewVersion)
     formDeleteDocument.addEventListener('submit', handleDeleteDocument)
     saveDocumentButton.addEventListener('click', handleSaveNewDocument)
     initializeEditor()
