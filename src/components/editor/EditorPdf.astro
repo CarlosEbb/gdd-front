@@ -1064,8 +1064,8 @@ const SHOW_PAGE_FOR_VIEW = false
         nameVersion && modalNewVersionDocument.close()
         syncEditorWithOutputTemplate(templateData)
         toast.success(data.message)
-        const newVersion = data.data.version.build_number
 
+        const newVersion = data.data.lastVersion.buildNumber
         documentationLink.href = `/config/documentation/${uuidTemplate}?build_number=${newVersion}`
         updateUrlWithNewVersion(newVersion)
       } catch (error) {
