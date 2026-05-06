@@ -72,7 +72,7 @@ export interface InfoNewVersion {
 }
 
 export interface CreateNewVersion {
-  version: Version
+  lastVersion: LastVersion
   pageConfigUpdated: boolean
 }
 
