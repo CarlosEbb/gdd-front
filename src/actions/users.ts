@@ -1,7 +1,7 @@
 import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
-import { Status, type Details, type GetUserByUuidResponse } from '@/types/users'
+import { Status, type AuthResponse, type Details, type GetUserByUuidResponse } from '@/types/users'
 import { requirePermission, requireAuth } from '@/lib/permissions'
 
 export const users = {
@@ -49,8 +49,14 @@ export const users = {
           }
         })
 
-        const userCreated = await http.post<Details>(`/users/register`, token, request, formData)
-        return userCreated
+        const userCreated = await http.post<AuthResponse>(`/users/register`, token, request, formData)
+        return {
+          ...userCreated,
+          data: {
+            ...userCreated.data,
+            redirect: `/users/${userCreated.data.user.uuid}`,
+          },
+        }
       } catch (error) {
         handleApiError(error, request)
       }
@@ -84,7 +90,13 @@ export const users = {
 
         await request.session?.set('user', userUpdated.data)
 
-        return userUpdated
+        return {
+          ...userUpdated,
+          data: {
+            ...userUpdated.data,
+            redirect: `/users/${input.uuid}`,
+          },
+        }
       } catch (error) {
         handleApiError(error, request)
       }
