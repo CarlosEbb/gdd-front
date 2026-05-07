@@ -49,6 +49,7 @@ export const documents = {
       name: z.string(),
       description: z.string(),
       uuid_workspace: z.string(),
+      uuid_category: z.string().optional(),
       pageSize: z.enum(PAPER_SIZES).optional(),
       orientation: z.enum(ORIENTATION).optional(),
       marginType: z.enum(MARGIN_PRESETS).optional(),
