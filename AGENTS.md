@@ -13,3 +13,4 @@ You are an expert developer with knowledge of Astro, TailwindCSS, and TypeScript
 - Los scripts que van en la paginas de astro siempre que sean en typescript deben ir en bloques `<script>`
 - Siempre pregunta si no sabes algo o si necesitas mas contexto
 - Si no sabes algo de astro busca en la documentacion oficial de astro: https://docs.astro.build/es/
+- El código de TypeScript siempre tiene que ser fácil de entender reutilizable y mantenible a lo largo del tiempo
