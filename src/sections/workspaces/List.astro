@@ -14,26 +14,22 @@ const getWorkspacesFromSession = async () => {
   return workspaces as Workspace[]
 }
 
-const hasWorkspacesInSession = (await getWorkspacesFromSession()).length > 0
+const sessionWorkspaces = await getWorkspacesFromSession()
+const hasWorkspacesInSession = sessionWorkspaces.length > 0
 
 let workspaces: Workspace[] = []
-let latestWorkspaces: Workspace[] = []
-let hasWorkSpaces = false
 let error: string | null = null
 
-if (!hasWorkspacesInSession) {
+if (hasWorkspacesInSession) {
+  workspaces = sessionWorkspaces
+} else {
   const { data, error: actionError } = await Astro.callAction(actions.workspaces.list, {})
   workspaces = data?.data ?? []
-  latestWorkspaces = workspaces.slice(0, 4)
-  hasWorkSpaces = workspaces.length > 0
   error = actionError?.message ?? null
 }
 
-if (hasWorkspacesInSession) {
-  workspaces = await getWorkspacesFromSession()
-  latestWorkspaces = workspaces.slice(0, 4)
-  hasWorkSpaces = workspaces.length > 0
-}
+const latestWorkspaces = workspaces.slice(0, 4)
+const hasWorkSpaces = workspaces.length > 0
 ---
 
 <section class="mb-10">

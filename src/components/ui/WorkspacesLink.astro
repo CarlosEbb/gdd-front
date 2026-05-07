@@ -32,6 +32,6 @@ const { workspace, index } = Astro.props
 
   <div class="flex w-full items-center justify-between border-t border-border pt-4 text-xs font-bold text-subheading">
     <span>Documentos</span>
-    <span class="text-heading">{workspace.templates.length}</span>
+    <span class="text-heading">{workspace.templates?.length || 0}</span>
   </div>
 </a>

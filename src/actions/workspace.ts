@@ -26,7 +26,7 @@ export const workspaces = {
           serverUuid: input.serverUuid,
         })
 
-        workspaces.push(newWorkspace.data)
+        workspaces.unshift(newWorkspace.data)
         await request.session?.set('workspaces', workspaces)
 
         return newWorkspace
