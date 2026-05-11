@@ -377,7 +377,7 @@ const currentPath = Astro.url.pathname
 
         toast.success(data.message)
         const { uuid, uuidWorkspace, title: templateTitle } = data.data.template
-        const { buildNumber = '1.00' } = data.data.lastVersion || {}
+        const { buildNumber } = data.data.lastVersion || {}
 
         navigate(`/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWorkspace}&name_document=${templateTitle}`)
         elements.modalCreateTemplate?.close()

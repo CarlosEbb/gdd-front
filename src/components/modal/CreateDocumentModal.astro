@@ -153,7 +153,7 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
 
         toast.success(data.message)
         const editorUrl = new URL(`/editor/${data.data.template.uuid}`, window.location.origin)
-        editorUrl.searchParams.set('build_number', String(data.data.lastVersion?.buildNumber || '1.00'))
+        editorUrl.searchParams.set('build_number', String(data.data.lastVersion?.buildNumber))
         editorUrl.searchParams.set('id_workspace', data.data.template.uuidWorkspace)
         editorUrl.searchParams.set('name_document', data.data.template.title)
         navigate(editorUrl.pathname + editorUrl.search)

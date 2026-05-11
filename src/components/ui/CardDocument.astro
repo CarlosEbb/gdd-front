@@ -32,11 +32,18 @@ const ACTIONS = [
 const { document } = Astro.props
 
 const { uuid, lastVersion, uuidWorkspace, title, updatedAt, description, owner } = document
-const { pathThumbnails = null, buildNumber = '1.00', nameVersion = '', uuid: uuidVersion = '' } = lastVersion || {}
+const { pathThumbnails = null, buildNumber, nameVersion, uuid: uuidVersion = '' } = lastVersion || {}
 const { name: autor, photo } = owner
 
 const thumbnails = pathThumbnails ? `${PUBLIC_PROJECT_URL}${pathThumbnails}` : template.src
-const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWorkspace}&name_document=${title}`
+
+const editorUrl = new URL(`/editor/${uuid}`, Astro.url)
+
+editorUrl.searchParams.set('build_number', String(buildNumber))
+editorUrl.searchParams.set('id_workspace', uuidWorkspace)
+editorUrl.searchParams.set('name_document', title)
+
+const url = editorUrl.pathname + editorUrl.search
 ---
 
 <div
