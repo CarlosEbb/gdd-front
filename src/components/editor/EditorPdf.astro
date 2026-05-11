@@ -14,6 +14,7 @@ import { PUBLIC_NAME_PROJECT } from 'astro:env/client'
 import logo from '@/assets/images/imagotipo.png'
 import Sidebar from '@/components/ui/Sidebar.astro'
 import Search from '@/components/ui/Search.astro'
+import CreateDocumentModal from '@/components/modal/CreateDocumentModal.astro'
 
 interface Props {
   uuid: string
@@ -265,6 +266,8 @@ const SHOW_PAGE_FOR_VIEW = false
     </div>
   </form>
 </Modal>
+
+<CreateDocumentModal />
 
 <script type="application/json" id="schema-file-data" set:html={JSON.stringify(schemaFile)} />
 <script>
