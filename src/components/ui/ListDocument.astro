@@ -31,7 +31,7 @@ const ACTIONS = [
 const { document } = Astro.props
 
 const { uuid, lastVersion, uuidWorkspace, title, updatedAt, description, owner } = document
-const { pathThumbnails, buildNumber, nameVersion, uuid: uuidVersion } = lastVersion
+const { pathThumbnails = null, buildNumber = '1.00', nameVersion = '', uuid: uuidVersion = '' } = lastVersion || {}
 const { name: autor, photo } = owner
 
 const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWorkspace}&name_document=${title}`

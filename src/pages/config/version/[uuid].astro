@@ -71,7 +71,7 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
                 <div class="flex items-center gap-7">
                   <div>
                     <span class="text-xs font-medium text-subheading">Versión</span>
-                    <p class="text-base font-semibold text-heading">{getCurrentVersionPublished.nameVersion}</p>
+                    <p class="text-base font-semibold text-heading">{getCurrentVersionPublished.nameVersion || ''}</p>
                   </div>
                   <div>
                     <span class="text-xs font-medium text-subheading">Numero de versión</span>
@@ -123,7 +123,7 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
       <div class="overflow-hidden rounded-main border border-border bg-background">
         {
           filteredVersionsUnpublished.map((version) => (
-            <CardList title={version.nameVersion} description={version.buildNumber.toString()} secondaryText={formatISODateWithIntl(version.createdAt)}>
+            <CardList title={version.nameVersion || ''} description={version.buildNumber.toString()} secondaryText={formatISODateWithIntl(version.createdAt)}>
               <div slot="actions" class="flex items-center gap-2">
                 <Button size="sm" variant="outline" icon="GitBranch" data-open-modal="new-version-document" data-build-number={version.buildNumber.toString()} title="Crear versión a partir de esta" />
                 <Button size="sm" data-open-modal="publish-version" data-version-uuid-template={version.uuidTemplate} data-version-uuid={version.uuid}>
