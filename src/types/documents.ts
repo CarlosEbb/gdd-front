@@ -110,6 +110,10 @@ export interface GeneratedDocument {
 }
 
 export interface RequestForDocument {
+  uuid_template?: string
+  build_number?: string
+  name_version?: string
+  jwtToken?: string
   variables: Record<string, any>
   elementos: string[]
 }
