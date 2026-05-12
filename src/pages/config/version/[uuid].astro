@@ -12,6 +12,7 @@ import Card from '@/components/ui/Card.astro'
 import Avatar from '@/components/ui/Avatar.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
+import Input from '@/components/form/Input.astro'
 
 const { uuid } = Astro.params
 
@@ -51,7 +52,7 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
                   size="sm"
                   title="Ver en el editor"
                 >
-                  Editor
+                  Editar
                 </Link>
               </div>
             </div>
@@ -65,8 +66,12 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
             <div class="flex flex-1 flex-col gap-4">
               <div class="flex flex-col gap-1 space-y-4">
                 <div>
-                  <span class="text-base font-medium text-heading">{nameTemplate}</span>
-                  <p class="text-xs font-semibold text-subheading">{descriptionTemplate}</p>
+                  <span class="text-xs font-medium text-subheading">Nombre del documento</span>
+                  <p class="text-base font-semibold text-heading">{nameTemplate}</p>
+                </div>
+                <div>
+                  <span class="text-xs font-medium text-subheading">Descripción</span>
+                  <p class="text-base font-semibold text-heading">{descriptionTemplate}</p>
                 </div>
                 <div class="flex items-center gap-7">
                   <div>
@@ -126,7 +131,15 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
             <CardList title={version.nameVersion || ''} description={version.buildNumber.toString()} secondaryText={formatISODateWithIntl(version.createdAt)}>
               <div slot="actions" class="flex items-center gap-2">
                 <Button size="sm" variant="outline" icon="GitBranch" data-open-modal="new-version-document" data-build-number={version.buildNumber.toString()} title="Crear versión a partir de esta" />
-                <Button size="sm" data-open-modal="publish-version" data-version-uuid-template={version.uuidTemplate} data-version-uuid={version.uuid}>
+
+                <Button
+                  size="sm"
+                  data-open-modal="publish-version"
+                  data-version-uuid-template={version.uuidTemplate}
+                  data-version-uuid={version.uuid}
+                  data-version-name={version.nameVersion || ''}
+                  data-version-build-number={version.buildNumber.toString()}
+                >
                   Publicar
                 </Button>
               </div>
@@ -142,18 +155,25 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
   </StateSwitch>
 
   <Modal modalId="publish-version" title="Publicar versión">
-    <form class="space-y-6" id="publish-version-form">
-      <div class="flex flex-col items-center justify-center py-5">
+    <form id="publish-version-form">
+      <div class="flex flex-col items-center justify-center pt-5">
         <Icon name="Info" stroke-width="1.5" size={48} class="text-heading" />
-        <p class="mt-4 mb-2 text-lg font-semibold text-heading">¿Estás seguro de que deseas publicar esta versión?</p>
+        <p class="mt-4 mb-2 text-lg font-normal text-heading">¿Estás seguro de que deseas publicar esta versión?</p>
         <input type="hidden" name="uuid_template" required readonly />
         <input type="hidden" name="uuid_version" required readonly />
+        <input type="hidden" name="build_number" />
+      </div>
+      <div id="publish-version-name-section" class="hidden">
+        <div class="mb-5">
+          <p class="text-center text-sm text-warning">Para publicar esta versión debes asignarle un nombre</p>
+        </div>
+        <Input label="Nombre de la versión" name="name_version" placeholder="Ingrese el nombre de la versión" required />
       </div>
     </form>
 
     <div slot="footer">
       <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-      <Button type="submit" size="sm" form="publish-version-form" id="btn-publish-version" loadingText="Publicando..."> Publicar </Button>
+      <Button type="submit" size="sm" form="publish-version-form" id="btn-publish-version"> Publicar </Button>
     </div>
   </Modal>
 
@@ -179,7 +199,7 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
   import { actions } from 'astro:actions'
   import { toast } from '@/scripts/toast'
   import { navigate } from 'astro:transitions/client'
-  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import { callAction, setButtonLoading, compressJson } from '@/scripts/utils'
   import { initDocumentModals } from '@/scripts/document-modals'
 
   document.addEventListener('astro:page-load', () => {
@@ -190,13 +210,33 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
     if (publishForm && publishModal) {
       const publishUuidTemplateInput = publishForm.querySelector<HTMLInputElement>('input[name="uuid_template"]')
       const publishUuidVersionInput = publishForm.querySelector<HTMLInputElement>('input[name="uuid_version"]')
+      const publishBuildNumberInput = publishForm.querySelector<HTMLInputElement>('input[name="build_number"]')
+      const publishNameSection = document.getElementById('publish-version-name-section')
+      const publishNameInput = publishForm.querySelector<HTMLInputElement>('input[name="name_version"]')
 
       document.addEventListener('click', (event) => {
         const trigger = (event.target as HTMLElement).closest<HTMLElement>('[data-open-modal="publish-version"]')
         if (!trigger) return
 
+        const versionName = trigger.dataset.versionName ?? ''
+
         if (publishUuidTemplateInput) publishUuidTemplateInput.value = trigger.dataset.versionUuidTemplate ?? ''
         if (publishUuidVersionInput) publishUuidVersionInput.value = trigger.dataset.versionUuid ?? ''
+        if (publishBuildNumberInput) publishBuildNumberInput.value = trigger.dataset.versionBuildNumber ?? ''
+
+        if (!versionName && publishNameSection) {
+          publishNameSection.classList.remove('hidden')
+          if (publishNameInput) {
+            publishNameInput.value = ''
+            publishNameInput.required = true
+          }
+        } else if (publishNameSection) {
+          publishNameSection.classList.add('hidden')
+          if (publishNameInput) {
+            publishNameInput.value = ''
+            publishNameInput.required = false
+          }
+        }
       })
 
       if (!publishForm.dataset.initialized) {
@@ -205,21 +245,62 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
         async function publishVersion(e: Event) {
           e.preventDefault()
           const dataForm = new FormData(publishForm)
+          const uuidTemplate = dataForm.get('uuid_template') as string
+          const needsCreateVersion = publishNameSection && !publishNameSection.classList.contains('hidden')
 
-          setButtonLoading('#btn-publish-version', true)
+          try {
+            let uuidVersionToPublish = dataForm.get('uuid_version') as string
 
-          const { data, error } = await callAction(actions.publications.publish({ uuid_template: dataForm.get('uuid_template') as string, uuid_version: dataForm.get('uuid_version') as string }))
+            if (needsCreateVersion) {
+              const nameVersion = dataForm.get('name_version') as string
+              const buildNumber = dataForm.get('build_number') as string
 
-          if (error) {
-            toast.error(error.message)
-            setButtonLoading('#btn-publish-version', false)
+              setButtonLoading('#btn-publish-version', true, { loadingText: 'Creando versión...' })
+
+              const { data: documentData, error: getError } = await callAction(actions.documents.getDocument({ uuid_template: uuidTemplate, build_number: buildNumber, compress: false }))
+
+              if (getError || !documentData?.data) {
+                toast.error(getError?.message || 'No se pudo obtener la plantilla de la versión')
+                setButtonLoading('#btn-publish-version', false)
+                return
+              }
+
+              const compressedBlob = await compressJson(documentData.data)
+              const cloneFormData = new FormData()
+              cloneFormData.append('uuid_template', uuidTemplate)
+              cloneFormData.append('name_version', nameVersion)
+              cloneFormData.append('template_data', compressedBlob, 'template.json.gz')
+
+              const { data: createData, error: createError } = await callAction(actions.documents.createNewVersion(cloneFormData))
+
+              if (createError) {
+                toast.error(createError.message)
+                setButtonLoading('#btn-publish-version', false)
+                return
+              }
+
+              uuidVersionToPublish = createData!.data.lastVersion.uuid
+            }
+
+            setButtonLoading('#btn-publish-version', true, { loadingText: 'Publicando...' })
+
+            const { data, error } = await callAction(actions.publications.publish({ uuid_template: uuidTemplate, uuid_version: uuidVersionToPublish }))
+
+            if (error) {
+              toast.error(error.message)
+              setButtonLoading('#btn-publish-version', false)
+              publishModal.close()
+              return
+            }
+
+            toast.success(data!.message)
+            navigate(data!.data.redirect)
             publishModal.close()
-            return
+          } catch {
+            toast.error('Ha ocurrido un error. Por favor, intente nuevamente.')
+          } finally {
+            setButtonLoading('#btn-publish-version', false)
           }
-
-          toast.success(data!.message)
-          navigate(data!.data.redirect)
-          publishModal.close()
         }
 
         publishForm.addEventListener('submit', publishVersion)
