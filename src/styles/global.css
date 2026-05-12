@@ -25,6 +25,7 @@
     --ring: oklch(0.708 0 0);
     --elevation-base: 0 2px 8px rgba(0, 0, 0, 0.04);
     --radius: 6px;
+    --warning: oklch(79.094% 0.14898 60.676);
 }
 
 .dark {
@@ -47,6 +48,7 @@
     --input: oklch(1 0 0 / 15%);
     --ring: oklch(0.556 0 0);
     --elevation-base: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --warning: oklch(79.094% 0.14898 60.676);
 }
 
 @theme inline {
@@ -73,6 +75,7 @@
   --color-subheading: var(--subheading);
   --shadow-base: var(--elevation-base);
   --radius-main: calc(var(--radius));
+  --color-warning: var(--warning);
 }
 
 /* Animación para el spinner del toast de loading */
