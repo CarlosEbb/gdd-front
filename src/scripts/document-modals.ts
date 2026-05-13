@@ -66,6 +66,33 @@ export function initDocumentModals() {
     navigate(`/config/documentation/${uuid}?build_number=${buildNumber}`)
   })
 
+  document.addEventListener('document:duplicate', (event: Event) => {
+    const cardData = (event as CustomEvent).detail
+    const modal = document.getElementById('save-template') as HTMLDialogElement | null
+    if (!modal) return
+
+    const form = document.getElementById('save-template-form') as HTMLFormElement | null
+    const titleInput = form?.querySelector<HTMLInputElement>('[name="title"]')
+    const uuidBaseInput = form?.querySelector<HTMLInputElement>('[name="uuidBaseTemplate"]')
+    const workspaceSelect = form?.querySelector<HTMLSelectElement>('[name="uuid_workspace"]')
+    const btnGenerateWithIA = form?.querySelector<HTMLInputElement>('#generate_with_ai')
+    const promptContainer = document.getElementById('prompt-container')
+    const generateWithAIIcon = document.getElementById('generate-with-ai-icon')
+
+    if (titleInput) titleInput.value = `Copia de ${cardData.title}`
+    if (uuidBaseInput) uuidBaseInput.value = cardData.uuid
+    if (workspaceSelect) workspaceSelect.value = cardData.workspaceId
+
+    if (btnGenerateWithIA) btnGenerateWithIA.checked = false
+    if (promptContainer) {
+      promptContainer.classList.remove('grid-rows-[1fr]')
+      promptContainer.classList.add('grid-rows-[0fr]')
+    }
+    if (generateWithAIIcon) generateWithAIIcon.classList.remove('rotate-180')
+
+    modal.showModal()
+  })
+
   document.addEventListener('submit', async (event: Event) => {
     const form = event.target as HTMLFormElement
     if (form.id !== 'delete-document-form') return

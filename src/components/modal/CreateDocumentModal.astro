@@ -12,6 +12,7 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
 
 <Modal modalId="save-template" title="Crear documento">
   <form class="space-y-4" id="save-template-form">
+    <input type="hidden" name="uuidBaseTemplate" value="" />
     <div>
       <Select
         label="Espacio de trabajo"
@@ -134,7 +135,8 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
     const handleSaveTemplate = async (e: Event) => {
       e.preventDefault()
 
-      const formData = new FormData(form)
+      const currentForm = document.getElementById('save-template-form') as HTMLFormElement
+      const formData = new FormData(currentForm)
       const name = (formData.get('title') as string)
         .toLowerCase()
         .replace(/ /g, '_')

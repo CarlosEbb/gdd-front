@@ -55,6 +55,7 @@ function handleDocumentClick(e: Event) {
       delete: 'document:delete',
       'view-documentation': 'document:view-documentation',
       generated: 'document:generated',
+      duplicate: 'document:duplicate',
     }
 
     const eventName = action ? eventMap[action] : undefined

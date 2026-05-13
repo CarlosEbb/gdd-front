@@ -54,6 +54,7 @@ export const documents = {
       orientation: z.enum(ORIENTATION).optional(),
       marginType: z.enum(MARGIN_PRESETS).optional(),
       prompt: z.string().optional(),
+      uuidBaseTemplate: z.string().optional(),
     }),
     handler: async (input, request) => {
       await requirePermission(request, ['templates.create'])
