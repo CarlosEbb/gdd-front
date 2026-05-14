@@ -16,6 +16,7 @@
     "@pdfme/schemas": "^5.4.6",
     "@pdfme/ui": "^5.4.6",
     "@tailwindcss/vite": "^4.1.16",
+    "apexcharts": "^5.11.0",
     "astro": "^5.16.0",
     "pdf-lib": "^1.17.1",
     "signature_pad": "^5.1.1",
