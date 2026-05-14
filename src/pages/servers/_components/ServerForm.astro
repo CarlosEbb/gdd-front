@@ -9,11 +9,13 @@ interface Props {
     ip: string
     name: string
     puerto: string
+    username?: string
+    password?: string
     uuid?: string
   }
 }
 
-const { isEdit = false, values = { ip: '', name: '', puerto: '', uuid: '' } } = Astro.props
+const { isEdit = false, values = { ip: '', name: '', puerto: '', uuid: '', username: '', password: '' } } = Astro.props
 
 const btnText = isEdit ? 'Actualizar servidor' : 'Crear servidor'
 const loadingText = isEdit ? 'Actualizando servidor...' : 'Creando servidor...'
@@ -40,6 +42,30 @@ const loadingText = isEdit ? 'Actualizando servidor...' : 'Creando servidor...'
     </div>
     <div>
       <Input label="Puerto" type="number" name="puerto" data-error-required="El puerto es obligatorio" required placeholder="3000" value={isEdit ? values?.puerto : ''} />
+    </div>
+    <div>
+      <Input
+        label="Usuario"
+        type="text"
+        name="username"
+        data-error-required="El usuario es obligatorio"
+        required
+        placeholder="root"
+        value={isEdit ? values?.username || '' : ''}
+        autocomplete="username"
+      />
+    </div>
+    <div>
+      <Input
+        label="Contraseña"
+        type="password"
+        name="password"
+        data-error-required="La contraseña es obligatoria"
+        required
+        placeholder="********"
+        value={isEdit ? values?.password || '' : ''}
+        autocomplete="new-password"
+      />
     </div>
     {isEdit && <input type="hidden" name="uuid" value={values?.uuid} />}
   </FormBlock>

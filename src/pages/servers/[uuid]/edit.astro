@@ -17,8 +17,10 @@ const serverValues = serverData?.data
       name: serverData.data.name,
       puerto: serverData.data.puerto?.toString(),
       uuid: serverData.data.uuid,
+      username: serverData.data.username,
+      password: serverData.data.password,
     }
-  : { ip: '', name: '', puerto: '', uuid: '' }
+  : { ip: '', name: '', puerto: '', uuid: '', username: '', password: '' }
 ---
 
 <MainLayout title={`Actualizar servidor ${serverData?.data?.name || ''}`}>

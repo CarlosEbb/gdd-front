@@ -4,6 +4,8 @@ export interface createServer {
   ip: string
   puerto: number
   name: string
+  username: string
+  password: string
   createdAt: Date
   updatedAt: Date
 }

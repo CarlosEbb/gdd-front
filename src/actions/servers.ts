@@ -12,6 +12,8 @@ export const servers = {
       ip: z.string().ip(),
       puerto: z.number(),
       name: z.string(),
+      username: z.string(),
+      password: z.string(),
     }),
     handler: async (input, request) => {
       await requirePermission(request, ['servers.create'])
@@ -63,6 +65,8 @@ export const servers = {
       ip: z.string({ message: 'La IP es obligatoria' }).ip({ message: 'La IP no es válida' }),
       puerto: z.string({ message: 'El puerto es obligatorio' }),
       name: z.string({ message: 'El nombre es obligatorio' }),
+      username: z.string(),
+      password: z.string(),
     }),
     handler: async (input, request) => {
       await requirePermission(request, ['servers.update'])
