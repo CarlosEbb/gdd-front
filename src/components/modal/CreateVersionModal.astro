@@ -45,6 +45,10 @@ const { uuidTemplate, modalId = 'new-version-document', formId = 'new-version-do
       const dialog = document.getElementById(modalId) as HTMLDialogElement | null
       if (!dialog) return
 
+      dialog.addEventListener('close', () => {
+        form.reset()
+      })
+
       const uuidTemplateInput = form.querySelector<HTMLInputElement>('input[name="uuid_template"]')
       const buildNumberInput = form.querySelector<HTMLInputElement>('input[name="build_number"]')
       const nameVersionInput = form.querySelector<HTMLInputElement>('input[name="name_version"]')
