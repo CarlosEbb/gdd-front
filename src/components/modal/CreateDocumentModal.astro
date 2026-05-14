@@ -135,8 +135,7 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
     const handleSaveTemplate = async (e: Event) => {
       e.preventDefault()
 
-      const currentForm = document.getElementById('save-template-form') as HTMLFormElement
-      const formData = new FormData(currentForm)
+      const formData = new FormData(form)
       const name = (formData.get('title') as string)
         .toLowerCase()
         .replace(/ /g, '_')
