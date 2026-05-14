@@ -1,0 +1,27 @@
+---
+import Table from '@/components/ui/Table.astro'
+import type { ClientMetrics } from '@/types/metrics'
+
+interface Props {
+  clients: ClientMetrics[]
+}
+
+const { clients } = Astro.props as Props
+---
+
+<Table
+  columns={[
+    { key: 'name', label: 'Nombre' },
+    { key: 'rif', label: 'RIF' },
+    { key: 'workspaces', label: 'Espacios de trabajo', align: 'center' },
+    { key: 'documents', label: 'Documentos' },
+  ]}
+  rows={clients.map((client) => ({
+    name: client.name,
+    rif: client.rif,
+    workspaces: client.workspaces_count,
+    documents: client.documents_count,
+    href: `/clients/${client.uuid}`,
+  }))}
+  showPagination={true}
+/>

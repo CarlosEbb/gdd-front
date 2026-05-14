@@ -1,0 +1,35 @@
+---
+import Icon from '@/components/ui/Icon.astro'
+import { icons } from '@lucide/astro'
+
+type Props = {
+  title: string
+  value: string
+  index: number
+  href: string
+}
+
+const GRADIENTS: Record<number, any> = {
+  0: { gradientBg: 'to-purple-50 dark:to-purple-950/20 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-purple-100', colorIcon: 'text-purple-600', icon: 'Briefcase' },
+  1: { gradientBg: 'to-blue-50 dark:to-blue-950/20 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-blue-100', colorIcon: 'text-blue-600', icon: 'SquareLibrary' },
+  2: { gradientBg: 'to-red-50 dark:to-red-950/20 via-white dark:via-neutral-800 from-transparent', bgIcon: 'bg-red-100', colorIcon: 'text-red-600', icon: 'FileText' },
+}
+
+const { title, value, index, href } = Astro.props
+---
+
+<a href={href} class={`group relative p-6 bg-background border border-border rounded-main flex justify-between items-center overflow-hidden  bg-linear-to-tl ${GRADIENTS[index % 4].gradientBg}`}>
+  <div>
+    <Icon name={GRADIENTS[index % 4].icon as keyof typeof icons} class={`size-10 group-hover:scale-110 transition-transform ${GRADIENTS[index % 4].colorIcon}`} strokeWidth={1.5} />
+  </div>
+
+  <div class="flex flex-col justify-end">
+    <div>
+      <span class="text-sm font-medium text-subheading" transition:animate="fade" transition:name="title">{title}</span>
+    </div>
+
+    <div class="w-full text-end text-3xl font-bold text-heading">
+      <span>{value}</span>
+    </div>
+  </div>
+</a>
