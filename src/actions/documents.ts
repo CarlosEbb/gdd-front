@@ -109,7 +109,6 @@ export const documents = {
 
       try {
         const file = await http.get<SchemaFile>(url, token, request)
-        console.log(file)
         return file
       } catch (error) {
         await handleApiError(error, request)
