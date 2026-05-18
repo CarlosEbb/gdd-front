@@ -20,9 +20,15 @@ interface Props extends HTMLAttributes<'div'> {
   totalPages?: number
   pageSize?: number
   showPagination?: boolean
+  size?: 'fixed' | 'free'
+  width?: string
+  height?: number
 }
 
-const { columns, rows, currentPage = 1, totalPages = 1, pageSize = 10, showPagination = true, class: className, ...rest } = Astro.props
+const { columns, rows, currentPage = 1, totalPages = 1, pageSize = 10, showPagination = true, size = 'free', width, height, class: className, ...rest } = Astro.props
+
+const isFixed = size === 'fixed'
+const containerStyle = [width && `width: ${width};`, isFixed && height && `height: ${height}dvh;`].filter(Boolean).join(' ') || undefined
 
 const alignClasses: Record<string, string> = {
   left: 'text-left',
@@ -31,10 +37,10 @@ const alignClasses: Record<string, string> = {
 }
 ---
 
-<div class:list={['w-full overflow-hidden rounded-main border border-border bg-background', className]} {...rest}>
-  <table class="w-full border-collapse">
+<div class:list={['rounded-main border border-border bg-background', !isFixed && 'w-full overflow-hidden', isFixed && 'overflow-auto', className]} style={containerStyle} {...rest}>
+  <table class:list={['border-collapse', !isFixed && 'w-full', isFixed && 'w-full table-fixed']}>
     <thead>
-      <tr class="h-11 border-b border-border bg-foreground">
+      <tr class:list={['h-11 border-b border-border bg-foreground', isFixed && 'sticky top-0 z-10']}>
         {columns.map((col) => <th class:list={['px-4 py-3 text-sm font-medium tracking-wide whitespace-nowrap text-heading select-none', alignClasses[col.align || 'left']]}>{col.label}</th>)}
       </tr>
     </thead>
@@ -90,7 +96,7 @@ const alignClasses: Record<string, string> = {
 
   {
     showPagination && (
-      <div class="flex items-center justify-between border-t border-border bg-foreground px-4 py-2">
+      <div class:list={['flex items-center justify-between border-t border-border bg-foreground px-4 py-2', isFixed && 'sticky bottom-0 z-10']}>
         <div class="flex items-center gap-1 text-xs text-subheading">
           <span>Show {pageSize}</span>
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
