@@ -1,5 +1,6 @@
 ---
 import Input from '@/components/form/Input.astro'
+import PasswordValidator from '@/components/form/PasswordValidator.astro'
 import FormPageLayout from '@/layouts/FormPageLayout.astro'
 import FormBlock from '@/components/ui/FormBlock.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
@@ -101,6 +102,21 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
     <div>
       <Input required={!isEdit} type="password" autocomplete="new-password" placeholder="********" name="password" data-error-required="La contraseña es obligatoria" label="Contraseña" value="" />
     </div>
+
+    <div>
+      <Input
+        required={!isEdit}
+        type="password"
+        autocomplete="new-password"
+        placeholder="********"
+        name="confirmPassword"
+        data-error-required="La confirmación de contraseña es obligatoria"
+        label="Confirmar Contraseña"
+        value=""
+      />
+    </div>
+
+    <PasswordValidator passwordName="password" confirmName="confirmPassword" />
   </FormBlock>
 
   <PermissionGuard permissions={['databases.create', 'users.create']}>
