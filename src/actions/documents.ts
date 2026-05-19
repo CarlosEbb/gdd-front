@@ -214,24 +214,6 @@ export const documents = {
     },
   }),
 
-  createValidationRules: defineAction({
-    input: z.object({
-      uuid_template: z.string(),
-      build_number: z.string(),
-      validation_rules: z.record(z.any()),
-    }),
-    handler: async ({ uuid_template, build_number, validation_rules }, request) => {
-      const token = await requireAuth(request)
-      const url = `/documents/validate/variables/${uuid_template}/${build_number}`
-      try {
-        const response = await http.post(url, token, request, validation_rules)
-        return response
-      } catch (error) {
-        await handleApiError(error, request)
-      }
-    },
-  }),
-
   getVersions: defineAction({
     input: z.object({
       uuid_template: z.string(),
@@ -257,6 +239,24 @@ export const documents = {
       const url = `/template/${uuid_template}/versions/history`
       try {
         const response = await http.get<DocumentVersionHistory[]>(url, token, request)
+        return response
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
+
+  createValidationRules: defineAction({
+    input: z.object({
+      uuid_version: z.string(),
+      validation_rules: z.record(z.any()),
+    }),
+    handler: async ({ uuid_version, validation_rules }, request) => {
+      const token = await requireAuth(request)
+      const url = `/template/versions/${uuid_version}`
+      const body = { json: validation_rules }
+      try {
+        const response = await http.post(url, token, request, body)
         return response
       } catch (error) {
         await handleApiError(error, request)

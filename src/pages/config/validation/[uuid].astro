@@ -32,6 +32,7 @@ const { data } = await Astro.callAction(actions.documents.getRequestForDocument,
 const request = data?.data?.variables || {}
 const fields = Object.keys(request) as Array<string>
 const elements = data?.data?.elementos || []
+const uuidVersion = data?.data?.uuid_version || ''
 ---
 
 <Layout title="Validaciones">
@@ -42,7 +43,7 @@ const elements = data?.data?.elementos || []
         <TabsTrigger value="documento">Documento</TabsTrigger>
       </TabsList>
 
-      <Button id="btn-save-validation" loadingText="Guardando..." data-uuid-template={uuid} data-build-number={build_number}>Guardar</Button>
+      <Button id="btn-save-validation" size="sm" loadingText="Guardando..." data-uuid-version={uuidVersion} data-build-number={build_number}>Guardar</Button>
     </div>
 
     <TabsContent value="json">
@@ -86,10 +87,10 @@ const elements = data?.data?.elementos || []
 
     saveButton.addEventListener('click', async (event) => {
       event.preventDefault()
-      const uuidTemplate = saveButton.dataset.uuidTemplate
+      const uuidVersion = saveButton.dataset.uuidVersion
       const buildNumber = saveButton.dataset.buildNumber
 
-      if (!uuidTemplate || !buildNumber) {
+      if (!uuidVersion || !buildNumber) {
         toast.error('No se pudo obtener la información del documento.')
         return
       }
@@ -101,8 +102,7 @@ const elements = data?.data?.elementos || []
 
         const { data, error } = await callAction(
           actions.documents.createValidationRules({
-            uuid_template: uuidTemplate,
-            build_number: buildNumber,
+            uuid_version: uuidVersion,
             validation_rules: validationPayload,
           })
         )
