@@ -1,0 +1,80 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import { actions } from 'astro:actions'
+import { formatISODateWithIntl } from '@/scripts/utils'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Container from '@/components/ui/Container.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import Header from '@/components/ui/Header.astro'
+import CardList from '@/components/ui/CardList.astro'
+import Link from '@/components/ui/Link.astro'
+import Layout from '../_components/Layout.astro'
+
+const { uuid } = Astro.params
+
+const { PUBLIC_PROJECT_URL } = import.meta.env
+
+if (!uuid) return Astro.redirect('/home')
+
+const { data, error } = await Astro.callAction(actions.documents.getListGeneratedDocuments, { uuid_template: uuid })
+
+const documents = data?.data || []
+const status = {
+  ACTIVO: 'Procesado',
+  ELIMINADO: 'Error',
+}
+
+const statusColor = {
+  ACTIVO: 'bg-green-100 text-green-800',
+  ELIMINADO: 'bg-red-100 text-red-800',
+}
+
+const statusIcon = {
+  ACTIVO: 'Check',
+  ELIMINADO: 'X',
+}
+
+const currentPath = Astro.url.pathname
+---
+
+<Layout title="Documentos generados">
+  <StateSwitch hasError={!!error} isEmpty={documents.length === 0}>
+    <div class="mt-6 sm:mt-8">
+      <div class="overflow-hidden rounded-main border border-border bg-background">
+        {
+          documents.map((document) => (
+            <CardList icon={statusIcon[document.status] as any} title={`ID: ${String(document.id)}`} description={formatISODateWithIntl(document.created_at)}>
+              <span slot="actions" class={`${statusColor[document.status]} me-2 inline-flex items-center rounded px-2.5 py-0.5 text-xs font-medium`}>
+                {status[document.status]}
+              </span>
+              <Link
+                variant="outline"
+                iconPosition="right"
+                icon="ExternalLink"
+                size="sm"
+                slot="actions"
+                href={`${PUBLIC_PROJECT_URL}/documents/viewPDF/${document.uuid}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ver documento
+              </Link>
+            </CardList>
+          ))
+        }
+      </div>
+    </div>
+
+    <EmptyState
+      slot="error"
+      title="Error al cargar la lista"
+      description="Ah ocurrido un error al cargar la lista de documentos."
+      href={currentPath}
+      hrefText="Recargar"
+      state="error"
+      action="refresh"
+    />
+
+    <EmptyState slot="empty" title="No se encontraron documentos generados" description="Genera un documento para empezar a trabajar." />
+  </StateSwitch>
+</Layout>

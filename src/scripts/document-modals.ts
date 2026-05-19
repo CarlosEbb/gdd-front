@@ -56,8 +56,8 @@ export function initDocumentModals() {
 
   document.addEventListener('document:generated', async (event: Event) => {
     const cardData = (event as CustomEvent).detail
-    const { uuid } = cardData
-    navigate(`documents/list/${uuid}`)
+    const { uuid, buildNumber } = cardData
+    navigate(`/config/generated/${uuid}?build_number=${buildNumber}`)
   })
 
   document.addEventListener('document:view-documentation', async (event: Event) => {
