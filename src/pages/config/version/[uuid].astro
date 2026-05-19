@@ -126,26 +126,37 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
         <Link href={`/documents/history/${uuid}`} variant="outline" icon="Clock" size="sm" title="Ver historial"> Historial </Link>
       </div>
       <div class="overflow-hidden rounded-main border border-border bg-background">
-        {
-          filteredVersionsUnpublished.map((version) => (
-            <CardList title={version.nameVersion || ''} description={version.buildNumber.toString()} secondaryText={formatISODateWithIntl(version.createdAt)}>
-              <div slot="actions" class="flex items-center gap-2">
-                <Button size="sm" variant="outline" icon="GitBranch" data-open-modal="new-version-document" data-build-number={version.buildNumber.toString()} title="Crear versión a partir de esta" />
+        <StateSwitch isEmpty={filteredVersionsUnpublished.length === 0}>
+          {
+            filteredVersionsUnpublished.map((version) => (
+              <CardList title={version.nameVersion || ''} description={version.buildNumber.toString()} secondaryText={formatISODateWithIntl(version.createdAt)}>
+                <div slot="actions" class="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    icon="GitBranch"
+                    data-open-modal="new-version-document"
+                    data-build-number={version.buildNumber.toString()}
+                    title="Crear versión a partir de esta"
+                  />
 
-                <Button
-                  size="sm"
-                  data-open-modal="publish-version"
-                  data-version-uuid-template={version.uuidTemplate}
-                  data-version-uuid={version.uuid}
-                  data-version-name={version.nameVersion || ''}
-                  data-version-build-number={version.buildNumber.toString()}
-                >
-                  Publicar
-                </Button>
-              </div>
-            </CardList>
-          ))
-        }
+                  <Button
+                    size="sm"
+                    data-open-modal="publish-version"
+                    data-version-uuid-template={version.uuidTemplate}
+                    data-version-uuid={version.uuid}
+                    data-version-name={version.nameVersion || ''}
+                    data-version-build-number={version.buildNumber.toString()}
+                  >
+                    Publicar
+                  </Button>
+                </div>
+              </CardList>
+            ))
+          }
+
+          <EmptyState slot="empty" showBorder={false} title="No hay versiones disponibles" description="No hay registros de versiones distintas a la publicada" state="notFound" />
+        </StateSwitch>
       </div>
     </div>
 
