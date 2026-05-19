@@ -43,7 +43,7 @@ const uuidVersion = data?.data?.uuid_version || ''
         <TabsTrigger value="documento">Documento</TabsTrigger>
       </TabsList>
 
-      <Button id="btn-save-validation" size="sm" loadingText="Guardando..." data-uuid-version={uuidVersion} data-build-number={build_number}>Guardar</Button>
+      <Button id="btn-save-validation" size="sm" loadingText="Guardando..." data-uuid-version={uuidVersion}>Guardar</Button>
     </div>
 
     <TabsContent value="json">
@@ -88,9 +88,8 @@ const uuidVersion = data?.data?.uuid_version || ''
     saveButton.addEventListener('click', async (event) => {
       event.preventDefault()
       const uuidVersion = saveButton.dataset.uuidVersion
-      const buildNumber = saveButton.dataset.buildNumber
 
-      if (!uuidVersion || !buildNumber) {
+      if (!uuidVersion) {
         toast.error('No se pudo obtener la información del documento.')
         return
       }
