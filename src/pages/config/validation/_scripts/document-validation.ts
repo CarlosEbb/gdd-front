@@ -21,10 +21,12 @@ interface DocumentValidationElements {
   formContainer: HTMLElement | null
   logicalOperators: HTMLElement | null
   selectedFieldsDisplay: HTMLElement | null
+  variablesSelect: HTMLSelectElement | null
   operatorSelect: HTMLSelectElement | null
   valueInput: HTMLInputElement | null
   logicalOperatorRadios: NodeListOf<HTMLInputElement>
   btnAddCondition: HTMLButtonElement | null
+  formFooter: HTMLElement | null
 
   // Paso 3
   emptyStatePaso3: HTMLElement | null
@@ -45,10 +47,12 @@ function getElements(): DocumentValidationElements {
     formContainer: document.querySelector('[data-form-container]'),
     logicalOperators: document.querySelector('[data-logical-operators]'),
     selectedFieldsDisplay: document.querySelector('[data-selected-fields-display]'),
+    variablesSelect: document.querySelector('select[data-variables-select]'),
     operatorSelect: document.querySelector('[data-form-container] select[name="operator"]'),
     valueInput: document.querySelector('[data-form-container] input[name="value"]'),
     logicalOperatorRadios: document.querySelectorAll('[data-logical-operator-radio]'),
     btnAddCondition: document.querySelector('[data-btn-add-condition]'),
+    formFooter: document.querySelector('[data-form-footer]'),
 
     // Paso 3
     emptyStatePaso3: document.querySelector('[data-empty-state-paso3]'),
@@ -153,12 +157,20 @@ function showForm(): void {
   if (elements.formContainer) {
     elements.formContainer.classList.remove('hidden')
   }
+  if (elements.formFooter) {
+    elements.formFooter.classList.remove('hidden')
+    elements.formFooter.classList.add('flex')
+  }
 }
 
 function hideForm(): void {
   const elements = getElements()
   if (elements.formContainer) {
     elements.formContainer.classList.add('hidden')
+  }
+  if (elements.formFooter) {
+    elements.formFooter.classList.add('hidden')
+    elements.formFooter.classList.remove('flex')
   }
 }
 
@@ -259,12 +271,14 @@ function createConditionItem(condition: HiddenCondition, index: number): HTMLEle
   const fieldText = li.querySelector('[data-field-text]')
   const operatorText = li.querySelector('[data-operator-text]')
   const valueText = li.querySelector('[data-value-text]')
+  const hiddenByText = li.querySelector('[data-hidden-by-text]')
   const messageText = li.querySelector('[data-message-text]')
   const deleteBtn = li.querySelector('[data-btn-delete-condition]')
 
   if (fieldText) fieldText.textContent = condition.field
   if (operatorText) operatorText.textContent = getOperatorSymbol(condition.operator)
   if (valueText) valueText.textContent = condition.value
+  if (hiddenByText) hiddenByText.textContent = condition.hiddenBy
   if (messageText) messageText.textContent = `${condition.field} ${getOperatorSymbol(condition.operator)} ${condition.value}`
   if (deleteBtn) deleteBtn.setAttribute('data-btn-delete-condition', String(index))
 
@@ -315,12 +329,16 @@ function handleAddCondition(): void {
     logicalOperator = selectedRadio.value as 'and' | 'or'
   }
 
+  // Obtener el valor del select de variables (hiddenBy)
+  const hiddenBy = elements.variablesSelect?.value || ''
+
   // Crear una condición por cada campo seleccionado
   state.selectedFieldsToHide.forEach((field) => {
     const condition: HiddenCondition = {
       field,
       operator,
       value,
+      hiddenBy,
       logicalOperator,
     }
 

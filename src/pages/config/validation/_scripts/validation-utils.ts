@@ -21,6 +21,7 @@ export type HiddenCondition = {
   field: string
   operator: string
   value: string
+  hiddenBy: string
   logicalOperator: 'and' | 'or'
 }
 

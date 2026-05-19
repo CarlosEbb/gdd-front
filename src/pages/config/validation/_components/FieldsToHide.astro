@@ -9,14 +9,14 @@ interface Props {
 const { elements } = Astro.props
 ---
 
-<Card class="flex flex-col">
+<Card class="flex h-[calc(100vh-20rem)] flex-col">
   <div slot="header">
     <h2 class="text-md text-heading">
       <span class="me-1 inline-flex size-5 items-center justify-center rounded-main bg-primary-foreground p-3 text-base font-semibold text-primary"> 1 </span>
       Campos a ocultar
     </h2>
   </div>
-  <div class="h-[calc(100vh-30rem)] space-y-1 overflow-y-auto">
+  <div class="flex-1 space-y-1 overflow-y-auto">
     {
       elements.map((element) => (
         <label class="flex cursor-pointer justify-between rounded-main border border-border p-2 text-subheading transition-all duration-200 hover:border-primary hover:bg-primary-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-2 focus-visible:outline-ring has-checked:border-primary has-checked:bg-primary-foreground has-checked:text-primary">

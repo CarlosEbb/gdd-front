@@ -56,7 +56,7 @@ const uuidVersion = data?.data?.uuid_version || ''
     <TabsContent value="documento">
       <div class="grid grid-cols-3 gap-x-3">
         <FieldsToHide elements={elements} />
-        <ConditionForm />
+        <ConditionForm variables={fields} />
         <ConditionsList />
       </div>
     </TabsContent>

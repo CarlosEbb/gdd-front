@@ -5,6 +5,13 @@ import Button from '@/components/ui/Button.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import { OPERATORS, OPERATORS_LOGICAL } from '../_constants'
 import Card from '@/components/ui/Card.astro'
+
+interface Props {
+  variables: Record<string, any>
+}
+
+const { variables } = Astro.props as Props
+const options = variables.map((variable: string) => ({ value: variable, label: variable }))
 ---
 
 <Card class="flex flex-col justify-between">
@@ -46,19 +53,20 @@ import Card from '@/components/ui/Card.astro'
             <span class="text-sm text-muted-foreground">No hay campos seleccionados</span>
           </div>
         </div>
+        <div>
+          <Select name="variables" id="variables" label="Variables" options={options} data-variables-select />
+        </div>
         <div class="w-full">
-          <label for="field" class="block text-sm font-medium text-heading">Operador de comparación</label>
-          <Select name="operator" options={OPERATORS} data-operator-select />
+          <Select name="operator" options={OPERATORS} label="Operador de comparación" data-operator-select />
         </div>
 
         <div class="w-full">
-          <label for="field" class="block text-sm font-medium text-heading">Valor</label>
-          <Input type="text" name="value" placeholder="Valor" data-value-input />
+          <Input type="text" name="value" placeholder="Valor" label="Valor" data-value-input />
         </div>
       </form>
     </div>
   </div>
-  <div slot="footer" class="flex justify-end">
+  <div slot="footer" class="hidden justify-end" data-form-footer>
     <Button icon="Plus" size="sm" data-btn-add-condition> Agregar validación </Button>
   </div>
 </Card>
