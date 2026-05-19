@@ -52,7 +52,7 @@
 }
 
 @theme inline {
-  --color-blue-accent: #2c62db;
+
   --color-blue-muted: #6165d7;
 
   --color-ring: var(--ring);
