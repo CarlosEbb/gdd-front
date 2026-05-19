@@ -201,4 +201,4 @@ export interface User {
   email?: string
 }
 
-type Status = 'active' | 'deleted'
+type Status = 'ACTIVO' | 'ELIMINADO'
