@@ -39,14 +39,14 @@ const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
         <img
           src={photo}
           alt="Foto de perfil"
-          class={`aspect-square h-32 w-32 rounded-full border border-gray-200 object-cover ${isHiddenPhoto}`}
+          class={`aspect-square h-32 w-32 rounded-full border border-border object-cover ${isHiddenPhoto}`}
           id="photo-profile"
           data-has-existing-photo={String(!hasPhoto)}
           data-original-photo={photo}
         />
 
         <div
-          class={`flex aspect-square size-28 items-center justify-center rounded-full border border-gray-200 bg-linear-to-bl from-blue-muted/30 to-blue-accent/30 object-cover text-5xl font-semibold ${isHiddenPhoto ? '' : 'hidden'}`}
+          class={`flex aspect-square size-28 items-center justify-center rounded-full border border-border bg-linear-to-bl from-primary-foreground/30 to-primary/80 object-cover text-5xl font-semibold ${isHiddenPhoto ? '' : 'hidden'}`}
           id="initials-profile"
         >
           {initials}
@@ -54,14 +54,14 @@ const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
 
         <div class="w-11/12 overflow-hidden md:w-auto">
           <div class="flex items-center gap-2">
-            <label class="black cursor-pointer rounded-main bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">
+            <label class="cursor-pointer rounded-main bg-muted px-4 py-2 text-sm font-medium text-subheading hover:bg-secondary">
               <span class="sr-only">Cambiar foto</span>
               <input type="file" form="form-profile" accept="image/jpeg, image/png" name="img_profile_file" class="cursor-pointer" />
             </label>
             <button
               type="button"
               id="remove-photo-btn"
-              class={`rounded-main bg-red-50 px-2 py-2 text-red-600 transition-colors hover:bg-red-100 ${isHiddenPhoto ? 'hidden' : ''}`}
+              class={`rounded-main bg-destructive/15 px-2 py-2 text-destructive transition-colors hover:bg-destructive/25 ${isHiddenPhoto ? 'hidden' : ''}`}
               title="Eliminar foto"
             >
               <Icon name="Trash" class="size-5" stroke-width={1.5} />
