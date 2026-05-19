@@ -4,18 +4,18 @@ import Button from '@/components/ui/Button.astro'
 
 <template id="template-condition-item">
   <li
-    class="flex items-center justify-between rounded-main border border-gray-200 bg-slate-50 p-2 transition-all duration-200 hover:border-blue-muted hover:bg-blue-muted/10 hover:text-blue-muted"
+    class="flex items-center justify-between rounded-main border border-border bg-foreground p-2 transition-all duration-200 hover:border-primary hover:bg-primary-foreground hover:text-primary"
     data-condition-index=""
   >
     <div class="flex-1">
       <div class="flex items-center gap-2 text-xs">
-        <span class="rounded-main bg-blue-muted/20 px-2 py-1 font-medium text-gray-700" data-field-text></span>
-        <span data-operator-text></span>
-        <span class="max-w-20 truncate rounded-main bg-blue-muted/20 px-2 py-1 font-medium text-gray-700" data-value-text></span>
+        <span class="rounded-main border border-primary bg-primary-foreground px-2 py-1 font-medium text-subheading" data-field-text></span>
+        <span class="text-subheading" data-operator-text></span>
+        <span class="max-w-20 truncate rounded-main border border-primary bg-primary-foreground px-2 py-1 font-medium text-subheading" data-value-text></span>
       </div>
-      <span class="mt-1 block text-xs text-gray-500" data-message-text></span>
+      <span class="mt-1 block text-xs text-muted-foreground" data-message-text></span>
     </div>
 
-    <Button variant="destructive" size="sm" icon="X" iconOnly data-btn-delete-condition />
+    <Button variant="destructive" size="sm" icon="X" iconOnly data-btn-delete-condition aria-label="Eliminar condición" />
   </li>
 </template>

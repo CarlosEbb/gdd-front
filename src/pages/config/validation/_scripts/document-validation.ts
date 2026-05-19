@@ -213,7 +213,7 @@ function updateSelectedFieldsDisplay(): void {
 
   if (state.selectedFieldsToHide.length === 0) {
     const emptySpan = document.createElement('span')
-    emptySpan.className = 'text-sm text-gray-500'
+    emptySpan.className = 'text-sm text-muted-foreground'
     emptySpan.textContent = 'No hay campos seleccionados'
     elements.selectedFieldsDisplay.appendChild(emptySpan)
     return
@@ -222,7 +222,7 @@ function updateSelectedFieldsDisplay(): void {
   // Agregar badges de campos seleccionados
   state.selectedFieldsToHide.forEach((field) => {
     const badge = document.createElement('span')
-    badge.className = 'rounded-main bg-blue-muted/20 px-3 py-1.5 text-sm font-medium text-gray-700'
+    badge.className = 'rounded-main bg-primary-foreground px-3 py-1.5 text-sm font-medium text-primary'
     badge.textContent = field
     elements?.selectedFieldsDisplay?.appendChild(badge)
   })

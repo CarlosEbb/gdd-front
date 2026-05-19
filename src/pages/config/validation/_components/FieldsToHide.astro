@@ -1,7 +1,6 @@
 ---
 import Button from '@/components/ui/Button.astro'
-import Icon from '@/components/ui/Icon.astro'
-import { PARTS_VALIDATION } from '../_constants'
+import Card from '@/components/ui/Card.astro'
 
 interface Props {
   elements: string[]
@@ -10,29 +9,32 @@ interface Props {
 const { elements } = Astro.props
 ---
 
-<div class="flex flex-col rounded-main border border-gray-200 bg-white p-4">
-  <div class="mb-4 border-b border-gray-200 pb-4">
-    <h2 class="text-lg font-medium text-gray-700">
-      <span class="inline-flex size-7 items-center justify-center rounded-main border-2 border-white bg-blue-muted p-2 text-base text-white shadow-sm"> 1 </span>
+<Card class="flex flex-col">
+  <div slot="header">
+    <h2 class="text-md text-heading">
+      <span class="me-1 inline-flex size-5 items-center justify-center rounded-main bg-primary-foreground p-3 text-base font-semibold text-primary"> 1 </span>
       Campos a ocultar
     </h2>
   </div>
   <div class="h-[calc(100vh-30rem)] space-y-1 overflow-y-auto">
     {
       elements.map((element) => (
-        <label class="flex cursor-pointer justify-between rounded-main border border-gray-200 p-2 transition-all duration-200 hover:border-blue-muted hover:bg-blue-muted/10 hover:text-blue-muted has-checked:border-blue-muted has-checked:bg-blue-muted/10 has-checked:text-blue-muted has-checked:ring-blue-muted">
+        <label class="flex cursor-pointer justify-between rounded-main border border-border p-2 text-subheading transition-all duration-200 hover:border-primary hover:bg-primary-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-2 focus-visible:outline-ring has-checked:border-primary has-checked:bg-primary-foreground has-checked:text-primary">
           {element}
-          <input type="checkbox" name={element} id={element} value={element} data-field-hide-checkbox class="block accent-blue-muted checked:border-indigo-500" />
+          <input
+            type="checkbox"
+            name={element}
+            id={element}
+            value={element}
+            data-field-hide-checkbox
+            class="block accent-primary focus-visible:outline-2 focus-visible:outline-ring"
+            aria-label={`Seleccionar ${element} para ocultar`}
+          />
         </label>
       ))
     }
   </div>
-  <div class="mt-4 flex justify-end border-t border-gray-200 pt-4">
-    <Button variant="secondary" size="sm" id="btn-create-validation">
-      <span class="flex items-center gap-2 text-blue-muted">
-        <Icon name="Plus" class="size-4" />
-        Crear validación
-      </span>
-    </Button>
+  <div slot="footer" class="flex justify-end">
+    <Button icon="Plus" size="sm" id="btn-create-validation"> Crear validación </Button>
   </div>
-</div>
+</Card>

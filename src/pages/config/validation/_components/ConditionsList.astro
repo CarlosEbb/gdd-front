@@ -1,18 +1,19 @@
 ---
+import Card from '@/components/ui/Card.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 ---
 
-<div class="rounded-main border border-gray-200 bg-white p-4">
-  <div class="mb-4 border-b border-gray-200 pb-4">
-    <h2 class="text-lg font-medium text-gray-700">
-      <span class="inline-flex size-7 items-center justify-center rounded-main border-2 border-white bg-blue-muted p-2 text-base text-white shadow-sm"> 3 </span>
+<Card>
+  <div slot="header">
+    <h2 class="text-md text-heading">
+      <span class="me-1 inline-flex size-5 items-center justify-center rounded-main bg-primary-foreground p-3 text-base font-semibold text-primary"> 3 </span>
       Condiciones
     </h2>
   </div>
 
   <div class="flex h-full flex-1 items-center justify-center" data-empty-state-paso3>
-    <EmptyState title="Sin condiciones" description="Las condiciones creadas aparecerán aquí" state="info" hiddenAction={true} />
+    <EmptyState title="Sin condiciones" showBorder={false} description="Las condiciones creadas aparecerán aquí" state="info" hiddenAction={true} />
   </div>
 
   <ul class="hidden space-y-1" data-conditions-container></ul>
-</div>
+</Card>

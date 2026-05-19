@@ -2,63 +2,63 @@
 import Input from '@/components/form/Input.astro'
 import Select from '@/components/form/Select.astro'
 import Button from '@/components/ui/Button.astro'
-import Icon from '@/components/ui/Icon.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import { OPERATORS, OPERATORS_LOGICAL } from '../_constants'
+import Card from '@/components/ui/Card.astro'
 ---
 
-<div class="flex flex-col justify-between rounded-main border border-gray-200 bg-white p-4">
-  <div class="mb-4 border-b border-gray-200 pb-4">
-    <h2 class="text-lg font-medium text-gray-700">
-      <span class="inline-flex size-7 items-center justify-center rounded-main border-2 border-white bg-blue-muted p-2 text-base text-white shadow-sm"> 2 </span>
+<Card class="flex flex-col justify-between">
+  <div slot="header">
+    <h2 class="text-md text-heading">
+      <span class="me-1 inline-flex size-5 items-center justify-center rounded-main bg-primary-foreground p-3 text-base font-semibold text-primary"> 2 </span>
       Nueva condición
     </h2>
   </div>
-
   <div class="flex flex-1 items-center justify-center" data-empty-state-paso2>
-    <EmptyState title="Sin campos seleccionados" description="Selecciona campos en el paso 1 y presiona 'Crear validación' para comenzar" state="info" hiddenAction={true} />
+    <EmptyState title="Sin campos seleccionados" showBorder={false} description="Selecciona campos en el paso 1 y presiona 'Crear validación' para comenzar" state="info" hiddenAction={true} />
   </div>
-
   <div class="hidden flex-1" data-form-container>
     <div class="flex h-full flex-col">
       <form class="flex flex-1 flex-col space-y-4">
         <div data-logical-operators class="hidden w-full">
-          <label for="field" class="block">Operadores lógicos</label>
+          <label for="field" class="block text-sm font-medium text-heading">Operadores lógicos</label>
           <div class="grid grid-cols-2 gap-2">
             {
               OPERATORS_LOGICAL.map((operator) => (
-                <label class="flex cursor-pointer justify-between rounded-main border border-gray-200 p-2 transition-all duration-200 hover:border-blue-muted hover:bg-blue-muted/10 hover:text-blue-muted has-checked:bg-blue-muted/10 has-checked:text-blue-muted has-checked:ring-blue-muted">
+                <label class="flex cursor-pointer justify-between rounded-main border border-border p-2 text-subheading transition-all duration-200 hover:border-primary hover:bg-primary-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-2 focus-visible:outline-ring has-checked:bg-primary-foreground has-checked:text-primary has-checked:ring-primary">
                   {operator.label}
-                  <input type="radio" name="logical-operator" value={operator.value} data-logical-operator-radio class="block accent-blue-muted checked:border-indigo-500" />
+                  <input
+                    type="radio"
+                    name="logical-operator"
+                    value={operator.value}
+                    data-logical-operator-radio
+                    class="block accent-primary focus-visible:outline-2 focus-visible:outline-ring"
+                    aria-label={`Seleccionar operador ${operator.label}`}
+                  />
                 </label>
               ))
             }
           </div>
         </div>
         <div class="w-full">
-          <label for="field" class="block">Campos a ocultar</label>
-          <div class="flex flex-wrap items-center justify-center gap-2 rounded-main border border-gray-200 bg-gray-50 p-3" data-selected-fields-display>
-            <span class="text-sm text-gray-500">No hay campos seleccionados</span>
+          <label for="field" class="block text-sm font-medium text-heading">Campos a ocultar</label>
+          <div class="flex flex-wrap items-center justify-center gap-2 rounded-main border border-border bg-foreground p-3" data-selected-fields-display>
+            <span class="text-sm text-muted-foreground">No hay campos seleccionados</span>
           </div>
         </div>
         <div class="w-full">
-          <label for="field" class="block">Operador de comparación</label>
+          <label for="field" class="block text-sm font-medium text-heading">Operador de comparación</label>
           <Select name="operator" options={OPERATORS} data-operator-select />
         </div>
 
         <div class="w-full">
-          <label for="field" class="block">Valor</label>
+          <label for="field" class="block text-sm font-medium text-heading">Valor</label>
           <Input type="text" name="value" placeholder="Valor" data-value-input />
         </div>
       </form>
-      <div class="mt-4 flex justify-end border-t border-gray-200 pt-4">
-        <Button variant="secondary" size="sm" data-btn-add-condition>
-          <span class="flex items-center gap-2 text-blue-muted">
-            <Icon name="Plus" class="size-4" />
-            Agregar validación
-          </span>
-        </Button>
-      </div>
     </div>
   </div>
-</div>
+  <div slot="footer" class="flex justify-end">
+    <Button icon="Plus" size="sm" data-btn-add-condition> Agregar validación </Button>
+  </div>
+</Card>
