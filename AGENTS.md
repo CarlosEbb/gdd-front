@@ -15,3 +15,4 @@ You are an expert developer with knowledge of Astro, TailwindCSS, and TypeScript
 - Si no sabes algo de astro busca en la documentacion oficial de astro: https://docs.astro.build/es/
 - El código de TypeScript siempre tiene que ser fácil de entender reutilizable y mantenible a lo largo del tiempo
 - Antes de empezar una actividad revisa las Skills y utiliza la que sea necesaria para la actividad
+- Nunca hagas HTML en JavaScript, para eso utiliza los templates de HTML
