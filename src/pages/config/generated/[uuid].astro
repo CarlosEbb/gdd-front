@@ -1,11 +1,8 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro'
 import { actions } from 'astro:actions'
 import { formatISODateWithIntl } from '@/scripts/utils'
 import EmptyState from '@/components/ui/EmptyState.astro'
-import Container from '@/components/ui/Container.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
-import Header from '@/components/ui/Header.astro'
 import CardList from '@/components/ui/CardList.astro'
 import Link from '@/components/ui/Link.astro'
 import Layout from '../_components/Layout.astro'
@@ -33,7 +30,7 @@ const statusIcon = {
   ACTIVO: 'Check',
   ELIMINADO: 'X',
 }
-console.log('documents', documents)
+
 const currentPath = Astro.url.pathname
 ---
 
