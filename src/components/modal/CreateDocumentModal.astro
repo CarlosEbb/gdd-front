@@ -8,23 +8,28 @@ import SelectionCard from '../form/SelectionCard.astro'
 import { PAPER_SIZES, ORIENTATION, MARGIN_PRESETS } from '@/constants/file-settings'
 
 const workspaces = (await Astro.session?.get('workspaces')) || []
+
+const mapperWorkspaces = workspaces.map((workspace) => ({ value: workspace.uuid, label: workspace.name })) || []
 ---
 
 <Modal modalId="save-template" title="Crear documento">
   <form class="space-y-4" id="save-template-form">
     <input type="hidden" name="uuidBaseTemplate" value="" />
     <div>
+      {mapperWorkspaces.length === 0 && <p class="text-sm text-warning">No tienes espacios de trabajo disponibles</p>}
       <Select
+        disabled={mapperWorkspaces.length === 0}
         label="Espacio de trabajo"
         name="uuid_workspace"
         placeholder="Seleccione un espacio de trabajo"
-        options={workspaces.map((workspace) => ({ value: workspace.uuid, label: workspace.name }))}
+        options={mapperWorkspaces}
         required
+        data-error-required="Seleccione un espacio de trabajo"
       />
     </div>
 
     <div>
-      <Input label="Nombre" name="title" placeholder="Carta de presentación" required />
+      <Input label="Nombre" name="title" placeholder="Carta de presentación" required data-error-required="Ingrese un nombre para el documento" />
     </div>
 
     <div>
