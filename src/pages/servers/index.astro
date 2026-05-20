@@ -10,6 +10,8 @@ import DataGrid from '@/components/ui/DataGrid.astro'
 import SearchFilter from '@/components/form/SearchFilter.astro'
 import Header from '@/components/ui/Header.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Icon from '@/components/ui/Icon.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.servers.list, {})
@@ -22,7 +24,19 @@ const hasServers = servers.length > 0
   <Container>
     <Header title="Gestión de servidores" subtitle={`Total: ${servers.length} servidores`}>
       <PermissionGuard slot="actions" permission="servers.create">
-        <Link size="sm" href="/servers/new" icon="Plus">Crear Servidor</Link>
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Link href="/servers/new" size="sm" icon="Plus"> Crear servidor </Link>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <a href="/servers/new" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear servidor
+              </a>
+            </Dropdown>
+          </div>
+        </div>
       </PermissionGuard>
     </Header>
 

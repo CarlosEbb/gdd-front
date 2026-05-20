@@ -12,6 +12,7 @@ import Modal from '@/components/modal/Modal.astro'
 import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
 import Selector from '@/sections/workspaces/Selector.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
 const { uuid } = Astro.params
 
 if (!uuid) {
@@ -56,12 +57,31 @@ const getInitials = (name: string) => {
   <Container>
     <Header backHref="/workspaces" title={name} subtitle={`Numero de documentos: ${templates.length}`}>
       <div slot="actions">
-        <PermissionGuard permission="workspaces.update">
-          <Button size="sm" data-open-modal="edit-workspace" icon="Pencil">Editar</Button>
-        </PermissionGuard>
-        <PermissionGuard permission="workspaces.delete">
-          <Button size="sm" data-open-modal="delete-workspace" icon="Trash" variant="destructive">Eliminar</Button>
-        </PermissionGuard>
+        <div class="hidden items-center gap-3 sm:flex">
+          <PermissionGuard permission="workspaces.update">
+            <Button size="sm" data-open-modal="edit-workspace" icon="Pencil">Editar</Button>
+          </PermissionGuard>
+          <PermissionGuard permission="workspaces.delete">
+            <Button size="sm" data-open-modal="delete-workspace" icon="Trash" variant="destructive">Eliminar</Button>
+          </PermissionGuard>
+        </div>
+
+        <div class="block sm:hidden">
+          <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones" size="sm">
+            <PermissionGuard permission="workspaces.update">
+              <button class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted" data-open-modal="edit-workspace">
+                <Icon name="Pencil" class="h-4 w-4" />
+                Editar
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission="workspaces.delete">
+              <button type="button" data-open-modal="delete-workspace" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-red-600 hover:bg-muted">
+                <Icon name="Trash" class="h-4 w-4" />
+                Eliminar
+              </button>
+            </PermissionGuard>
+          </Dropdown>
+        </div>
       </div>
     </Header>
 

@@ -13,6 +13,7 @@ import Header from '@/components/ui/Header.astro'
 import CardList from '@/components/ui/CardList.astro'
 import Avatar from '@/components/ui/Avatar.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.clients.list, {})
@@ -26,7 +27,19 @@ const totalClients = clients.length
   <Container>
     <Header title="Gestión de clientes" subtitle={`Total: ${totalClients} clientes`}>
       <PermissionGuard slot="actions" permission="clients.create">
-        <Link size="sm" icon="Plus" href="/clients/new">Crear Cliente</Link>
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Link size="sm" icon="Plus" href="/clients/new">Crear Cliente</Link>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <a href="/clients/new" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear cliente
+              </a>
+            </Dropdown>
+          </div>
+        </div>
       </PermissionGuard>
     </Header>
 

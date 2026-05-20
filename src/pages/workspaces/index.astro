@@ -12,6 +12,7 @@ import { formatISODateWithIntl } from '@/scripts/utils'
 import Button from '@/components/ui/Button.astro'
 import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.workspaces.list, {})
@@ -24,7 +25,19 @@ const hasWorkspaces = workspaces.length > 0
   <Container>
     <Header title="Gestión de espacios de trabajo" subtitle={`Total: ${workspaces.length} espacios`}>
       <PermissionGuard slot="actions" permission="workspaces.create">
-        <Button size="sm" data-open-modal="create-workspace" icon="Plus">Crear Espacio</Button>
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Button size="sm" data-open-modal="create-workspace" icon="Plus">Crear Espacio</Button>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <button class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted" data-open-modal="create-workspace">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear espacio
+              </button>
+            </Dropdown>
+          </div>
+        </div>
       </PermissionGuard>
     </Header>
 

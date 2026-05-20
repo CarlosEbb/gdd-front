@@ -10,6 +10,7 @@ import Container from '@/components/ui/Container.astro'
 import Header from '@/components/ui/Header.astro'
 import Dropdown from '@/components/ui/Dropdown.astro'
 import Icon from '@/components/ui/Icon.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const workspaces = await Astro.session?.get('workspaces')
 const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id, label: workspace.name })) ?? []
@@ -18,19 +19,21 @@ const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id,
 <MainLayout title="Mis documentos">
   <Container>
     <Header title="Mis documentos" subtitle="Gestiona tus documentos">
-      <div slot="actions" class="flex items-center gap-2">
-        <div class="hidden md:block">
-          <Button size="sm" icon="Plus" data-open-modal="save-template">Crear documento</Button>
+      <PermissionGuard slot="actions" permission="templates.create">
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Button size="sm" icon="Plus" data-open-modal="save-template">Crear documento</Button>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <button class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted" data-open-modal="save-template">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear documento
+              </button>
+            </Dropdown>
+          </div>
         </div>
-        <div class="block md:hidden">
-          <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
-            <button class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted" data-open-modal="save-template">
-              <Icon name="Plus" class="h-4 w-4" />
-              Crear documento
-            </button>
-          </Dropdown>
-        </div>
-      </div>
+      </PermissionGuard>
     </Header>
 
     <section data-documents-filters>

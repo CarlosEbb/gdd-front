@@ -12,6 +12,8 @@ import Avatar from '@/components/ui/Avatar.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Icon from '@/components/ui/Icon.astro'
 
 const { data, error } = await Astro.callAction(actions.users.list, {})
 
@@ -24,7 +26,19 @@ const totalUsers = users.length
   <Container>
     <Header title="Gestión de usuarios" subtitle={`Total: ${totalUsers} usuarios`}>
       <PermissionGuard slot="actions" permission="users.create">
-        <Link href="/users/new" size="sm" icon="Plus"> Crear usuario </Link>
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Link href="/users/new" size="sm" icon="Plus"> Crear usuario </Link>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <a href="/users/new" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear usuario
+              </a>
+            </Dropdown>
+          </div>
+        </div>
       </PermissionGuard>
     </Header>
 

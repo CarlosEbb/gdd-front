@@ -36,9 +36,9 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
       getCurrentVersionPublished && (
         <Card class="mb-6 rounded-xl shadow-base">
           <div slot="header">
-            <div class="flex items-center justify-between">
+            <div class="items-center justify-between md:flex">
               <p class="font-semibold text-heading">Version Publicada</p>
-              <div class="flex items-center gap-2">
+              <div class="mt-2 flex items-center gap-2 md:mt-0">
                 <Button size="sm" icon="Reply" variant="destructive" data-open-modal="unpublish-version" data-version-uuid-template={getCurrentVersionPublished.uuidTemplate}>
                   Despublicar
                 </Button>
@@ -100,14 +100,14 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
               </div>
             </div>
           </div>
-          <div slot="footer" class="flex items-center justify-between">
+          <div slot="footer" class="items-center justify-between md:flex">
             <p class="text-sm text-subheading">Fecha de publicación: {formatISODateWithIntl(getCurrentVersionPublished.createdAt)}</p>
 
             <a
               href="http://"
               id="viewDocument"
               target="_blank"
-              class="flex items-center gap-2 text-primary hover:underline"
+              class="mt-2 flex items-center gap-2 text-primary hover:underline md:mt-0"
               rel="noopener noreferrer"
               data-uuid={getCurrentVersionPublished.uuidTemplate}
               data-build-number={getCurrentVersionPublished.buildNumber}
