@@ -35,24 +35,28 @@ const breadcrumbItems: BreadcrumbItem[] = [{ label: 'Inicio', href: '/home' }, .
     </Header>
 
     <section class="mb-10 border-b border-border">
-      <ul class="flex gap-x-8">
+      <ul data-tabs-container class="flex gap-x-8 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {
-          navigation.map((item) => (
-            <li>
-              <a
-                href={item.href}
-                class:list={[
-                  'inline-block px-4 py-3 text-sm font-medium transition-colors',
-                  {
-                    'border-b-2 border-primary text-primary': currentPath === item.href,
-                    'text-subheading hover:text-heading': currentPath !== item.href,
-                  },
-                ]}
-              >
-                {item.label}
-              </a>
-            </li>
-          ))
+          navigation.map((item) => {
+            const isActive = activeTab?.href === item.href
+            return (
+              <li>
+                <a
+                  href={item.href}
+                  data-active-tab={isActive ? 'true' : undefined}
+                  class:list={[
+                    'inline-block px-4 py-3 text-sm font-medium transition-colors',
+                    {
+                      'border-b-2 border-primary text-primary': isActive,
+                      'text-subheading hover:text-heading': !isActive,
+                    },
+                  ]}
+                >
+                  {item.label}
+                </a>
+              </li>
+            )
+          })
         }
       </ul>
     </section>
@@ -62,3 +66,20 @@ const breadcrumbItems: BreadcrumbItem[] = [{ label: 'Inicio', href: '/home' }, .
     </section>
   </Container>
 </MainLayout>
+
+<script>
+  const setupActiveTabScroll = () => {
+    const container = document.querySelector('[data-tabs-container]')
+    const activeTab = container?.querySelector('[data-active-tab="true"]')
+    if (container && activeTab) {
+      activeTab.scrollIntoView({
+        behavior: 'auto',
+        block: 'nearest',
+        inline: 'center',
+      })
+    }
+  }
+
+  setupActiveTabScroll()
+  document.addEventListener('astro:page-load', setupActiveTabScroll)
+</script>
