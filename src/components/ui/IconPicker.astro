@@ -153,14 +153,14 @@ if (iconSelected) {
 
 <p class="mb-1 block text-sm font-medium text-heading">Seleccione un icono</p>
 <div class="w-full max-w-lg rounded-main border border-border bg-background p-2">
-  <div class="grid h-72 grid-cols-5 gap-2 overflow-y-auto p-2">
+  <div class="grid h-72 grid-cols-4 gap-2 overflow-y-auto p-2 md:grid-cols-5">
     {
       iconList.map((icon) => (
         <label
           title={icon.name}
           class="peer flex aspect-square cursor-pointer flex-col items-center justify-center rounded-main border border-background p-2 text-subheading transition-colors hover:border-border has-checked:border-primary has-checked:text-primary"
         >
-          <icon.component class="h-6 w-6" stroke-width={1.5} />
+          <icon.component class="size-4 md:size-6" stroke-width={1.5} />
           <span class="mt-1 truncate text-xs peer-has-checked:text-primary">{icon.name}</span>
           <input type="radio" value={icon.name} class="hidden" name="icon" checked={isChecked} />
         </label>
