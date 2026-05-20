@@ -36,12 +36,11 @@ const ACTIONS = [
 
 const { document } = Astro.props
 
-const { uuid, lastVersion, uuidWorkspace, title, updatedAt, description, owner } = document
+const { uuid, lastVersion, uuidWorkspace, title, updatedAt, description, owner, workspace } = document
 const { pathThumbnails = null, buildNumber, nameVersion, uuid: uuidVersion = '' } = lastVersion || {}
 const { name: autor, photo } = owner
 
 const thumbnails = pathThumbnails ? `${PUBLIC_PROJECT_URL}${pathThumbnails}` : template.src
-
 const editorUrl = new URL(`/editor/${uuid}`, Astro.url)
 
 editorUrl.searchParams.set('build_number', String(buildNumber))
@@ -61,6 +60,7 @@ const url = editorUrl.pathname + editorUrl.search
   data-name-version={nameVersion}
   data-build-number={buildNumber}
   data-uuid-version={uuidVersion}
+  data-name-workspace={workspace?.name || ''}
 >
   <div class="overflow-hidden px-3 pt-3">
     <div class="relative flex h-48 w-full items-center justify-center overflow-hidden rounded-main bg-foreground">
@@ -78,10 +78,15 @@ const url = editorUrl.pathname + editorUrl.search
     </div>
   </div>
 
-  <div class="mt-2 flex items-center justify-between space-x-2 px-3">
-    <div class="flex min-w-0 flex-1 items-center gap-x-2">
-      <h3 class="truncate text-sm font-medium text-heading">{title}</h3>
-    </div>
+  <div class="my-2 flex items-center justify-between space-x-2 px-3">
+    {
+      workspace && (
+        <div class="flex max-w-[120px] min-w-0 items-center gap-x-2 rounded-main border border-primary bg-background px-1 py-0.5">
+          <Icon name={workspace.icon as keyof typeof icons} stroke-width={1.5} class="size-2.5 shrink-0 text-primary" />
+          <p class="truncate text-[11px] text-primary">{workspace.name}</p>
+        </div>
+      )
+    }
     <div class="relative">
       <button class="flex size-6 items-center justify-center rounded-main text-heading transition-colors duration-150 hover:bg-foreground" data-btn-dropdown>
         <Icon name="EllipsisVertical" stroke-width={1.5} size={18} />
@@ -110,15 +115,20 @@ const url = editorUrl.pathname + editorUrl.search
   </div>
 
   <div class="mb-2 px-3 pb-2">
+    <div class="flex min-w-0 flex-1 items-center gap-x-2">
+      <h3 class="truncate text-sm font-medium text-heading">{title}</h3>
+    </div>
     {description && <p class="line-clamp-2 text-xs text-subheading">{description}</p>}
   </div>
 
-  <div class="mt-auto flex items-center justify-between rounded-b-main border-t border-border bg-foreground px-3 py-2">
-    <div class="flex items-center">
-      <Avatar size="xs" name={autor} photo={photo} />
-      <p class="ml-2 line-clamp-1 text-xs text-heading">{autor}</p>
+  <div class="mt-auto rounded-b-main border-t border-border bg-foreground px-3 py-2">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <Avatar size="xs" name={autor} photo={photo} />
+        <p class="ml-2 line-clamp-1 text-xs text-heading">{autor}</p>
+      </div>
+      <p class="mt-0.5 rounded-main border border-border bg-muted px-2 py-1 text-[10px] text-subheading">{formatShortDate(updatedAt)}</p>
     </div>
-    <p class="mt-0.5 rounded-main border border-border bg-muted px-2 py-1 text-[10px] text-subheading">{formatShortDate(updatedAt)}</p>
   </div>
 </div>
 
