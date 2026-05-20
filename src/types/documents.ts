@@ -11,6 +11,12 @@ export interface Document {
   status: string
   lastVersion: LastVersion
   owner: Owner
+  workspace: Workspace
+}
+
+export interface Workspace {
+  name: string
+  icon: string
 }
 
 export interface Owner {
