@@ -15,20 +15,20 @@ if (!uuid) return Astro.redirect('/home')
 
 const { data, error } = await Astro.callAction(actions.documents.getListGeneratedDocuments, { uuid_template: uuid })
 
-const documents = data?.data || []
+const documents = data?.data?.documents || []
 const status = {
   ACTIVO: 'Procesado',
-  ELIMINADO: 'Error',
+  ERROR: 'Error',
 }
 
 const statusColor = {
   ACTIVO: 'bg-green-100 text-green-800',
-  ELIMINADO: 'bg-red-100 text-red-800',
+  ERROR: 'bg-red-100 text-red-800',
 }
 
 const statusIcon = {
   ACTIVO: 'Check',
-  ELIMINADO: 'X',
+  ERROR: 'X',
 }
 
 const currentPath = Astro.url.pathname
@@ -36,7 +36,7 @@ const currentPath = Astro.url.pathname
 
 <Layout title="Documentos generados">
   <StateSwitch hasError={!!error} isEmpty={documents.length === 0}>
-    <div class="mt-6 sm:mt-8">
+    <div class="my-10 sm:my-10">
       <div class="overflow-hidden rounded-main border border-border bg-background">
         {
           documents.map((document) => (

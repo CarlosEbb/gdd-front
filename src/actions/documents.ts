@@ -187,7 +187,7 @@ export const documents = {
     handler: async ({ uuid_template }, request) => {
       // await requirePermission(request, ['templates.view'], 'all')
       const token = await requireAuth(request)
-      const url = `/documents/getTemplate/${uuid_template}`
+      const url = `/documents/getTemplate/${uuid_template}?page=1&limit=10`
       try {
         const documents = await http.get<GeneratedDocument[]>(url, token, request)
         return documents
