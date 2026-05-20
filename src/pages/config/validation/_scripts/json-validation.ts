@@ -572,9 +572,9 @@ function setupDebugPanelToggle(): void {
 // ============================================
 // INICIALIZACIÓN
 // ============================================
-export function initValidationSystem(): void {
+export function initValidationSystem(initialRules?: ValidationRules): void {
   // Reset state
-  validationRules = {}
+  validationRules = initialRules || {}
   currentField = null
 
   // Get elements
@@ -583,6 +583,9 @@ export function initValidationSystem(): void {
   // Setup event listeners
   setupEventListeners()
   setupDebugPanelToggle()
+
+  // Update sidebar to show existing badges
+  updateSidebar()
 
   // Initial debug panel update
   updateDebugPanel({ validationRules })

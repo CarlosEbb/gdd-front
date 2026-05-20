@@ -117,6 +117,10 @@ export interface RequestForDocument {
   jwtToken?: string
   variables: Record<string, any>
   elementos: string[]
+  validaciones: {
+    validationRules: Record<string, any>
+    hiddenConditions: Record<string, any>
+  }
 }
 
 export interface DocumentVersion {

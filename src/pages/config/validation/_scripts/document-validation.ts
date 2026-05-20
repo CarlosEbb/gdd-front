@@ -397,12 +397,12 @@ function setupEventListeners(): void {
 // ============================================
 let initialized = false
 
-export function initDocumentValidation(): void {
+export function initDocumentValidation(initialConditions?: HiddenCondition[]): void {
   if (initialized) return
   initialized = true
 
   // Reset state
-  state.hiddenConditions = []
+  state.hiddenConditions = initialConditions || []
   state.selectedFieldsToHide = []
 
   // Setup event listeners

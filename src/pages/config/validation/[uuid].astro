@@ -33,6 +33,9 @@ const request = data?.data?.variables || {}
 const fields = Object.keys(request) as Array<string>
 const elements = data?.data?.elementos || []
 const uuidVersion = data?.data?.uuid_version || ''
+const validations = (data?.data as any)?.validation || null
+
+console.log(validations)
 ---
 
 <Layout title="Validaciones">
@@ -69,6 +72,7 @@ const uuidVersion = data?.data?.uuid_version || ''
 </Layout>
 
 <script type="application/json" id="json-input-data" set:html={JSON.stringify(request)} />
+<script type="application/json" id="json-validations-data" set:html={JSON.stringify(validations)} />
 
 <script>
   import { initValidationSystem } from './_scripts/json-validation'
@@ -122,8 +126,25 @@ const uuidVersion = data?.data?.uuid_version || ''
 
   document.addEventListener('astro:page-load', () => {
     resetDocumentValidation()
-    initValidationSystem()
-    initDocumentValidation()
+
+    let initialRules = undefined
+    let initialConditions = undefined
+
+    const validationsEl = document.getElementById('json-validations-data')
+    if (validationsEl && validationsEl.textContent) {
+      try {
+        const parsed = JSON.parse(validationsEl.textContent)
+        if (parsed) {
+          initialRules = parsed.validationRules
+          initialConditions = parsed.hiddenConditions
+        }
+      } catch (e) {
+        console.error('Error parsing initial validations data:', e)
+      }
+    }
+
+    initValidationSystem(initialRules)
+    initDocumentValidation(initialConditions)
     setupSaveValidation()
   })
 </script>
