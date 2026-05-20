@@ -16,3 +16,4 @@ You are an expert developer with knowledge of Astro, TailwindCSS, and TypeScript
 - El código de TypeScript siempre tiene que ser fácil de entender reutilizable y mantenible a lo largo del tiempo
 - Antes de empezar una actividad revisa las Skills y utiliza la que sea necesaria para la actividad
 - Nunca hagas HTML en JavaScript, para eso utiliza los templates de HTML
+- Siempre que hagas un diseño de una vista o un componente pregunta si es necesario hacer la vista mobile
