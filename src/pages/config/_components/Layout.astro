@@ -9,15 +9,16 @@ interface Props {
 const { uuid } = Astro.params
 const { title } = Astro.props
 
-const build_number = Astro.url.searchParams.get('build_number') as string
+const buildNumber = Astro.url.searchParams.get('build_number') as string
+const nameWorkspace = Astro.url.searchParams.get('name_workspace') as string
 
 const NAVIGATION = [
-  { href: `/config/version/${uuid}?build_number=${build_number}`, label: 'Versiones' },
-  { href: `/config/documentation/${uuid}?build_number=${build_number}`, label: 'Documentación' },
-  { href: `/config/validation/${uuid}?build_number=${build_number}`, label: 'Validaciones' },
-  { href: `/config/security/${uuid}?build_number=${build_number}`, label: 'Seguridad' },
-  { href: `/config/metrics/${uuid}?build_number=${build_number}`, label: 'Métricas' },
-  { href: `/config/generated/${uuid}?build_number=${build_number}`, label: 'Generados' },
+  { href: `/config/version/${uuid}?build_number=${buildNumber}`, label: 'Versiones' },
+  { href: `/config/documentation/${uuid}?build_number=${buildNumber}`, label: 'Documentación' },
+  { href: `/config/validation/${uuid}?build_number=${buildNumber}`, label: 'Validaciones' },
+  { href: `/config/security/${uuid}?build_number=${buildNumber}`, label: 'Seguridad' },
+  { href: `/config/metrics/${uuid}?build_number=${buildNumber}`, label: 'Métricas' },
+  { href: `/config/generated/${uuid}?build_number=${buildNumber}`, label: 'Generados' },
 ]
 
 const { data } = await Astro.callAction(actions.documents.getByUser, { limit: null })
@@ -26,14 +27,14 @@ const getCurrentUrl = Astro.url.pathname
 const [_, page, tab] = getCurrentUrl.split('/')
 ---
 
-<TabsLayout title={title} navigation={NAVIGATION} titleForPage="Gestionar documento">
+<TabsLayout title={title} navigation={NAVIGATION} subtitle={nameWorkspace ? `Espacio de trabajo: ${nameWorkspace}` : ''} titleForPage="Gestionar documento">
   <div slot="actions">
     <Dropdown shadow="none" buttonLabel="Cambiar documento">
       <ul>
         {
           documents.map((document) => (
             <li>
-              <a href={`/${page}/${tab}/${document.uuid}?build_number=${build_number}`} class="flex items-center gap-x-2 px-4 py-2 text-sm text-heading hover:bg-foreground">
+              <a href={`/${page}/${tab}/${document.uuid}?build_number=${buildNumber}`} class="flex items-center gap-x-2 px-4 py-2 text-sm text-heading hover:bg-foreground">
                 {document.name}
               </a>
             </li>

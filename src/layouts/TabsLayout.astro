@@ -8,9 +8,10 @@ interface Props {
   title: string
   navigation: { href: string; label: string }[]
   titleForPage: string
+  subtitle?: string
 }
-
-const { title, navigation, titleForPage } = Astro.props
+console.log('subtitle', Astro.props)
+const { title, navigation, titleForPage, subtitle } = Astro.props
 
 const pathname = Astro.url.pathname
 const search = Astro.url.search
@@ -24,7 +25,7 @@ const breadcrumbItems: BreadcrumbItem[] = [{ label: 'Inicio', href: '/home' }, .
 
 <MainLayout title={title}>
   <Container>
-    <Header title={titleForPage} subtitle="Consulta y gestiona la API de los documentos" breadcrumbItems={breadcrumbItems}>
+    <Header title={titleForPage} subtitle={subtitle || 'Consulta y gestiona la API de los documentos'} breadcrumbItems={breadcrumbItems}>
       {
         hasActions && (
           <Fragment slot="actions">
