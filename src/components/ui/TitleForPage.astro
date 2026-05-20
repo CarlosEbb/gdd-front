@@ -14,7 +14,7 @@ interface Props {
 const { title, class: className, backHref = undefined, showBackButton = true, subtitle = null, titleStyle = '' } = Astro.props
 ---
 
-<div class="flex items-start gap-4">
+<div class="flex min-w-0 items-start gap-4">
   {
     showBackButton && (
       <Button type="button" data-history-back data-fallback-href={backHref} variant="ghost" title="Volver a la página anterior" size="sm" aria-label="Volver a la página anterior">
@@ -23,11 +23,17 @@ const { title, class: className, backHref = undefined, showBackButton = true, su
     )
   }
 
-  <div class:list={[className]}>
-    <h1 class="text-xl font-semibold text-heading md:text-2xl" class:list={[titleStyle]} transition:animate="fade" transition:name="title">
+  <div class:list={['min-w-0', className]}>
+    <h1 class="truncate text-xl font-semibold text-heading md:text-2xl" class:list={[titleStyle]} transition:animate="fade" transition:name="title" title={title}>
       {title}
     </h1>
-    {subtitle && <p class="text-sm text-subheading">{subtitle}</p>}
+    {
+      subtitle && (
+        <p class="truncate text-sm text-subheading" title={subtitle}>
+          {subtitle}
+        </p>
+      )
+    }
   </div>
 </div>
 
