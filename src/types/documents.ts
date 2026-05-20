@@ -113,6 +113,7 @@ export interface GeneratedDocument {
   id_template: number
   created_at: string
   status: Status
+  encrypt: string
 }
 
 export interface RequestForDocument {

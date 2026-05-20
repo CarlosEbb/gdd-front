@@ -33,7 +33,7 @@ const statusIcon = {
   ACTIVO: 'Check',
   ELIMINADO: 'X',
 }
-
+console.log('documents', documents)
 const currentPath = Astro.url.pathname
 ---
 
@@ -53,7 +53,7 @@ const currentPath = Astro.url.pathname
                 icon="ExternalLink"
                 size="sm"
                 slot="actions"
-                href={`${PUBLIC_PROJECT_URL}/documents/viewPDF/${document.uuid}`}
+                href={`${PUBLIC_PROJECT_URL}/documents/viewPDF/${document.encrypt}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
