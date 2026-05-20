@@ -44,6 +44,7 @@ function handleDocumentClick(e: Event) {
       nameVersion: card.dataset.nameVersion,
       buildNumber: card.dataset.buildNumber,
       uuidVersion: card.dataset.uuidVersion,
+      nameWorkspace: card.dataset.nameWorkspace,
     }
 
     // Cerrar el dropdown

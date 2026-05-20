@@ -62,8 +62,8 @@ export function initDocumentModals() {
 
   document.addEventListener('document:view-documentation', async (event: Event) => {
     const cardData = (event as CustomEvent).detail
-    const { uuid, buildNumber, uuidVersion } = cardData
-    navigate(`/config/documentation/${uuid}?build_number=${buildNumber}`)
+    const { uuid, buildNumber, nameWorkspace } = cardData
+    navigate(`/config/documentation/${uuid}?build_number=${buildNumber}&name_workspace=${nameWorkspace}`)
   })
 
   document.addEventListener('document:duplicate', (event: Event) => {
