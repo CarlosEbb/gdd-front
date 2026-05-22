@@ -10,6 +10,7 @@ interface Props {
   border?: 'border' | 'none'
   position?: 'left' | 'right' | 'default'
   mobileIcon?: keyof typeof icons
+  icon?: keyof typeof icons
   menuClass?: string
   hideLabel?: boolean
 }
@@ -22,6 +23,7 @@ const {
   border = 'border',
   position = 'default',
   mobileIcon = 'Menu',
+  icon = undefined,
   menuClass = '',
   hideLabel = false,
 } = Astro.props
@@ -75,7 +77,12 @@ const positionClasses = {
         <>
           {mobileIcon && (
             <span class:list={['flex items-center justify-center', !hideLabel && 'md:hidden']}>
-              <Icon name={mobileIcon} class="h-5 w-5 text-heading" />
+              <Icon name={mobileIcon} class="size-5 text-heading" />
+            </span>
+          )}
+          {icon && (
+            <span class:list={['flex items-center justify-center', mobileIcon && 'hidden md:flex']}>
+              <Icon name={icon} class="size-4 text-heading" />
             </span>
           )}
           {!hideLabel && <span class:list={['truncate text-subheading', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>}
