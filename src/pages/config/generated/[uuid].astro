@@ -1,6 +1,6 @@
 ---
 import { actions } from 'astro:actions'
-import { formatISODateWithIntl, formatExtendedDate } from '@/scripts/utils'
+import { formatExtendedDate } from '@/scripts/utils'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import Layout from '../_components/Layout.astro'
@@ -11,6 +11,7 @@ import Icon from '@/components/ui/Icon.astro'
 import Button from '@/components/ui/Button.astro'
 import Link from '@/components/ui/Link.astro'
 import Dropdown from '@/components/ui/Dropdown.astro'
+import Select from '@/components/form/Select.astro'
 
 const { PUBLIC_PROJECT_URL } = import.meta.env
 
@@ -20,12 +21,15 @@ if (!uuid) return Astro.redirect('/home')
 const pageParam = Astro.url.searchParams.get('page')
 const currentPage = pageParam ? parseInt(pageParam, 10) : 1
 
+const limitParam = Astro.url.searchParams.get('limit')
+const currentLimit = limitParam ? parseInt(limitParam, 10) : 10
+
 const statusParam = Astro.url.searchParams.get('status')
 const validStatuses = ['validation_error', 'success', 'json_error', 'error'] as const
 type FilterStatus = (typeof validStatuses)[number] | null
 const currentStatus: FilterStatus = statusParam && validStatuses.includes(statusParam as any) ? (statusParam as FilterStatus) : null
 
-const { data, error } = await Astro.callAction(actions.documents.getListGeneratedDocuments, { uuid_template: uuid, page: currentPage, limit: 10, status: currentStatus })
+const { data, error } = await Astro.callAction(actions.documents.getListGeneratedDocuments, { uuid_template: uuid, page: currentPage, limit: currentLimit, status: currentStatus })
 
 const documents = data?.documents || []
 const stats: Stats = data?.stats || {
@@ -38,7 +42,7 @@ const stats: Stats = data?.stats || {
 
 const pagination: Pagination = data?.pagination || {
   page: currentPage,
-  limit: 10,
+  limit: currentLimit,
   total: 0,
   totalPages: 1,
 }
@@ -158,7 +162,7 @@ const statusIcons: Record<string, string> = {
                   {status(document.status, document.response_data.code)}
                 </span>
 
-                <div class="shrink-0 text-[10px] text-subheading select-none">{formatISODateWithIntl(document.created_at)}</div>
+                <div class="shrink-0 text-[10px] text-subheading select-none">{formatExtendedDate(document.created_at)}</div>
               </div>
 
               <div>
@@ -233,14 +237,38 @@ const statusIcons: Record<string, string> = {
   </div>
 
   <div class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 font-mono text-sm text-subheading sm:flex-row">
-    <div>
-      Mostrando <span class="font-bold text-heading">{itemStart} - {itemEnd}</span> de <span class="font-bold text-heading">{pagination.total}</span> registros
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div>
+        Mostrando <span class="font-bold text-heading">{itemStart} - {itemEnd}</span> de <span class="font-bold text-heading">{pagination.total}</span> registros
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="shrink-0">Mostrar:</span>
+        <div class="w-20">
+          <Select
+            name="limit"
+            id="page-limit"
+            value={currentLimit.toString()}
+            class="h-8 rounded-main py-0.5 text-xs"
+            options={[
+              { value: '10', label: '10' },
+              { value: '20', label: '20' },
+              { value: '50', label: '50' },
+              { value: '100', label: '100' },
+            ]}
+          />
+        </div>
+      </div>
     </div>
     <div class="flex items-center space-x-2">
       <div class="inline-flex items-center gap-x-2">
         {
           pagination.page > 1 ? (
-            <Link href={`?page=${pagination.page - 1}${currentStatus ? `&status=${currentStatus}` : ''}`} variant="secondary" icon="ChevronLeft" size="sm">
+            <Link
+              href={`?page=${pagination.page - 1}${currentLimit !== 10 ? `&limit=${currentLimit}` : ''}${currentStatus ? `&status=${currentStatus}` : ''}`}
+              variant="secondary"
+              icon="ChevronLeft"
+              size="sm"
+            >
               Anterior
             </Link>
           ) : (
@@ -252,7 +280,13 @@ const statusIcons: Record<string, string> = {
         <span class="text-xs">Página <span id="current-page">{pagination.page}</span> de <span id="total-pages">{pagination.totalPages}</span></span>
         {
           pagination.page < pagination.totalPages ? (
-            <Link href={`?page=${pagination.page + 1}${currentStatus ? `&status=${currentStatus}` : ''}`} variant="secondary" icon="ChevronRight" size="sm" iconPosition="right">
+            <Link
+              href={`?page=${pagination.page + 1}${currentLimit !== 10 ? `&limit=${currentLimit}` : ''}${currentStatus ? `&status=${currentStatus}` : ''}`}
+              variant="secondary"
+              icon="ChevronRight"
+              size="sm"
+              iconPosition="right"
+            >
               Siguiente
             </Link>
           ) : (
@@ -265,6 +299,23 @@ const statusIcons: Record<string, string> = {
     </div>
   </div>
 </Layout>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const limitSelect = document.getElementById('page-limit') as HTMLSelectElement | null
+    if (limitSelect) {
+      limitSelect.addEventListener('change', (event) => {
+        const target = event.target as HTMLSelectElement
+        const newLimit = target.value
+        const url = new URL(window.location.href)
+        url.searchParams.set('limit', newLimit)
+        // Reiniciamos a la primera página al cambiar el límite
+        url.searchParams.set('page', '1')
+        window.location.href = url.toString()
+      })
+    }
+  })
+</script>
 
 <style>
   .code-container,
