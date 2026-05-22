@@ -108,12 +108,67 @@ export interface BasePDF {
 }
 
 export interface GeneratedDocument {
+  template: Template
+  stats: Stats
+  pagination: Pagination
+  documents: DocumentGenerated[]
+}
+
+export interface DocumentGenerated {
   id: number
   uuid: string
   id_template: number
+  build_number: string
+  encrypt: null | string
+  status: 'ACTIVO' | 'ERROR'
+  response_status: string
+  response_data: ResponseDocumentGenerated
+  error_details: null | string
   created_at: string
-  status: Status
-  encrypt: string
+  updated_at: string
+}
+
+export interface ResponseDocumentGenerated {
+  code: number
+  data: DocumentGeneratedData
+  message: string
+  timestamp: string
+}
+
+export interface DocumentGeneratedData {
+  url?: string
+  uuid?: string
+  errors?: string[]
+  summary?: Summary
+  warnings?: string[]
+}
+
+export interface Summary {
+  totalErrors: number
+  totalWarnings: number
+}
+
+export interface Pagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+export interface Stats {
+  total: number
+  success: number
+  error: number
+  validation_error: number
+  json_error: number
+}
+
+export interface Template {
+  uuid: string
+  name: string
+  title: string
+  idWorkspace: number
+  uuidWorkspace: string
 }
 
 export interface RequestForDocument {

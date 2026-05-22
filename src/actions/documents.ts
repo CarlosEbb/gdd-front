@@ -183,14 +183,35 @@ export const documents = {
   getListGeneratedDocuments: defineAction({
     input: z.object({
       uuid_template: z.string(),
+      page: z.number().optional(),
+      limit: z.number().optional(),
+      status: z.enum(['validation_error', 'success', 'validation_error', 'json_error', 'error']).optional().nullable(),
     }),
-    handler: async ({ uuid_template }, request) => {
+    handler: async ({ uuid_template, page, limit, status }, request) => {
       // await requirePermission(request, ['templates.view'], 'all')
       const token = await requireAuth(request)
-      const url = `/documents/getTemplate/${uuid_template}?page=1&limit=10`
+      const url = `/documents/getTemplate/${uuid_template}?page=${page || 1}&limit=${limit || 10}&status=${status || ''}`
       try {
-        const documents = await http.get<GeneratedDocument[]>(url, token, request)
-        return documents
+        const response = await http.get<GeneratedDocument>(url, token, request)
+        const documents = response.data
+        const mapper = {
+          template: documents.template,
+          stats: documents.stats,
+          pagination: documents.pagination,
+          documents: documents.documents.map((doc) => ({
+            id: doc.id,
+            uuid: doc.uuid,
+            id_template: doc.id_template,
+            build_number: doc.build_number,
+            status: doc.status,
+            response_status: doc.response_status,
+            response_data: doc.response_data,
+            created_at: doc.created_at,
+            updated_at: doc.updated_at,
+            encrypt: doc.encrypt,
+          })),
+        }
+        return mapper
       } catch (error) {
         await handleApiError(error, request)
       }
