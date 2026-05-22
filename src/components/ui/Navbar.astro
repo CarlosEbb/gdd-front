@@ -76,7 +76,9 @@ const email = user?.email ?? ''
 
     const logout = async () => {
       const { data } = await actions.auth.logout()
+      const theme = localStorage.getItem('gdd-theme')
       localStorage.clear()
+      if (theme) localStorage.setItem('gdd-theme', theme)
       navigate(data?.data?.redirect ?? '/')
     }
 
