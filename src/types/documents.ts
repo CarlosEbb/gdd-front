@@ -117,6 +117,7 @@ export interface GeneratedDocument {
 export interface DocumentGenerated {
   id: number
   uuid: string
+  json: Record<string, any>
   id_template: number
   build_number: string
   encrypt: null | string

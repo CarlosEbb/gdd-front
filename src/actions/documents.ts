@@ -209,6 +209,7 @@ export const documents = {
             created_at: doc.created_at,
             updated_at: doc.updated_at,
             encrypt: doc.encrypt,
+            payload: doc.json,
           })),
         }
         return mapper

@@ -1,6 +1,6 @@
 ---
 import { actions } from 'astro:actions'
-import { formatISODateWithIntl } from '@/scripts/utils'
+import { formatISODateWithIntl, formatExtendedDate } from '@/scripts/utils'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import Layout from '../_components/Layout.astro'
@@ -47,11 +47,11 @@ const itemStart = pagination.total === 0 ? 0 : (pagination.page - 1) * paginatio
 const itemEnd = Math.min(pagination.page * pagination.limit, pagination.total)
 
 const metricList = [
-  { label: 'Total Logs', value: stats.total, color: 'text-neutral-900 dark:text-neutral-50', border: '' },
-  { label: 'Completados (2xx)', value: stats.success, color: 'text-emerald-500', border: ' hover:border-emerald-500/30' },
-  { label: 'Errores Valid.', value: stats.validation_error, color: 'text-amber-500', border: ' hover:border-amber-500/30' },
-  { label: 'Errores JSON', value: stats.json_error, color: 'text-red-500', border: ' hover:border-red-500/30' },
-  { label: 'Errores Críticos', value: stats.error, color: 'text-red-600', border: ' hover:border-red-600/30' },
+  { label: 'Total Logs', value: stats.total, color: 'text-neutral-900 dark:text-neutral-50', border: 'hover:border-neutral-400 dark:hover:border-neutral-600', status: 'all' },
+  { label: 'Completados (2xx)', value: stats.success, color: 'text-emerald-500', border: 'hover:border-emerald-500/30', status: 'success' },
+  { label: 'Errores Valid.', value: stats.validation_error, color: 'text-amber-500', border: 'hover:border-amber-500/30', status: 'validation_error' },
+  { label: 'Errores JSON', value: stats.json_error, color: 'text-red-500', border: 'hover:border-red-500/30', status: 'json_error' },
+  { label: 'Errores Críticos', value: stats.error, color: 'text-red-600', border: 'hover:border-red-600/30', status: 'error' },
 ]
 
 const status = (status: string, code: number) => {
@@ -76,24 +76,54 @@ const statusLabels: Record<string, string> = {
   json_error: 'Errores JSON',
   error: 'Errores Críticos',
 }
+
+const statusIcons: Record<string, string> = {
+  all: 'ListFilter',
+  success: 'CircleCheck',
+  validation_error: 'TriangleAlert',
+  json_error: 'Braces',
+  error: 'CircleX',
+}
 ---
 
 <Layout title="Documentos generados">
   <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-5">
     {
-      metricList.map((item) => (
-        <div class={`rounded-main border border-border bg-background p-4 ${item.border} flex flex-col justify-between shadow-base transition-all duration-300`}>
-          <p class="font-mono text-[11px] tracking-wider text-subheading uppercase">{item.label}</p>
-          <p class={`mt-2 font-mono text-2xl font-bold tracking-tight ${item.color}`}>{item.value}</p>
-        </div>
-      ))
+      metricList.map((item) => {
+        const isActive = (item.status === 'all' && !currentStatus) || currentStatus === item.status
+        const activeBorderClass = isActive
+          ? item.status === 'all'
+            ? 'border-neutral-500 ring-1 ring-neutral-500'
+            : item.status === 'success'
+              ? 'border-emerald-500 ring-1 ring-emerald-500'
+              : item.status === 'validation_error'
+                ? 'border-amber-500 ring-1 ring-amber-500'
+                : 'border-red-500 ring-1 ring-red-500'
+          : 'border-border'
+
+        return (
+          <a
+            href={`?page=1&status=${item.status}`}
+            class={`rounded-main border bg-background p-4 ${activeBorderClass} ${item.border} flex cursor-pointer flex-col justify-between shadow-base transition-all duration-300`}
+          >
+            <p class="font-mono text-[11px] tracking-wider text-subheading uppercase">{item.label}</p>
+            <p class={`mt-2 font-mono text-2xl font-bold tracking-tight ${item.color}`}>{item.value}</p>
+          </a>
+        )
+      })
     }
   </div>
   <div class="mb-4 flex items-center justify-between">
     <h2 class="text-lg font-semibold text-heading">Documentos generados</h2>
 
     <div>
-      <Dropdown buttonLabel={statusLabels[currentStatus || 'all']} icon="ListFilter" position="right" mobileIcon="ListFilter" menuClass="min-w-[180px] md:min-w-[200px]">
+      <Dropdown
+        buttonLabel={statusLabels[currentStatus || 'all']}
+        icon={statusIcons[currentStatus || 'all'] as any}
+        position="right"
+        mobileIcon={statusIcons[currentStatus || 'all'] as any}
+        menuClass="min-w-[180px] md:min-w-[200px]"
+      >
         <a href={`?page=1&status=all`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
           <Icon name="List" size={16} />
           Todos
@@ -140,7 +170,7 @@ const statusLabels: Record<string, string> = {
                     Build: <span class="font-bold text-heading">{document.build_number}</span>
                   </div>
                   <div>
-                    Creado: <span class="font-bold text-heading">{formatISODateWithIntl(document.created_at)}</span>
+                    Creado: <span class="font-bold text-heading">{formatExtendedDate(document.created_at)}</span>
                   </div>
                   {document.encrypt && (
                     <a
@@ -155,6 +185,12 @@ const statusLabels: Record<string, string> = {
                   )}
                 </div>
 
+                <span class="font-mono text-[11px] font-bold text-heading">Body:</span>
+                <div class="mb-4 overflow-x-auto rounded-main border border-border bg-foreground p-2 font-mono text-[11px] leading-relaxed">
+                  <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(document.payload, null, 2)} />
+                </div>
+
+                <span class="font-mono text-[11px] font-bold text-heading">Response Data:</span>
                 <div class="mb-4 overflow-x-auto rounded-main border border-border bg-foreground p-2 font-mono text-[11px] leading-relaxed">
                   <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(document.response_data, null, 2)} />
                 </div>
