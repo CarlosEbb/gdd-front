@@ -54,6 +54,26 @@ export function initDocumentModals() {
     }
   })
 
+  document.addEventListener('document:template', async (event: Event) => {
+    const cardData = (event as CustomEvent).detail
+    const { title, uuidVersion } = cardData
+
+    const { data, error } = await callAction(
+      actions.templates.create({
+        uuidDocument: uuidVersion,
+        title: title || 'Plantilla creada desde documento',
+      })
+    )
+
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+
+    navigate('/templates')
+    toast.success('Plantilla creada exitosamente')
+  })
+
   document.addEventListener('document:generated', async (event: Event) => {
     const cardData = (event as CustomEvent).detail
     const { uuid, buildNumber } = cardData

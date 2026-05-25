@@ -57,6 +57,7 @@ function handleDocumentClick(e: Event) {
       'view-documentation': 'document:view-documentation',
       generated: 'document:generated',
       duplicate: 'document:duplicate',
+      template: 'document:template',
     }
 
     const eventName = action ? eventMap[action] : undefined
