@@ -6,6 +6,12 @@ import Icon from '@/components/ui/Icon.astro'
 import { actions } from 'astro:actions'
 import { hasPermission } from '@/lib/permissions/policy'
 import type { PermissionData } from '@/lib/permissions/types'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Button from '@/components/ui/Button.astro'
+import Select from '@/components/form/Select.astro'
+import Input from '@/components/form/Input.astro'
+import { formatExtendedDate } from '@/scripts/utils'
+import { Code } from 'astro:components'
 
 // Enforzamos la carga de permisos y autenticación
 const permissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
@@ -17,7 +23,7 @@ const clients = clientsRes.data?.data || []
 
 // 2. Leer los filtros de la URL actual para el estado inicial
 const url = new URL(Astro.request.url)
-const selectedClientUuid = url.searchParams.get('clientUuid') || (clients[0]?.uuid || '')
+const selectedClientUuid = url.searchParams.get('clientUuid') || clients[0]?.uuid || ''
 const selectedAction = url.searchParams.get('action') || ''
 const selectedEntity = url.searchParams.get('entity') || ''
 const selectedUserUuid = url.searchParams.get('userUuid') || ''
@@ -89,260 +95,181 @@ function getActionBadgeConfig(action: string) {
   }
   return { bg: 'bg-slate-500/10 text-slate-400 border-slate-500/20', label: 'Acción', icon: 'Activity' }
 }
-
-// Formateador estético para fechas con localización en español
-function formatAuditDate(dateString: string) {
-  const date = new Date(dateString)
-  return date.toLocaleString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
 ---
 
 <MainLayout title="Auditorías">
   <Container>
     <Header title="Auditorías del Sistema" subtitle="Registro cronológico oficial para cumplimiento y seguridad">
       <div slot="actions" class="flex gap-2">
-        {isSuperAdmin && (
-          <button
-            id="btn-purge"
-            class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all duration-200 cursor-pointer"
-          >
-            <Icon stroke-width={2} name="Trash" size={16} />
-            <span>Purgar Historial (>180 días)</span>
-          </button>
-        )}
+        {
+          isSuperAdmin && (
+            <Button variant="destructive" icon="Trash" size="sm" id="btn-purge">
+              Eliminar registro (>180 días)
+            </Button>
+          )
+        }
       </div>
     </Header>
 
-    <!-- BANNER DE FILTROS PREMIUM GLASSMORPHISM -->
-    <div class="mb-6 p-5 rounded-xl border border-slate-800/80 bg-slate-900/60 backdrop-blur-md">
-      <form id="filters-form" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <!-- Selector de Cliente (Solo se muestra dropdown si hay múltiples o es admin) -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-semibold text-slate-400">Cliente a Auditar</label>
-          <select
-            name="clientUuid"
-            class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary/50"
-          >
-            {clients.map((c: any) => (
-              <option value={c.uuid} selected={c.uuid === selectedClientUuid}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+    <div class="mb-6">
+      <form id="filters-form" class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div>
+          <Select label="Cliente a Auditar" name="clientUuid" options={clients.map((c: any) => ({ value: c.uuid, label: c.name, selected: c.uuid === selectedClientUuid }))} />
         </div>
 
-        <!-- Filtro Acción -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-semibold text-slate-400">Acción</label>
-          <select
+        <div>
+          <Select
+            label="Acción"
             name="action"
-            class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary/50"
-          >
-            <option value="">Todas las acciones</option>
-            {filterCatalog.actions.map((act: string) => (
-              <option value={act} selected={act === selectedAction}>
-                {act}
-              </option>
-            ))}
-          </select>
+            options={[{ value: '', label: 'Todas' }, ...filterCatalog.actions.map((act: string) => ({ value: act, label: act, selected: act === selectedAction }))]}
+          />
         </div>
 
-        <!-- Filtro Entidad -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-semibold text-slate-400">Entidad</label>
-          <select
+        <div>
+          <Select
+            label="Entidad"
             name="entity"
-            class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary/50"
-          >
-            <option value="">Todas las entidades</option>
-            {filterCatalog.entities.map((ent: string) => (
-              <option value={ent} selected={ent === selectedEntity}>
-                {ent}
-              </option>
-            ))}
-          </select>
+            options={[{ value: '', label: 'Todas' }, ...filterCatalog.entities.map((ent: string) => ({ value: ent, label: ent, selected: ent === selectedEntity }))]}
+          />
         </div>
 
-        <!-- Filtro Usuario -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-semibold text-slate-400">Usuario</label>
-          <select
+        <div>
+          <Select
+            label="Usuario"
             name="userUuid"
-            class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary/50"
-          >
-            <option value="">Todos los usuarios</option>
-            {filterUsers.map((u: any) => (
-              <option value={u.uuid} selected={u.uuid === selectedUserUuid}>
-                {u.name} {u.lastName} ({u.email.split('@')[0]})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <!-- Fecha Desde -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-semibold text-slate-400">Desde</label>
-          <input
-            type="date"
-            name="dateFrom"
-            value={dateFrom}
-            class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary/50"
+            options={[
+              { value: '', label: 'Todos', selected: !selectedUserUuid },
+              ...filterUsers.map((u: any) => ({ value: u.uuid, label: `${u.name} ${u.lastName} (${u.email.split('@')[0]})`, selected: u.uuid === selectedUserUuid })),
+            ]}
           />
         </div>
 
-        <!-- Fecha Hasta -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-semibold text-slate-400">Hasta</label>
-          <input
-            type="date"
-            name="dateTo"
-            value={dateTo}
-            class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary/50"
-          />
+        <div>
+          <Input label="Desde" type="date" name="dateFrom" value={dateFrom} />
+        </div>
+
+        <div>
+          <Input label="Hasta" type="date" name="dateTo" value={dateTo} />
         </div>
       </form>
     </div>
 
     <!-- TABLA DE LOGS -->
-    <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
-      {fetchError && (
-        <div class="p-8 text-center text-rose-400">
-          <Icon name="AlertTriangle" size={40} class="mx-auto mb-3" />
-          <p class="font-medium">Error al cargar registros</p>
-          <p class="text-xs opacity-75">{fetchError.message}</p>
-        </div>
-      )}
+    <div class="mb-10 overflow-hidden rounded-main border border-border bg-background">
+      {
+        fetchError && (
+          <EmptyState
+            title="Error al cargar registros"
+            description="Ocurrió un error al cargar los registros de auditoría. Por favor, intente nuevamente."
+            state="error"
+            action="refresh"
+            showBorder={false}
+          />
+        )
+      }
 
-      {!fetchError && logs.length === 0 && (
-        <div class="p-12 text-center text-slate-500">
-          <Icon name="Activity" size={48} class="mx-auto mb-3 opacity-30" />
-          <p class="text-base font-semibold">No se encontraron registros de auditoría</p>
-          <p class="text-sm opacity-75 mt-1">Intente cambiar los filtros o el rango de fechas.</p>
-        </div>
-      )}
+      {
+        !fetchError && logs.length === 0 && (
+          <EmptyState title="No se encontraron registros" description="No se encontraron registros de auditoría con los filtros aplicados." state="notFound" action="reload" showBorder={false} />
+        )
+      }
 
-      {!fetchError && logs.length > 0 && (
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-slate-800/80 bg-slate-900/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                <th class="py-4 px-6 w-8"></th>
-                <th class="py-4 px-6">Usuario</th>
-                <th class="py-4 px-6">Acción</th>
-                <th class="py-4 px-6">Recurso Afectado</th>
-                <th class="py-4 px-6">Fecha y Hora</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-800/60 text-sm">
-              {logs.map((log: any) => {
-                const badge = getActionBadgeConfig(log.action)
-                return (
-                  <>
-                    <!-- Fila Principal (Clic para expandir) -->
-                    <tr
-                      class="hover:bg-slate-900/30 cursor-pointer transition-colors duration-150 border-slate-800/60 row-clickable"
-                      data-target={`details-${log.id}`}
-                    >
-                      <td class="py-4 px-6 text-center">
-                        <span class="chevron-icon inline-block transform transition-transform duration-200 text-slate-500">
-                          <Icon name="ChevronRight" size={16} />
-                        </span>
-                      </td>
-                      <td class="py-4 px-6">
-                        <div class="flex flex-col">
-                          <span class="font-medium text-slate-200">
-                            {log.user ? `${log.user.name} ${log.user.lastName}` : 'Sistema / API'}
+      {
+        !fetchError && logs.length > 0 && (
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left">
+              <thead>
+                <tr class="border-b border-border bg-foreground text-xs font-semibold tracking-wider text-subheading uppercase">
+                  <th class="w-8 px-6 py-4" />
+                  <th class="px-6 py-4">Usuario</th>
+                  <th class="px-6 py-4">Acción</th>
+                  <th class="px-6 py-4">Recurso Afectado</th>
+                  <th class="px-6 py-4">Fecha y Hora</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border text-sm">
+                {logs.map((log: any) => {
+                  const badge = getActionBadgeConfig(log.action)
+                  return (
+                    <>
+                      <tr class="row-clickable cursor-pointer border-border transition-colors duration-150 hover:bg-foreground" data-target={`details-${log.id}`}>
+                        <td class="px-6 py-4 text-center">
+                          <span class="chevron-icon inline-block transform text-subheading transition-transform duration-200">
+                            <Icon name="ChevronRight" size={16} />
                           </span>
-                          <span class="text-xs text-slate-500">{log.user?.email || 'bypass.admin'}</span>
-                        </div>
-                      </td>
-                      <td class="py-4 px-6">
-                        <span class={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${badge.bg}`}>
-                          {log.action}
-                        </span>
-                      </td>
-                      <td class="py-4 px-6">
-                        <div class="flex flex-col">
-                          <span class="font-mono text-xs text-slate-300">{log.entityUuid || 'N/A'}</span>
-                          <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">{log.entity}</span>
-                        </div>
-                      </td>
-                      <td class="py-4 px-6 text-slate-300" title={`Timestamp ISO: ${log.createdAt}`}>
-                        {formatAuditDate(log.createdAt)}
-                      </td>
-                    </tr>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="flex flex-col">
+                            <span class="font-medium text-heading">{log.user ? `${log.user.name} ${log.user.lastName}` : ''}</span>
+                            <span class="text-xs text-subheading">{log.user?.email || ''}</span>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <span class={`inline-flex items-center gap-1.5 rounded-main border px-2.5 py-1 text-xs font-medium ${badge.bg}`}>{log.action}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="flex flex-col">
+                            <span class="font-mono text-xs text-heading">{log.entityUuid || 'N/A'}</span>
+                            <span class="text-xs font-semibold tracking-wider text-subheading uppercase">{log.entity}</span>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 text-heading" title={`Timestamp ISO: ${log.createdAt}`}>
+                          {formatExtendedDate(log.createdAt)}
+                        </td>
+                      </tr>
 
-                    <!-- Fila Detalle (Oculta por defecto) -->
-                    <tr id={`details-${log.id}`} class="hidden bg-slate-900/20">
-                      <td colspan="5" class="py-5 px-8">
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                          <!-- Metadatos de Red / Contexto -->
-                          <div class="flex flex-col gap-3 p-4 rounded-lg bg-slate-950/40 border border-slate-800/50">
-                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Contexto de Red</h4>
-                            <div class="space-y-2 text-xs">
-                              <div class="flex justify-between py-1 border-b border-slate-900">
-                                <span class="text-slate-500">Dirección IP:</span>
-                                <span class="font-mono text-slate-300 font-semibold">{log.ipAddress || '127.0.0.1'}</span>
+                      <tr id={`details-${log.id}`} class="hidden bg-foreground/40">
+                        <td colspan="5" class="px-4 pt-3 pb-4">
+                          <div>
+                            <div class="mb-2 flex flex-wrap items-center gap-4 border-b border-border pb-3 font-mono text-[11px] text-subheading">
+                              <div>
+                                Dirección IP: <span class="font-bold text-heading">{log.ipAddress || 'N/A'}</span>
                               </div>
-                              <div class="flex flex-col gap-1 py-1">
-                                <span class="text-slate-500">User-Agent:</span>
-                                <span class="text-slate-400 wrap-break-word font-mono text-[10px] leading-relaxed">
-                                  {log.userAgent || 'Desconocido / Llamada directa de backend'}
-                                </span>
+                              <div>
+                                User-Agent: <span class="font-bold text-heading">{log.userAgent || 'N/A'}</span>
+                              </div>
+                              <div>
+                                Creado: <span class="font-bold text-heading">{formatExtendedDate(log.createdAt)}</span>
+                              </div>
+                            </div>
+
+                            <div class="mt-4">
+                              <span class="font-mono text-[11px] font-bold text-heading">Cambios Registrados (JSON)</span>
+
+                              <div class="mb-4 overflow-x-auto rounded-main border border-border bg-foreground p-2 font-mono text-[11px] leading-relaxed">
+                                <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(log.details, null, 2)} />
                               </div>
                             </div>
                           </div>
-
-                          <!-- Detalles Modificación JSON -->
-                          <div class="col-span-2 flex flex-col gap-2">
-                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                              <Icon name="FileText" size={14} class="text-primary" />
-                              <span>Cambios Registrados (JSON)</span>
-                            </h4>
-                            <pre class="w-full overflow-x-auto p-4 rounded-lg bg-slate-950 border border-slate-800/80 text-xs font-mono text-emerald-400 leading-relaxed max-h-60 overflow-y-auto"><code>{JSON.stringify(log.details, null, 2)}</code></pre>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                        </td>
+                      </tr>
+                    </>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
 
       <!-- PAGINACIÓN -->
-      {!fetchError && pagination.totalPages > 1 && (
-        <div class="flex items-center justify-between px-6 py-4 border-t border-slate-800 bg-slate-900/20">
-          <span class="text-xs text-slate-400">
-            Página <strong class="text-slate-200">{pagination.page}</strong> de <strong class="text-slate-200">{pagination.totalPages}</strong> ({totalLogs} registros)
-          </span>
-          <div class="flex gap-2">
-            <button
-              id="btn-prev"
-              disabled={pagination.page <= 1}
-              class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-300 text-xs hover:bg-slate-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              Anterior
-            </button>
-            <button
-              id="btn-next"
-              disabled={pagination.page >= pagination.totalPages}
-              class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-300 text-xs hover:bg-slate-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              Siguiente
-            </button>
+      {
+        !fetchError && pagination.totalPages > 1 && (
+          <div class="flex items-center justify-between bg-foreground px-6 py-4">
+            <span class="text-xs text-subheading">
+              Página <strong class="text-heading">{pagination.page}</strong> de <strong class="text-heading">{pagination.totalPages}</strong> ({totalLogs} registros)
+            </span>
+            <div class="flex gap-2">
+              <Button size="sm" id="btn-prev" disabled={pagination.page <= 1} variant="secondary">
+                Anterior
+              </Button>
+              <Button size="sm" id="btn-next" disabled={pagination.page >= pagination.totalPages} variant="secondary">
+                Siguiente
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
     </div>
   </Container>
 </MainLayout>
@@ -350,87 +277,94 @@ function formatAuditDate(dateString: string) {
 <script is:inline define:vars={{ page, totalPages: pagination.totalPages }}>
   document.addEventListener('astro:page-load', () => {
     // 1. Manejo del acordeón interactivo para ver detalles JSON
-    const rows = document.querySelectorAll('.row-clickable');
-    rows.forEach(row => {
+    const rows = document.querySelectorAll('.row-clickable')
+    rows.forEach((row) => {
       row.addEventListener('click', (e) => {
-        const targetId = row.getAttribute('data-target');
-        const detailsRow = document.getElementById(targetId);
-        const chevron = row.querySelector('.chevron-icon');
+        const targetId = row.getAttribute('data-target')
+        const detailsRow = document.getElementById(targetId)
+        const chevron = row.querySelector('.chevron-icon')
 
         if (detailsRow) {
-          const isHidden = detailsRow.classList.contains('hidden');
+          const isHidden = detailsRow.classList.contains('hidden')
           if (isHidden) {
-            detailsRow.classList.remove('hidden');
-            if (chevron) chevron.style.transform = 'rotate(90deg)';
+            detailsRow.classList.remove('hidden')
+            if (chevron) chevron.style.transform = 'rotate(90deg)'
           } else {
-            detailsRow.classList.add('hidden');
-            if (chevron) chevron.style.transform = 'rotate(0deg)';
+            detailsRow.classList.add('hidden')
+            if (chevron) chevron.style.transform = 'rotate(0deg)'
           }
         }
-      });
-    });
+      })
+    })
 
     // 2. Escuchar cambios en los inputs del formulario de filtros y hacer submit dinámico
-    const filtersForm = document.getElementById('filters-form');
+    const filtersForm = document.getElementById('filters-form')
     if (filtersForm) {
-      const inputs = filtersForm.querySelectorAll('select, input[type="date"]');
-      inputs.forEach(input => {
+      const inputs = filtersForm.querySelectorAll('select, input[type="date"]')
+      inputs.forEach((input) => {
         input.addEventListener('change', () => {
           // Volver a la página 1 cuando cambian los filtros
-          const params = new URLSearchParams(new FormData(filtersForm));
-          params.set('page', '1');
-          window.location.search = params.toString();
-        });
-      });
+          const params = new URLSearchParams(new FormData(filtersForm))
+          params.set('page', '1')
+          window.location.search = params.toString()
+        })
+      })
     }
 
     // 3. Manejo de los botones de paginación
-    const btnPrev = document.getElementById('btn-prev');
-    const btnNext = document.getElementById('btn-next');
+    const btnPrev = document.getElementById('btn-prev')
+    const btnNext = document.getElementById('btn-next')
 
     if (btnPrev && page > 1) {
       btnPrev.addEventListener('click', () => {
-        const params = new URLSearchParams(window.location.search);
-        params.set('page', String(page - 1));
-        window.location.search = params.toString();
-      });
+        const params = new URLSearchParams(window.location.search)
+        params.set('page', String(page - 1))
+        window.location.search = params.toString()
+      })
     }
 
     if (btnNext && page < totalPages) {
       btnNext.addEventListener('click', () => {
-        const params = new URLSearchParams(window.location.search);
-        params.set('page', String(page + 1));
-        window.location.search = params.toString();
-      });
+        const params = new URLSearchParams(window.location.search)
+        params.set('page', String(page + 1))
+        window.location.search = params.toString()
+      })
     }
 
     // 4. Manejo del botón de purga (Solo admin)
-    const btnPurge = document.getElementById('btn-purge');
+    const btnPurge = document.getElementById('btn-purge')
     if (btnPurge) {
       btnPurge.addEventListener('click', async () => {
-        const confirmed = confirm('¿Estás seguro de que deseas purgar de forma permanente todos los registros de auditoría de más de 180 días? Esta acción no se puede deshacer.');
-        if (!confirmed) return;
+        const confirmed = confirm('¿Estás seguro de que deseas limpiar de forma permanente todos los registros de auditoría de más de 180 días? Esta acción no se puede deshacer.')
+        if (!confirmed) return
 
-        btnPurge.disabled = true;
-        btnPurge.style.opacity = '0.5';
+        btnPurge.disabled = true
+        btnPurge.style.opacity = '0.5'
 
         try {
           // Import dynamic Astro Action on the client-side
-          const { actions } = await import('astro:actions');
-          const res = await actions.audits.purgeLogs();
+          const { actions } = await import('astro:actions')
+          const res = await actions.audits.purgeLogs()
           if (res.error) {
-            alert('Error al purgar los logs: ' + res.error.message);
+            alert('Error al limpiar los logs: ' + res.error.message)
           } else {
-            alert('Purga completada con éxito. Registros eliminados: ' + (res.data?.data?.deletedCount || 0));
-            window.location.reload();
+            alert('Limpieza completada con éxito. Registros eliminados: ' + (res.data?.data?.deletedCount || 0))
+            window.location.reload()
           }
         } catch (err) {
-          alert('Error inesperado: ' + err.message);
+          alert('Error inesperado: ' + err.message)
         } finally {
-          btnPurge.disabled = false;
-          btnPurge.style.opacity = '1';
+          btnPurge.disabled = false
+          btnPurge.style.opacity = '1'
         }
-      });
+      })
     }
-  });
+  })
 </script>
+
+<style>
+  .code-container,
+  pre {
+    background-color: transparent !important;
+  }
+</style>
