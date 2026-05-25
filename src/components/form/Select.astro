@@ -5,7 +5,7 @@ interface Props extends HTMLAttributes<'select'> {
   label?: string
   name: string
   placeholder?: string
-  options: Array<{ value: string; label?: string }>
+  options: Array<{ value: string; label?: string; selected?: boolean }>
   serverError?: string
 }
 
@@ -15,6 +15,8 @@ const errorId = `error-${name}`
 const stateClasses = serverError
   ? 'border-destructive focus:border-destructive focus:ring-destructive'
   : 'border-border focus:border-primary focus:ring-ring aria-invalid:border-destructive aria-invalid:focus:border-destructive aria-invalid:focus:ring-destructive'
+
+const hasSelectedOption = options.some((option) => option.selected)
 ---
 
 <>
@@ -40,15 +42,15 @@ const stateClasses = serverError
       {...rest}
     >
       {
-        placeholder && !rest.value && (
-          <option class="block font-sans text-base font-medium text-heading disabled:text-subheading" disabled selected value="">
+        placeholder && (
+          <option class="block font-sans text-base font-medium text-heading disabled:text-subheading" disabled selected={!rest.value && !hasSelectedOption} value="">
             {placeholder}
           </option>
         )
       }
       {
         options.map((option) => (
-          <option value={option.value} selected={option.value === rest.value}>
+          <option value={option.value} selected={rest.value !== undefined ? option.value === rest.value : !!option.selected}>
             {option.label || option.value}
           </option>
         ))
