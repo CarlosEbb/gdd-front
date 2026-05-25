@@ -15,19 +15,21 @@ const isSuperAdmin = permissions ? hasPermission(permissions, 'admin.full') : fa
 const clientsRes = await Astro.callAction(actions.audits.getClients, {})
 const clients = clientsRes.data?.data || []
 
-// 2. Obtener catálogo de filtros (acciones y entidades) para los dropdowns
-const filtersRes = await Astro.callAction(actions.audits.getFilters, {})
-const filterCatalog = filtersRes.data?.data || { actions: [], entities: [] }
-
-// 3. Leer los filtros de la URL actual para el estado inicial
+// 2. Leer los filtros de la URL actual para el estado inicial
 const url = new URL(Astro.request.url)
 const selectedClientUuid = url.searchParams.get('clientUuid') || (clients[0]?.uuid || '')
 const selectedAction = url.searchParams.get('action') || ''
 const selectedEntity = url.searchParams.get('entity') || ''
+const selectedUserUuid = url.searchParams.get('userUuid') || ''
 const dateFrom = url.searchParams.get('dateFrom') || ''
 const dateTo = url.searchParams.get('dateTo') || ''
 const page = parseInt(url.searchParams.get('page') || '1', 10)
 const limit = 15
+
+// 3. Obtener catálogo de filtros (acciones, entidades y usuarios) para los dropdowns
+const filtersRes = await Astro.callAction(actions.audits.getFilters, { clientUuid: selectedClientUuid })
+const filterCatalog = filtersRes.data?.data || { actions: [], entities: [], users: [] }
+const filterUsers = filterCatalog.users || []
 
 // 4. Cargar logs del cliente seleccionado (o general si no hay cliente asignado)
 let logsData = { logs: [], pagination: { total: 0, totalPages: 1, page: 1 } }
@@ -38,6 +40,7 @@ if (selectedClientUuid) {
     clientUuid: selectedClientUuid,
     action: selectedAction,
     entity: selectedEntity,
+    userUuid: selectedUserUuid,
     dateFrom,
     dateTo,
     page,
@@ -53,6 +56,7 @@ if (selectedClientUuid) {
   const logsRes = await Astro.callAction(actions.audits.getGeneralLogs, {
     action: selectedAction,
     entity: selectedEntity,
+    userUuid: selectedUserUuid,
     dateFrom,
     dateTo,
     page,
@@ -118,7 +122,7 @@ function formatAuditDate(dateString: string) {
 
     <!-- BANNER DE FILTROS PREMIUM GLASSMORPHISM -->
     <div class="mb-6 p-5 rounded-xl border border-slate-800/80 bg-slate-900/60 backdrop-blur-md">
-      <form id="filters-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <form id="filters-form" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <!-- Selector de Cliente (Solo se muestra dropdown si hay múltiples o es admin) -->
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-semibold text-slate-400">Cliente a Auditar</label>
@@ -161,6 +165,22 @@ function formatAuditDate(dateString: string) {
             {filterCatalog.entities.map((ent: string) => (
               <option value={ent} selected={ent === selectedEntity}>
                 {ent}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Filtro Usuario -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold text-slate-400">Usuario</label>
+          <select
+            name="userUuid"
+            class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary/50"
+          >
+            <option value="">Todos los usuarios</option>
+            {filterUsers.map((u: any) => (
+              <option value={u.uuid} selected={u.uuid === selectedUserUuid}>
+                {u.name} {u.lastName} ({u.email.split('@')[0]})
               </option>
             ))}
           </select>

@@ -84,12 +84,16 @@ export const audits = {
   }),
 
   getFilters: defineAction({
-    handler: async (_, request) => {
+    input: z.object({
+      clientUuid: z.string().optional(),
+    }).optional(),
+    handler: async (input, request) => {
       await requirePermission(request, ['audit.view'])
       const token = await requireAuth(request)
+      const qs = input?.clientUuid ? `?clientUuid=${input.clientUuid}` : ''
 
       try {
-        const response = await http.get<any>('/audits/filters', token, request)
+        const response = await http.get<any>(`/audits/filters${qs}`, token, request)
         return response
       } catch (error) {
         handleApiError(error, request)
