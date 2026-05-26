@@ -1,0 +1,133 @@
+---
+import { formatExtendedDate } from '@/scripts/utils'
+import { Code } from 'astro:components'
+import Icon from '@/components/ui/Icon.astro'
+
+interface Props {
+  logs: []
+}
+
+const { logs } = Astro.props as Props
+
+const ACTION_BADGES = {
+  create: { bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', label: 'Creación', icon: 'Plus' },
+  delete: { bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20', label: 'Eliminación', icon: 'Trash' },
+  modify: { bg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', label: 'Modificación', icon: 'Pencil' },
+  security: { bg: 'bg-violet-500/10 text-violet-400 border-violet-500/20', label: 'Seguridad', icon: 'Lock' },
+  default: { bg: 'bg-slate-500/10 text-slate-400 border-slate-500/20', label: 'Acción', icon: 'Activity' },
+} as const
+
+const ACTION_RULES = [
+  { test: (act: string) => act.endsWith('.create'), config: ACTION_BADGES.create },
+  { test: (act: string) => act.endsWith('.delete'), config: ACTION_BADGES.delete },
+  { test: (act: string) => act.includes('assign') || act.includes('update'), config: ACTION_BADGES.modify },
+  { test: (act: string) => act.startsWith('auth.'), config: ACTION_BADGES.security },
+]
+
+function getActionBadgeConfig(action: string) {
+  return ACTION_RULES.find((rule) => rule.test(action))?.config || ACTION_BADGES.default
+}
+
+const CUSTOM_CONTEXT_MAP: Record<string, (log: any) => string> = {
+  'template.create': (log) =>
+    `creó la plantilla <span class="text-heading font-medium">${log.details.templateTitle}</span> en el espacio de trabajo <span class="text-subheading font-mono text-[11px] bg-muted px-1 py-0.5 rounded-main border border-border">${log.details.workspaceName}</span>`,
+  'template.update_version': (log) =>
+    `actualizó la plantilla <span class="text-heading font-medium">${log.details.templateTitle}</span> a la versión <span class="bg-muted px-1.5 py-0.5 border border-border text-subheading font-mono text-[10px] rounded-main">${log.details.buildNumber}</span>`,
+  'publication.publish': (log) =>
+    `publicó la versión <span class="text-heading font-medium">${log.details.versionName}</span> con número de build <span class="text-subheading font-mono text-[10px] bg-muted border border-border px-1 rounded-main">${log.details.buildNumber}</span>`,
+  'auth.login': (log) => `inició sesión correctamente en la consola con el email <span class="text-heading font-medium">${log.details?.email || log.user?.email || 'N/D'}</span>`,
+  'auth.logout': () => `concluyó su sesión de usuario de manera segura`,
+}
+
+function getCustomContextText(log: any) {
+  return CUSTOM_CONTEXT_MAP[log.action]?.(log) || ''
+}
+---
+
+<div class="divide-y divide-border overflow-x-auto text-sm md:overflow-visible">
+  {
+    logs.map((log: any) => {
+      const badge = getActionBadgeConfig(log.action)
+      const customContextText = getCustomContextText(log)
+      const executorName = log.user ? `${log.user.name} ${log.user.lastName}` : log.details?.email || 'Autómata del SaaS'
+
+      return (
+        <details class="group transition-colors duration-150">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 text-sm transition-colors duration-150 hover:bg-muted [&::-webkit-details-marker]:hidden">
+            <div class="flex w-full min-w-0 items-center gap-x-4">
+              <div>
+                <span class={`inline-flex items-center gap-1.5 truncate rounded-main border px-2 py-0.5 text-sm text-[10px] font-bold ${badge.bg}`}>{log.action}</span>
+              </div>
+              {customContextText && (
+                <span class="flex items-center gap-x-2 font-sans text-sm leading-relaxed text-subheading">
+                  <strong class="font-medium text-heading">{executorName}</strong> <div class="text-sm leading-relaxed text-heading" set:html={customContextText} />
+                </span>
+              )}
+            </div>
+            <div class="flex shrink-0 items-center gap-x-2">
+              <div class="truncate text-sm whitespace-nowrap text-heading" title={`Timestamp ISO: ${log.createdAt}`}>
+                {formatExtendedDate(log.createdAt)}
+              </div>
+              <div class="shrink-0 text-subheading transition-transform duration-200 group-open:rotate-90">
+                <Icon name="ChevronRight" size={16} />
+              </div>
+            </div>
+          </summary>
+
+          <div class="border-t border-border bg-background px-6 pt-4 pb-6">
+            <div class="grid grid-cols-1 gap-x-6 gap-y-3 text-xs text-heading sm:grid-cols-2 md:grid-cols-3">
+              <div class="space-y-1">
+                <span class="block font-mono text-[10px] tracking-wider text-muted-foreground uppercase">Ejecutor</span>
+                <div class="flex items-center gap-2">
+                  {log.user ? (
+                    <>
+                      <span class="font-medium text-subheading">
+                        {log.user.name} {log.user.lastName}
+                      </span>
+                    </>
+                  ) : (
+                    <span class="flex items-center gap-1 font-medium text-muted-foreground">Proceso Autónomo</span>
+                  )}
+                </div>
+                {log.user ? <span class="block font-mono text-[10px] text-muted-foreground">{log.user.email}</span> : ''}
+              </div>
+
+              <div class="space-y-1">
+                <span class="block font-mono text-[10px] tracking-wider text-muted-foreground uppercase">Tenant SaaS</span>
+                <div class="flex items-center gap-1.5 font-medium text-subheading">
+                  {log.client ? (
+                    <>
+                      <span class="h-1.5 w-1.5 rounded-full bg-primary" />
+                      <span>{log.client.name}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span class="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                      <span class="text-muted-foreground italic">Ámbito Global Core</span>
+                    </>
+                  )}
+                </div>
+                {log.client ? <span class="block font-mono text-[10px] text-muted-foreground">RIF: {log.client.rif}</span> : ''}
+              </div>
+              <div class="space-y-1">
+                <span class="block font-mono text-[10px] tracking-wider text-muted-foreground uppercase">Red e Infraestructura</span>
+                <div class="font-mono text-[11px] text-subheading">IP: {log.ipAddress}</div>
+                <div class="truncate font-mono text-[10px] text-muted-foreground" title={log.userAgent}>
+                  Agent: {log.userAgent}
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 rounded-main border border-border bg-background p-3">
+              <span class="mb-2 block font-mono text-[11px] font-bold text-heading">Cambios Registrados (JSON)</span>
+
+              <div class="overflow-x-auto rounded-main border border-border bg-foreground font-mono text-[11px] leading-relaxed">
+                <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(log.details, null, 2)} />
+              </div>
+            </div>
+          </div>
+        </details>
+      )
+    })
+  }
+</div>

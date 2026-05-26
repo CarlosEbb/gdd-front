@@ -1,0 +1,18 @@
+---
+import Input from '@/components/form/Input.astro'
+import Accordion from '../Accordion.astro'
+
+interface Props {
+  dateFrom: string
+  dateTo: string
+}
+
+const { dateFrom, dateTo } = Astro.props as Props
+---
+
+<Accordion title="Rango de Fechas" queryKeys={['dateFrom', 'dateTo']}>
+  <div class="space-y-3">
+    <Input label="Desde" type="date" name="dateFrom" value={dateFrom} />
+    <Input label="Hasta" type="date" name="dateTo" value={dateTo} />
+  </div>
+</Accordion>

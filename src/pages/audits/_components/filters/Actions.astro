@@ -1,0 +1,25 @@
+---
+import Accordion from '../Accordion.astro'
+import Radio from '../Radio.astro'
+
+interface Props {
+  filterCatalog: {
+    actions: string[]
+    entities: string[]
+  }
+  selectedAction: string
+}
+
+const { filterCatalog, selectedAction } = Astro.props as Props
+---
+
+<Accordion title="Acción" queryKeys="action">
+  <div class="divide-y divide-border overflow-hidden rounded-main border border-border">
+    {
+      [{ value: '', label: 'Todas' }, ...filterCatalog.actions.map((act: string) => ({ value: act, label: act }))].map((opt) => {
+        const isSelected = opt.value === selectedAction
+        return <Radio name="action" value={opt.value} label={opt.label} checked={isSelected} />
+      })
+    }
+  </div>
+</Accordion>

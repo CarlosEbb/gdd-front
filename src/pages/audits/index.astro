@@ -1,27 +1,25 @@
 ---
-import Container from '@/components/ui/Container.astro'
 import MainLayout from '@/layouts/MainLayout.astro'
 import Header from '@/components/ui/Header.astro'
-import Icon from '@/components/ui/Icon.astro'
 import { actions } from 'astro:actions'
 import { hasPermission } from '@/lib/permissions/policy'
 import type { PermissionData } from '@/lib/permissions/types'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import Button from '@/components/ui/Button.astro'
-import Select from '@/components/form/Select.astro'
-import Input from '@/components/form/Input.astro'
-import { formatExtendedDate } from '@/scripts/utils'
-import { Code } from 'astro:components'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import SidebarFilters from './_components/filters/SidebarFilters.astro'
+import ListLogs from './_components/ListLogs.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Modal from '@/components/modal/Modal.astro'
 
-// Enforzamos la carga de permisos y autenticación
 const permissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
 const isSuperAdmin = permissions ? hasPermission(permissions, 'admin.full') : false
 
-// 1. Obtener la lista de clientes disponibles para auditar
 const clientsRes = await Astro.callAction(actions.audits.getClients, {})
 const clients = clientsRes.data?.data || []
 
-// 2. Leer los filtros de la URL actual para el estado inicial
 const url = new URL(Astro.request.url)
 const selectedClientUuid = url.searchParams.get('clientUuid') || clients[0]?.uuid || ''
 const selectedAction = url.searchParams.get('action') || ''
@@ -32,17 +30,18 @@ const dateTo = url.searchParams.get('dateTo') || ''
 const page = parseInt(url.searchParams.get('page') || '1', 10)
 const limit = 15
 
-// 3. Obtener catálogo de filtros (acciones, entidades y usuarios) para los dropdowns
 const filtersRes = await Astro.callAction(actions.audits.getFilters, { clientUuid: selectedClientUuid })
 const filterCatalog = filtersRes.data?.data || { actions: [], entities: [], users: [] }
 const filterUsers = filterCatalog.users || []
 
-// 4. Cargar logs del cliente seleccionado (o general si no hay cliente asignado)
-let logsData = { logs: [], pagination: { total: 0, totalPages: 1, page: 1 } }
-let fetchError = null
+let fetchError = undefined
+let logs: any[] = []
+let pagination: any = { total: 0, totalPages: 1, page: 1 }
+let totalLogs: number = 0
+let response = null
 
 if (selectedClientUuid) {
-  const logsRes = await Astro.callAction(actions.audits.getClientLogs, {
+  response = await Astro.callAction(actions.audits.getClientLogs, {
     clientUuid: selectedClientUuid,
     action: selectedAction,
     entity: selectedEntity,
@@ -52,14 +51,8 @@ if (selectedClientUuid) {
     page,
     limit,
   })
-  if (logsRes.error) {
-    fetchError = logsRes.error
-  } else {
-    logsData = logsRes.data?.data || logsData
-  }
 } else if (isSuperAdmin) {
-  // Si no hay cliente seleccionado pero es superadmin, traer logs generales
-  const logsRes = await Astro.callAction(actions.audits.getGeneralLogs, {
+  response = await Astro.callAction(actions.audits.getGeneralLogs, {
     action: selectedAction,
     entity: selectedEntity,
     userUuid: selectedUserUuid,
@@ -68,243 +61,123 @@ if (selectedClientUuid) {
     page,
     limit,
   })
-  if (logsRes.error) {
-    fetchError = logsRes.error
-  } else {
-    logsData = logsRes.data?.data || logsData
-  }
 }
 
-const logs = logsData.logs || []
-const pagination = logsData.pagination
-const totalLogs = pagination.total
-
-// Helper estético para las badges de acciones
-function getActionBadgeConfig(action: string) {
-  if (action.endsWith('.create')) {
-    return { bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', label: 'Creación', icon: 'Plus' }
-  }
-  if (action.endsWith('.delete')) {
-    return { bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20', label: 'Eliminación', icon: 'Trash' }
-  }
-  if (action.includes('assign') || action.includes('update')) {
-    return { bg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', label: 'Modificación', icon: 'Pencil' }
-  }
-  if (action.startsWith('auth.')) {
-    return { bg: 'bg-violet-500/10 text-violet-400 border-violet-500/20', label: 'Seguridad', icon: 'Lock' }
-  }
-  return { bg: 'bg-slate-500/10 text-slate-400 border-slate-500/20', label: 'Acción', icon: 'Activity' }
+if (response) {
+  const { data, error } = response
+  logs = data?.data?.logs || []
+  pagination = data?.data?.pagination || { total: 0, totalPages: 1, page: 1 }
+  totalLogs = pagination.total
+  fetchError = error
 }
 ---
 
-<MainLayout title="Auditorías">
-  <Container>
-    <Header title="Auditorías del Sistema" subtitle="Registro cronológico oficial para cumplimiento y seguridad">
-      <div slot="actions" class="flex gap-2">
-        {
-          isSuperAdmin && (
-            <Button variant="destructive" icon="Trash" size="sm" id="btn-purge">
-              Eliminar registro (>180 días)
-            </Button>
-          )
-        }
+<MainLayout title="Auditorías" class="px-0 pt-14">
+  <div class="flex">
+    <SidebarFilters
+      clients={clients}
+      selectedClientUuid={selectedClientUuid}
+      filterCatalog={filterCatalog}
+      selectedAction={selectedAction}
+      selectedEntity={selectedEntity}
+      filterUsers={filterUsers}
+      selectedUserUuid={selectedUserUuid}
+      dateFrom={dateFrom}
+      dateTo={dateTo}
+    />
+
+    <div class="ml-0 min-w-0 flex-1 md:ml-[283px]">
+      <div id="sticky-header-container" class="flow-root bg-foreground px-5 pt-5 md:sticky md:top-14 md:z-20">
+        <Header title="Auditorías del Sistema" subtitle="Registro de auditorías del sistema">
+          <PermissionGuard slot="actions" permission="admin.full">
+            <div class="flex items-center gap-2">
+              <Button variant="secondary" icon={'Filter' as any} size="sm" id="btn-toggle-filters" class="md:hidden"> Filtrar </Button>
+              <div class="hidden md:block">
+                <Button variant="destructive" icon="Trash" size="sm" class="btn-purge-trigger"> Eliminar registro (>180 días) </Button>
+              </div>
+              <div class="block md:hidden">
+                <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+                  <button class="btn-purge-trigger flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted">
+                    <Icon name="Trash" class="h-4 w-4" />
+                    Eliminar registro (>180 días)
+                  </button>
+                </Dropdown>
+              </div>
+            </div>
+          </PermissionGuard>
+        </Header>
       </div>
-    </Header>
+      <div class="mb-10">
+        <StateSwitch hasError={fetchError !== undefined} isEmpty={logs.length === 0}>
+          <ListLogs logs={logs as []} />
+          {
+            !fetchError && pagination.totalPages > 1 && (
+              <div class="flex items-center justify-between bg-foreground px-6 py-4">
+                <span class="text-xs text-subheading">
+                  Página <strong class="text-heading">{pagination.page}</strong> de <strong class="text-heading">{pagination.totalPages}</strong> ({totalLogs} registros)
+                </span>
+                <div class="flex gap-2">
+                  <Button size="sm" id="btn-prev" disabled={pagination.page <= 1} variant="secondary">
+                    Anterior
+                  </Button>
+                  <Button size="sm" id="btn-next" disabled={pagination.page >= pagination.totalPages} variant="secondary">
+                    Siguiente
+                  </Button>
+                </div>
+              </div>
+            )
+          }
 
-    <div class="mb-6">
-      <form id="filters-form" class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <div>
-          <Select label="Cliente a Auditar" name="clientUuid" options={clients.map((c: any) => ({ value: c.uuid, label: c.name, selected: c.uuid === selectedClientUuid }))} />
-        </div>
-
-        <div>
-          <Select
-            label="Acción"
-            name="action"
-            options={[{ value: '', label: 'Todas' }, ...filterCatalog.actions.map((act: string) => ({ value: act, label: act, selected: act === selectedAction }))]}
-          />
-        </div>
-
-        <div>
-          <Select
-            label="Entidad"
-            name="entity"
-            options={[{ value: '', label: 'Todas' }, ...filterCatalog.entities.map((ent: string) => ({ value: ent, label: ent, selected: ent === selectedEntity }))]}
-          />
-        </div>
-
-        <div>
-          <Select
-            label="Usuario"
-            name="userUuid"
-            options={[
-              { value: '', label: 'Todos', selected: !selectedUserUuid },
-              ...filterUsers.map((u: any) => ({ value: u.uuid, label: `${u.name} ${u.lastName} (${u.email.split('@')[0]})`, selected: u.uuid === selectedUserUuid })),
-            ]}
-          />
-        </div>
-
-        <div>
-          <Input label="Desde" type="date" name="dateFrom" value={dateFrom} />
-        </div>
-
-        <div>
-          <Input label="Hasta" type="date" name="dateTo" value={dateTo} />
-        </div>
-      </form>
-    </div>
-
-    <!-- TABLA DE LOGS -->
-    <div class="mb-10 overflow-hidden rounded-main border border-border bg-background">
-      {
-        fetchError && (
           <EmptyState
+            slot="error"
             title="Error al cargar registros"
             description="Ocurrió un error al cargar los registros de auditoría. Por favor, intente nuevamente."
             state="error"
             action="refresh"
             showBorder={false}
           />
-        )
-      }
 
-      {
-        !fetchError && logs.length === 0 && (
-          <EmptyState title="No se encontraron registros" description="No se encontraron registros de auditoría con los filtros aplicados." state="notFound" action="reload" showBorder={false} />
-        )
-      }
-
-      {
-        !fetchError && logs.length > 0 && (
-          <div class="overflow-x-auto">
-            <table class="w-full border-collapse text-left">
-              <thead>
-                <tr class="border-b border-border bg-foreground text-xs font-semibold tracking-wider text-subheading uppercase">
-                  <th class="w-8 px-6 py-4" />
-                  <th class="px-6 py-4">Usuario</th>
-                  <th class="px-6 py-4">Acción</th>
-                  <th class="px-6 py-4">Recurso Afectado</th>
-                  <th class="px-6 py-4">Fecha y Hora</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-border text-sm">
-                {logs.map((log: any) => {
-                  const badge = getActionBadgeConfig(log.action)
-                  return (
-                    <>
-                      <tr class="row-clickable cursor-pointer border-border transition-colors duration-150 hover:bg-foreground" data-target={`details-${log.id}`}>
-                        <td class="px-6 py-4 text-center">
-                          <span class="chevron-icon inline-block transform text-subheading transition-transform duration-200">
-                            <Icon name="ChevronRight" size={16} />
-                          </span>
-                        </td>
-                        <td class="px-6 py-4">
-                          <div class="flex flex-col">
-                            <span class="font-medium text-heading">{log.user ? `${log.user.name} ${log.user.lastName}` : ''}</span>
-                            <span class="text-xs text-subheading">{log.user?.email || ''}</span>
-                          </div>
-                        </td>
-                        <td class="px-6 py-4">
-                          <span class={`inline-flex items-center gap-1.5 rounded-main border px-2.5 py-1 text-xs font-medium ${badge.bg}`}>{log.action}</span>
-                        </td>
-                        <td class="px-6 py-4">
-                          <div class="flex flex-col">
-                            <span class="font-mono text-xs text-heading">{log.entityUuid || 'N/A'}</span>
-                            <span class="text-xs font-semibold tracking-wider text-subheading uppercase">{log.entity}</span>
-                          </div>
-                        </td>
-                        <td class="px-6 py-4 text-heading" title={`Timestamp ISO: ${log.createdAt}`}>
-                          {formatExtendedDate(log.createdAt)}
-                        </td>
-                      </tr>
-
-                      <tr id={`details-${log.id}`} class="hidden bg-foreground/40">
-                        <td colspan="5" class="px-4 pt-3 pb-4">
-                          <div>
-                            <div class="mb-2 flex flex-wrap items-center gap-4 border-b border-border pb-3 font-mono text-[11px] text-subheading">
-                              <div>
-                                Dirección IP: <span class="font-bold text-heading">{log.ipAddress || 'N/A'}</span>
-                              </div>
-                              <div>
-                                User-Agent: <span class="font-bold text-heading">{log.userAgent || 'N/A'}</span>
-                              </div>
-                              <div>
-                                Creado: <span class="font-bold text-heading">{formatExtendedDate(log.createdAt)}</span>
-                              </div>
-                            </div>
-
-                            <div class="mt-4">
-                              <span class="font-mono text-[11px] font-bold text-heading">Cambios Registrados (JSON)</span>
-
-                              <div class="mb-4 overflow-x-auto rounded-main border border-border bg-foreground p-2 font-mono text-[11px] leading-relaxed">
-                                <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(log.details, null, 2)} />
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    </>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )
-      }
-
-      <!-- PAGINACIÓN -->
-      {
-        !fetchError && pagination.totalPages > 1 && (
-          <div class="flex items-center justify-between bg-foreground px-6 py-4">
-            <span class="text-xs text-subheading">
-              Página <strong class="text-heading">{pagination.page}</strong> de <strong class="text-heading">{pagination.totalPages}</strong> ({totalLogs} registros)
-            </span>
-            <div class="flex gap-2">
-              <Button size="sm" id="btn-prev" disabled={pagination.page <= 1} variant="secondary">
-                Anterior
-              </Button>
-              <Button size="sm" id="btn-next" disabled={pagination.page >= pagination.totalPages} variant="secondary">
-                Siguiente
-              </Button>
-            </div>
-          </div>
-        )
-      }
+          <EmptyState
+            slot="empty"
+            title="No se encontraron registros"
+            description="No se encontraron registros de auditoría con los filtros aplicados."
+            state="notFound"
+            action="reload"
+            showBorder={false}
+          />
+        </StateSwitch>
+      </div>
     </div>
-  </Container>
+  </div>
+
+  <Modal modalId="confirm-purge-modal" title="Confirmar eliminación">
+    <p class="text-sm text-subheading">¿Estás seguro de que deseas limpiar de forma permanente todos los registros de auditoría de más de 180 días? Esta acción no se puede deshacer.</p>
+    <div slot="footer" class="flex gap-2">
+      <Button variant="secondary" size="sm" data-close-modal> Cancelar </Button>
+      <Button variant="destructive" size="sm" id="btn-confirm-purge" icon="Trash"> Confirmar </Button>
+    </div>
+  </Modal>
 </MainLayout>
 
-<script is:inline define:vars={{ page, totalPages: pagination.totalPages }}>
-  document.addEventListener('astro:page-load', () => {
-    // 1. Manejo del acordeón interactivo para ver detalles JSON
-    const rows = document.querySelectorAll('.row-clickable')
-    rows.forEach((row) => {
-      row.addEventListener('click', (e) => {
-        const targetId = row.getAttribute('data-target')
-        const detailsRow = document.getElementById(targetId)
-        const chevron = row.querySelector('.chevron-icon')
+<script type="application/json" id="pagination-data" set:html={JSON.stringify({ page, totalPages: pagination.totalPages })} />
 
-        if (detailsRow) {
-          const isHidden = detailsRow.classList.contains('hidden')
-          if (isHidden) {
-            detailsRow.classList.remove('hidden')
-            if (chevron) chevron.style.transform = 'rotate(90deg)'
-          } else {
-            detailsRow.classList.add('hidden')
-            if (chevron) chevron.style.transform = 'rotate(0deg)'
-          }
-        }
-      })
-    })
+<script>
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import { actions } from 'astro:actions'
+
+  document.addEventListener('astro:page-load', () => {
+    const dataScript = document.getElementById('pagination-data')
+    const { page, totalPages } = dataScript ? JSON.parse(dataScript.textContent || '{}') : { page: 1, totalPages: 1 }
 
     // 2. Escuchar cambios en los inputs del formulario de filtros y hacer submit dinámico
     const filtersForm = document.getElementById('filters-form')
     if (filtersForm) {
-      const inputs = filtersForm.querySelectorAll('select, input[type="date"]')
+      const inputs = filtersForm.querySelectorAll('input[type="radio"], input[type="date"]')
       inputs.forEach((input) => {
         input.addEventListener('change', () => {
           // Volver a la página 1 cuando cambian los filtros
-          const params = new URLSearchParams(new FormData(filtersForm))
+          const params = new URLSearchParams(new FormData(filtersForm as HTMLFormElement) as any)
           params.set('page', '1')
           window.location.search = params.toString()
         })
@@ -332,33 +205,39 @@ function getActionBadgeConfig(action: string) {
     }
 
     // 4. Manejo del botón de purga (Solo admin)
-    const btnPurge = document.getElementById('btn-purge')
-    if (btnPurge) {
-      btnPurge.addEventListener('click', async () => {
-        const confirmed = confirm('¿Estás seguro de que deseas limpiar de forma permanente todos los registros de auditoría de más de 180 días? Esta acción no se puede deshacer.')
-        if (!confirmed) return
+    const btnPurge = document.querySelectorAll('.btn-purge-trigger')
+    const purgeModal = document.getElementById('confirm-purge-modal') as HTMLDialogElement
+    const btnConfirmPurge = document.getElementById('btn-confirm-purge') as HTMLButtonElement
 
-        btnPurge.disabled = true
-        btnPurge.style.opacity = '0.5'
-
-        try {
-          // Import dynamic Astro Action on the client-side
-          const { actions } = await import('astro:actions')
-          const res = await actions.audits.purgeLogs()
-          if (res.error) {
-            alert('Error al limpiar los logs: ' + res.error.message)
-          } else {
-            alert('Limpieza completada con éxito. Registros eliminados: ' + (res.data?.data?.deletedCount || 0))
-            window.location.reload()
-          }
-        } catch (err) {
-          alert('Error inesperado: ' + err.message)
-        } finally {
-          btnPurge.disabled = false
-          btnPurge.style.opacity = '1'
-        }
+    if (btnPurge.length > 0 && purgeModal) {
+      btnPurge.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          purgeModal.showModal()
+        })
       })
     }
+
+    btnConfirmPurge.addEventListener('click', async () => {
+      setButtonLoading('#btn-confirm-purge', true)
+
+      try {
+        const { data, error } = await callAction(actions.audits.purgeLogs())
+
+        if (error) {
+          toast.error('Error al limpiar los registros')
+          console.log(error)
+          return
+        }
+
+        toast.success('Registros eliminados: ' + (data?.data?.deletedCount || 0))
+        purgeModal.close()
+        window.location.reload()
+      } catch (err: unknown) {
+        toast.error(`Error inesperado: ${(err as Error).message}`)
+      } finally {
+        setButtonLoading('#btn-confirm-purge', false)
+      }
+    })
   })
 </script>
 
