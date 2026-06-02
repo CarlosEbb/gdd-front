@@ -72,6 +72,8 @@ export const users = {
       country: z.string().optional(),
       img_profile_file: z.any().optional(),
       zipCode: z.string().optional(),
+      'clientUuids[]': z.array(z.string()).optional().default([]),
+      'permissionUuids[]': z.array(z.string()).optional().default([]),
     }),
     handler: async (input, request) => {
       await requirePermission(request, ['users.update'])
@@ -79,12 +81,15 @@ export const users = {
 
       try {
         const formData = new FormData()
-        formData.append('name', input.name)
-        formData.append('lastName', input.lastName)
-        formData.append('email', input.email)
-        if (input.country) formData.append('country', input.country)
-        if (input.zipCode) formData.append('zipCode', input.zipCode)
-        if (input.img_profile_file && input.img_profile_file.size > 0) formData.append('img_profile_file', input.img_profile_file)
+        Object.entries(input).forEach(([key, value]) => {
+          if (key === 'img_profile_file') {
+            if (value && value.size > 0) formData.append(key, value)
+          } else if (Array.isArray(value)) {
+            value.forEach((v) => formData.append(key, v))
+          } else {
+            formData.append(key, value)
+          }
+        })
 
         const userUpdated = await http.put<Details>(`/users/${input.uuid}`, token, request, formData)
 
