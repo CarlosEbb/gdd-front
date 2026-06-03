@@ -13,7 +13,7 @@ import Icon from '@/components/ui/Icon.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const workspaces = await Astro.session?.get('workspaces')
-const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id, label: workspace.name })) ?? []
+const workspacesOptions = [{ value: '', label: 'Mostrar todos' }, ...(workspaces?.map((workspace) => ({ value: workspace.uuid, label: workspace.name })) ?? [])]
 ---
 
 <MainLayout title="Mis documentos">
