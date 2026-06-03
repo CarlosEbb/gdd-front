@@ -45,6 +45,7 @@ function handleDocumentClick(e: Event) {
       buildNumber: card.dataset.buildNumber,
       uuidVersion: card.dataset.uuidVersion,
       nameWorkspace: card.dataset.nameWorkspace,
+      description: card.dataset.description,
     }
 
     // Cerrar el dropdown
@@ -58,6 +59,7 @@ function handleDocumentClick(e: Event) {
       generated: 'document:generated',
       duplicate: 'document:duplicate',
       template: 'document:template',
+      'edit-metadata': 'document:edit-metadata',
     }
 
     const eventName = action ? eventMap[action] : undefined

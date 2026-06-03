@@ -43,6 +43,12 @@ const ACTIONS = [
     action: 'template',
     permission: 'templates.create',
   },
+  {
+    name: 'Editar metadata',
+    icon: 'Info',
+    action: 'edit-metadata',
+    permission: 'templates.update',
+  },
 ] as const
 
 const { document } = Astro.props
@@ -79,6 +85,7 @@ const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWork
   data-name-version={nameVersion}
   data-build-number={buildNumber}
   data-uuid-version={uuidVersion}
+  data-description={description}
   data-name-workspace={workspace?.name || ''}
 >
   <div slot="actions" class="flex items-center gap-2">

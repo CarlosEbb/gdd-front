@@ -1,5 +1,6 @@
 ---
 import Modal from '@/components/modal/Modal.astro'
+import EditDocumentMetadata from '@/components/modal/EditDocumentMetadata.astro'
 import Button from '@/components/ui/Button.astro'
 import CardDocument from '@/components/ui/CardDocument.astro'
 import ListDocument from '@/components/ui/ListDocument.astro'
@@ -86,6 +87,8 @@ const currentPath = '/home'
     <Button type="submit" size="sm" form="delete-document-form" id="btn-delete-document" loadingText="Eliminando...">Eliminar documento</Button>
   </div>
 </Modal>
+
+<EditDocumentMetadata />
 
 <script>
   import { initDocumentModals } from '@/scripts/document-modals'

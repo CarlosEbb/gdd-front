@@ -285,4 +285,25 @@ export const documents = {
       }
     },
   }),
+
+  updateMetadata: defineAction({
+    input: z.object({
+      uuid_version: z.string(),
+      title: z.string(),
+      description: z.string().optional(),
+      name: z.string().optional(),
+    }),
+    handler: async ({ uuid_version, title, description, name }, request) => {
+      await requirePermission(request, ['templates.edit'], 'all')
+      const token = await requireAuth(request)
+      const url = `/template/${uuid_version}`
+      const body = { title, description, name }
+      try {
+        const response = await http.put(url, token, request, body)
+        return response
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
 }

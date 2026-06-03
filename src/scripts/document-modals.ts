@@ -115,32 +115,89 @@ export function initDocumentModals() {
 
   document.addEventListener('submit', async (event: Event) => {
     const form = event.target as HTMLFormElement
-    if (form.id !== 'delete-document-form') return
+    if (form.id === 'delete-document-form') {
+      event.preventDefault()
+      const dataForm = new FormData(form)
 
-    event.preventDefault()
-    const dataForm = new FormData(form)
+      try {
+        setButtonLoading('#btn-delete-document', true)
+        const { data, error } = await callAction(actions.documents.deleteDocument(dataForm))
 
-    try {
-      setButtonLoading('#btn-delete-document', true)
-      const { data, error } = await callAction(actions.documents.deleteDocument(dataForm))
+        if (error) {
+          toast.error(error.message)
+          setButtonLoading('#btn-delete-document', false)
+          return
+        }
 
-      if (error) {
-        toast.error(error.message)
+        const modal = getModalDelete()
+        if (modal) modal.close()
+
+        toast.success(data.message)
+        const uuid = dataForm.get('uuid_template') as string
+        const card = document.querySelector(`[data-uuid="${uuid}"]`)
+        card?.remove()
+      } catch (error) {
+        toast.error('Ha ocurrido un error al eliminar el documento. Por favor, intente nuevamente.')
+      } finally {
         setButtonLoading('#btn-delete-document', false)
-        return
       }
+    } else if (form.id === 'edit-document-metadata-form') {
+      event.preventDefault()
+      const dataForm = new FormData(form)
 
-      const modal = getModalDelete()
-      if (modal) modal.close()
+      const uuid_version = dataForm.get('uuid') as string
+      const title = dataForm.get('titulo') as string
+      const name = dataForm.get('name') as string
+      const description = dataForm.get('descripcion') as string
 
-      toast.success(data.message)
-      const uuid = dataForm.get('uuid_template') as string
-      const card = document.querySelector(`[data-uuid="${uuid}"]`)
-      card?.remove()
-    } catch (error) {
-      toast.error('Ha ocurrido un error al eliminar el documento. Por favor, intente nuevamente.')
-    } finally {
-      setButtonLoading('#btn-delete-document', false)
+      try {
+        setButtonLoading('#btn-edit-document-metadata', true)
+        const { data, error } = await callAction(
+          actions.documents.updateMetadata({
+            uuid_version,
+            title,
+            name: name || undefined,
+            description: description || undefined,
+          })
+        )
+
+        if (error) {
+          toast.error(error.message)
+          setButtonLoading('#btn-edit-document-metadata', false)
+          return
+        }
+
+        const modal = document.getElementById('edit-document-metadata') as HTMLDialogElement | null
+        if (modal) modal.close()
+
+        toast.success(data?.message || 'Metadata del documento actualizada exitosamente')
+        navigate(window.location.pathname + window.location.search)
+      } catch (error) {
+        toast.error('Ha ocurrido un error al actualizar la metadata. Por favor, intente nuevamente.')
+      } finally {
+        setButtonLoading('#btn-edit-document-metadata', false)
+      }
     }
+  })
+
+  document.addEventListener('document:edit-metadata', (event: Event) => {
+    const cardData = (event as CustomEvent).detail
+    const modal = document.getElementById('edit-document-metadata') as HTMLDialogElement | null
+    if (!modal) return
+
+    const form = document.getElementById('edit-document-metadata-form') as HTMLFormElement | null
+    if (!form) return
+
+    const uuidInput = form.querySelector<HTMLInputElement>('[name="uuid"]')
+    const tituloInput = form.querySelector<HTMLInputElement>('[name="titulo"]')
+    const nameInput = form.querySelector<HTMLInputElement>('[name="name"]')
+    const descripcionInput = form.querySelector<HTMLInputElement>('[name="descripcion"]')
+
+    if (uuidInput) uuidInput.value = cardData.uuidVersion || ''
+    if (tituloInput) tituloInput.value = cardData.title || ''
+    if (nameInput) nameInput.value = cardData.nameVersion || ''
+    if (descripcionInput) descripcionInput.value = cardData.description || ''
+
+    modal.showModal()
   })
 }
