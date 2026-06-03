@@ -178,6 +178,7 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
                       type="checkbox"
                       name="permissionUuids[]"
                       value={permission.uuid}
+                      data-permission-name={permission.name}
                       class="shrink-0 accent-primary"
                       data-permission-checkbox
                       checked={userPermissionUuids.includes(permission.uuid)}
@@ -285,6 +286,113 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
       updateBadge()
     })
   })
+</script>
+
+<script>
+  // --- Reglas de permisología en tiempo real ---
+  document.addEventListener('astro:page-load', () => {
+    const checkboxes = document.querySelectorAll<HTMLInputElement>('[data-permission-checkbox]');
+    if (checkboxes.length === 0) return;
+
+    const findCheckboxByName = (name: string) => {
+      return Array.from(checkboxes).find(cb => cb.dataset.permissionName === name);
+    };
+
+    const updateDependencies = () => {
+      const usersViewCb = findCheckboxByName('users.view');
+      const serversViewCb = findCheckboxByName('servers.view');
+      const documentsCreateCb = findCheckboxByName('documents.create');
+      const templatesCreateCb = findCheckboxByName('templates.create');
+
+      // Regla: si puedo crear una plantilla, debo poder crear un documento
+      if (templatesCreateCb?.checked && documentsCreateCb && !documentsCreateCb.checked) {
+        documentsCreateCb.checked = true;
+        documentsCreateCb.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      // Regla: si puedo crear, actualizar o eliminar un servidor, es necesario poder consultarlo/verlo
+      const needsServersView = Array.from(checkboxes).some(cb => {
+        const name = cb.dataset.permissionName || '';
+        const isDependent = 
+          name.startsWith('servers.create') || name.startsWith('servers.update') || name.startsWith('servers.delete') || name.startsWith('servers.manage');
+        return isDependent && cb.checked;
+      });
+
+      if (needsServersView && serversViewCb && !serversViewCb.checked) {
+        serversViewCb.checked = true;
+        serversViewCb.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      // Reglas:
+      // - Si tengo actualizar o crear usuario o eliminar, es necesario el ver usuario
+      // - Si tengo actualizar o crear servidores o eliminar, es necesario el ver usuario
+      // - Si tengo actualizar o crear plantillas o eliminar, es necesario el ver usuario
+      const needsUsersView = Array.from(checkboxes).some(cb => {
+        const name = cb.dataset.permissionName || '';
+        const isDependent = 
+          name.startsWith('users.create') || name.startsWith('users.update') || name.startsWith('users.delete') || name.startsWith('users.manage') ||
+          name.startsWith('servers.create') || name.startsWith('servers.update') || name.startsWith('servers.delete') || name.startsWith('servers.manage') ||
+          name.startsWith('templates.create') || name.startsWith('templates.update') || name.startsWith('templates.delete') || name.startsWith('templates.publish');
+        return isDependent && cb.checked;
+      });
+
+      if (needsUsersView && usersViewCb && !usersViewCb.checked) {
+        usersViewCb.checked = true;
+        usersViewCb.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    };
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', () => {
+        const name = cb.dataset.permissionName || '';
+        
+        // Cascade uncheck
+        if (!cb.checked) {
+          // Si desmarcas ver usuario, desmarcar todos los de gestión/edición
+          if (name === 'users.view') {
+            checkboxes.forEach(otherCb => {
+              const otherName = otherCb.dataset.permissionName || '';
+              const isDependent = 
+                otherName.startsWith('users.create') || otherName.startsWith('users.update') || otherName.startsWith('users.delete') || otherName.startsWith('users.manage') ||
+                otherName.startsWith('servers.create') || otherName.startsWith('servers.update') || otherName.startsWith('servers.delete') || otherName.startsWith('servers.manage') ||
+                otherName.startsWith('templates.create') || otherName.startsWith('templates.update') || otherName.startsWith('templates.delete') || otherName.startsWith('templates.publish');
+              if (isDependent && otherCb.checked) {
+                otherCb.checked = false;
+                otherCb.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+            });
+          }
+
+          // Si desmarcas ver servidor, desmarcar todos los de gestión/edición de servidores
+          if (name === 'servers.view') {
+            checkboxes.forEach(otherCb => {
+              const otherName = otherCb.dataset.permissionName || '';
+              const isDependent = 
+                otherName.startsWith('servers.create') || otherName.startsWith('servers.update') || otherName.startsWith('servers.delete') || otherName.startsWith('servers.manage');
+              if (isDependent && otherCb.checked) {
+                otherCb.checked = false;
+                otherCb.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+            });
+          }
+          
+          // Si desmarcas crear documento, desmarcar crear plantilla
+          if (name === 'documents.create') {
+            const templatesCreateCb = findCheckboxByName('templates.create');
+            if (templatesCreateCb?.checked) {
+              templatesCreateCb.checked = false;
+              templatesCreateCb.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          }
+        }
+
+        updateDependencies();
+      });
+    });
+
+    // Ejecutar escaneo inicial al cargar
+    updateDependencies();
+  });
 </script>
 
 <script>
