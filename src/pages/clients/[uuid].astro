@@ -145,70 +145,76 @@ const selectedClient = {
               <h2 class="text-xl font-semibold text-heading">Información Adicional</h2>
               <div class="-mx-4 max-w-full px-4 pb-1 sm:mx-0 sm:px-0">
                 <TabsList>
-                  <TabsTrigger value="dataBase"
-                    >Base de Datos <span class="ml-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
-                      >{selectedClient.databases.length}</span
-                    ></TabsTrigger
-                  >
-                  <TabsTrigger value="servidores"
-                    >Servidores <span class="ml-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
-                      >{selectedClient.servers.length}</span
-                    ></TabsTrigger
-                  >
-
-                  <TabsTrigger value="usuarios"
-                    >Usuarios <span class="ml-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
-                      >{selectedClient.user?.length || 0}</span
-                    ></TabsTrigger
-                  >
+                  <PermissionGuard permission="servers.view">
+                    <TabsTrigger value="dataBase"
+                      >Base de Datos <span class="ml-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
+                        >{selectedClient.databases.length}</span
+                      ></TabsTrigger
+                    >
+                    <TabsTrigger value="servidores"
+                      >Servidores <span class="ml-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
+                        >{selectedClient.servers.length}</span
+                      ></TabsTrigger
+                    >
+                  </PermissionGuard>
+                  <PermissionGuard permission="users.view">
+                    <TabsTrigger value="usuarios"
+                      >Usuarios <span class="ml-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
+                        >{selectedClient.user?.length || 0}</span
+                      ></TabsTrigger
+                    >
+                  </PermissionGuard>
                 </TabsList>
               </div>
             </div>
 
-            <TabsContent value="dataBase">
-              <Table
-                columns={[
-                  { key: 'nameBd', label: 'Nombre' },
-                  { key: 'idServer', label: 'ID Servidor' },
-                ]}
-                rows={selectedClient.databases.map((database) => ({
-                  nameBd: database.nameBd,
-                  idServer: database.idServer.toString(),
-                }))}
-                showPagination={false}
-              />
-            </TabsContent>
+            <PermissionGuard permission="servers.view">
+              <TabsContent value="dataBase">
+                <Table
+                  columns={[
+                    { key: 'nameBd', label: 'Nombre' },
+                    { key: 'idServer', label: 'ID Servidor' },
+                  ]}
+                  rows={selectedClient.databases.map((database) => ({
+                    nameBd: database.nameBd,
+                    idServer: database.idServer.toString(),
+                  }))}
+                  showPagination={false}
+                />
+              </TabsContent>
+              <TabsContent value="servidores">
+                <Table
+                  columns={[
+                    { key: 'serverName', label: 'Nombre' },
+                    { key: 'hostname', label: 'Hostname', align: 'left' as const },
+                    { key: 'createdAt', label: 'Fecha de creación', align: 'left' as const },
+                  ]}
+                  rows={selectedClient.servers.map((server) => ({
+                    serverName: server.server.name || 'Servidor sin nombre',
+                    hostname: `${server.server.ip}:${server.server.puerto}`,
+                    createdAt: server.server.createdAt,
+                    href: `/servers/${server.uuidServer}`,
+                  }))}
+                  showPagination={false}
+                />
+              </TabsContent>
+            </PermissionGuard>
 
-            <TabsContent value="servidores">
-              <Table
-                columns={[
-                  { key: 'serverName', label: 'Nombre' },
-                  { key: 'hostname', label: 'Hostname', align: 'left' as const },
-                  { key: 'createdAt', label: 'Fecha de creación', align: 'left' as const },
-                ]}
-                rows={selectedClient.servers.map((server) => ({
-                  serverName: server.server.name || 'Servidor sin nombre',
-                  hostname: `${server.server.ip}:${server.server.puerto}`,
-                  createdAt: server.server.createdAt,
-                  href: `/servers/${server.uuidServer}`,
-                }))}
-                showPagination={false}
-              />
-            </TabsContent>
-
-            <TabsContent value="usuarios">
-              <Table
-                columns={[
-                  { key: 'name', label: 'Nombre' },
-                  { key: 'email', label: 'Correo' },
-                ]}
-                rows={selectedClient.user?.map((user) => ({
-                  name: user.user.name,
-                  email: user.user.email,
-                })) || []}
-                showPagination={false}
-              />
-            </TabsContent>
+            <PermissionGuard permission="users.view">
+              <TabsContent value="usuarios">
+                <Table
+                  columns={[
+                    { key: 'name', label: 'Nombre' },
+                    { key: 'email', label: 'Correo' },
+                  ]}
+                  rows={selectedClient.user?.map((user) => ({
+                    name: user.user.name,
+                    email: user.user.email,
+                  })) || []}
+                  showPagination={false}
+                />
+              </TabsContent>
+            </PermissionGuard>
           </Tabs>
         </section>
       </>
