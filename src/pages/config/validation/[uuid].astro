@@ -88,6 +88,12 @@ const isEmpty = !validations && elements.length === 0 && fields.length === 0
   import { toast } from '@/scripts/toast'
   import { actions } from 'astro:actions'
 
+  const updateUrlWithNewVersion = (buildNumber: string) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('build_number', buildNumber)
+    window.history.replaceState({}, '', url.toString())
+  }
+
   function setupSaveValidation() {
     const saveButton = document.getElementById('btn-save-validation') as HTMLButtonElement | null
     if (!saveButton) return
@@ -122,6 +128,9 @@ const isEmpty = !validations && elements.length === 0 && fields.length === 0
         }
 
         toast.success(data?.message ?? 'Validaciones guardadas correctamente.')
+
+        const buildNumber = (data as any)?.data?.version?.buildNumber
+        updateUrlWithNewVersion(buildNumber)
       } catch (error) {
         toast.error('Ah ocurrido un error al guardar las validaciones. Por favor, intente nuevamente.')
       } finally {
