@@ -50,6 +50,9 @@ const selectedServer = {
             <h1 class="text-base font-medium text-heading">Detalles server</h1>
 
             <div class="hidden items-center gap-3 sm:flex">
+              <PermissionGuard permission="servers.view">
+                <Button size="sm" variant="outline" id="refresh-server" icon="RefreshCcw"> Status </Button>
+              </PermissionGuard>
               <PermissionGuard permission="servers.update">
                 <Link size="sm" href={`/servers/${uuid}/edit`} icon="Pencil"> Editar </Link>
               </PermissionGuard>
@@ -129,6 +132,7 @@ const selectedServer = {
   </div>
 </Modal>
 
+<script type="application/json" id="server-data" set:html={JSON.stringify(server)} />
 <script>
   import { actions } from 'astro:actions'
   import { toast } from '@/scripts/toast'
@@ -138,6 +142,10 @@ const selectedServer = {
   document.addEventListener('astro:page-load', () => {
     const form = document.getElementById('delete-server-form') as HTMLFormElement
     const modal = document.getElementById('delete-server') as HTMLDialogElement
+    const btnCheckServer = document.getElementById('refresh-server') as HTMLButtonElement
+
+    const serverData = JSON.parse(document.getElementById('server-data')!.textContent!)
+    console.log(serverData)
 
     if (form.dataset.initialized) return
     form.dataset.initialized = 'true'
@@ -160,6 +168,19 @@ const selectedServer = {
       modal.close()
     }
 
+    const checkServer = async () => {
+      setButtonLoading('#refresh-server', true)
+      const { data, error } = await callAction(actions.servers.check({ uuid: serverData.uuid }))
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#refresh-server', false)
+        return
+      }
+      toast.success(data!.message)
+      setButtonLoading('#refresh-server', false)
+    }
+
+    btnCheckServer.addEventListener('click', checkServer)
     form.addEventListener('submit', deleteServer)
   })
 </script>

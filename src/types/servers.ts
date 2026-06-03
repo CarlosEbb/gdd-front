@@ -27,3 +27,16 @@ export interface Database {
   createdAt: Date
   updatedAt: Date
 }
+
+export interface CheckServer {
+  status: string
+  response_time_ms: number
+  server: Server
+}
+
+export interface Server {
+  uuid: string
+  name: string
+  ip: string
+  port: number
+}

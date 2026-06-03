@@ -2,7 +2,7 @@ import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import type { ApiResponse } from '@/types/response'
 import { handleApiError, http } from './http'
-import type { createServer, DetailsServer } from '@/types/servers'
+import type { CheckServer, createServer, DetailsServer } from '@/types/servers'
 import { requirePermission, requireAuth } from '@/lib/permissions'
 
 export const servers = {
@@ -113,6 +113,23 @@ export const servers = {
 
       try {
         const serverInfo = await http.get<DetailsServer[]>(`/servers/ip/${ip}`, token, request)
+
+        return serverInfo
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  check: defineAction({
+    input: z.object({
+      uuid: z.string(),
+    }),
+    handler: async ({ uuid }, request) => {
+      await requirePermission(request, ['servers.view'])
+      const token = await requireAuth(request)
+
+      try {
+        const serverInfo = await http.get<CheckServer>(`/servers/${uuid}/health`, token, request)
 
         return serverInfo
       } catch (error) {
