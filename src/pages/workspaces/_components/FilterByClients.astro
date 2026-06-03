@@ -1,0 +1,115 @@
+---
+import Select from '@/components/form/Select.astro'
+---
+
+<Select name="client" options={[]} placeholder="Filtrar por cliente" />
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction } from '@/scripts/utils'
+
+  const ITEM_SELECTOR = '.workspace-item'
+  const SECONDARY_HIDDEN_FLAG = 'filterSecondaryHidden'
+
+  function initWorkspaceFilter() {
+    const container = document.querySelector('[data-workspaces-filters]')
+    if (!container) return
+
+    const clientSelect = container.querySelector<HTMLSelectElement>('select[name="client"]')
+    if (!clientSelect) return
+
+    let clientsLoaded = false
+    let clientsLoading = false
+
+    const getItems = () => Array.from(document.querySelectorAll<HTMLElement>(ITEM_SELECTOR))
+
+    const applySecondaryFilter = () => {
+      const clientValue = clientSelect.value || ''
+
+      getItems().forEach((item) => {
+        const itemClient = item.dataset.client || ''
+        const matchesClient = !clientValue || itemClient === clientValue
+
+        if (matchesClient) {
+          item.style.display = ''
+          delete item.dataset[SECONDARY_HIDDEN_FLAG]
+        } else {
+          item.style.display = 'none'
+          item.dataset[SECONDARY_HIDDEN_FLAG] = 'true'
+        }
+      })
+    }
+
+    async function loadClients() {
+      const select = clientSelect
+      if (!select || clientsLoaded || clientsLoading) return
+
+      clientsLoading = true
+      const originalPlaceholder = select.options[0]?.text || 'Filtrar por cliente'
+
+      if (select.options[0]) {
+        select.options[0].text = 'Cargando clientes...'
+      }
+
+      try {
+        const { data, error } = await callAction(actions.clients.list())
+
+        if (error) {
+          throw new Error(error.message)
+        }
+
+        const clientsList = data?.data || []
+
+        // Limpiar opciones previas excepto la primera (el placeholder)
+        while (select.options.length > 1) {
+          select.remove(1)
+        }
+
+        if (select.options[0]) {
+          select.options[0].text = 'Todos los clientes'
+          select.options[0].disabled = false
+        }
+
+        clientsList.forEach((client: any) => {
+          const option = document.createElement('option')
+          option.value = client.uuid
+          option.text = client.name
+          select.appendChild(option)
+        })
+
+        clientsLoaded = true
+      } catch (err: any) {
+        console.error('Error al cargar clientes:', err)
+        if (select.options[0]) {
+          select.options[0].text = 'Error al cargar clientes'
+        }
+        toast.error('Error al cargar la lista de clientes.')
+        clientsLoading = false
+      }
+    }
+
+    clientSelect.addEventListener('mousedown', loadClients)
+    clientSelect.addEventListener('focus', loadClients)
+    clientSelect.addEventListener('change', applySecondaryFilter)
+
+    // Reaplica filtros cuando cambian las cards en el DOM
+    const observer = new MutationObserver((mutations) => {
+      let shouldReapply = false
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+          shouldReapply = true
+          break
+        }
+      }
+      if (shouldReapply) applySecondaryFilter()
+    })
+
+    const targetNode = document.querySelector('main') || document.body
+    observer.observe(targetNode, { childList: true, subtree: true })
+
+    applySecondaryFilter()
+  }
+
+  document.addEventListener('astro:page-load', initWorkspaceFilter)
+</script>

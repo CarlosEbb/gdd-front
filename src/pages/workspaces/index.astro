@@ -13,6 +13,8 @@ import Button from '@/components/ui/Button.astro'
 import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 import Dropdown from '@/components/ui/Dropdown.astro'
+import Select from '@/components/form/Select.astro'
+import FilterByClients from './_components/FilterByClients.astro'
 
 const currentPath = Astro.url.pathname
 const { data, error } = await Astro.callAction(actions.workspaces.list, {})
@@ -42,12 +44,20 @@ const hasWorkspaces = workspaces.length > 0
     </Header>
 
     <DataGrid hasData={hasWorkspaces} isError={error} grid="x2">
-      <div slot="header" class="mb-4">
-        <SearchFilter placeholder="Buscar espacio..." target=".workspace-item" keys="name" />
+      <div slot="header" class="mb-4 flex w-full flex-col gap-3 md:flex-row md:items-center" data-workspaces-filters>
+        <div class="w-full md:flex-1">
+          <SearchFilter placeholder="Buscar espacio..." target=".workspace-item" keys="name" />
+        </div>
+
+        <PermissionGuard permission="admin.full">
+          <div class="hidden shrink-0 md:block md:w-64">
+            <FilterByClients />
+          </div>
+        </PermissionGuard>
       </div>
       {
         workspaces.map((workspace: any) => (
-          <Card href={`/workspaces/${workspace.uuid}`} class="workspace-item" data-name={workspace.name}>
+          <Card href={`/workspaces/${workspace.uuid}`} class="workspace-item" data-name={workspace.name} data-client={workspace.client?.uuid || ''}>
             <div class="flex items-center gap-3">
               <div class="flex size-9 items-center justify-center rounded-main border border-border text-heading">
                 <Icon name={workspace.icon || 'Folder'} stroke-width={1.6} size={18} />
