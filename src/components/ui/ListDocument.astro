@@ -5,6 +5,8 @@ import { formatShortDate } from '@/scripts/utils'
 import Icon from './Icon.astro'
 import Avatar from './Avatar.astro'
 import CardList from './CardList.astro'
+import type { PermissionData } from '@/lib/permissions'
+import { hasPermission } from '@/lib/permissions'
 
 interface Props {
   document: Document
@@ -15,34 +17,50 @@ const ACTIONS = [
     name: 'Documentación',
     icon: 'FileCode',
     action: 'view-documentation',
+    permission: 'templates.view',
   },
   {
     name: 'Visualizar',
     icon: 'FileText',
     action: 'view',
+    permission: 'templates.view',
   },
   {
     name: 'Documentos generados',
     icon: 'ListTree',
     action: 'generated',
+    permission: 'templates.view',
   },
   {
     name: 'Duplicar',
     icon: 'Copy',
     action: 'duplicate',
+    permission: 'templates.create',
   },
   {
     name: 'Crear plantilla',
     icon: 'FilePlusCorner',
     action: 'template',
+    permission: 'templates.create',
   },
-]
+] as const
 
 const { document } = Astro.props
 
 const { uuid, lastVersion, uuidWorkspace, title, updatedAt, description, owner, workspace } = document
 const { pathThumbnails = null, buildNumber, nameVersion = '', uuid: uuidVersion } = lastVersion || {}
 const { name: autor, photo } = owner
+
+const permissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
+
+const ALLOWED_ACTIONS = ACTIONS.filter((action) => {
+  if (!action.permission) return true
+  if (!permissions) return false
+  return hasPermission(permissions, action.permission)
+})
+
+const hasDeletePermission = permissions ? hasPermission(permissions, 'templates.delete') : false
+const showDropdown = ALLOWED_ACTIONS.length > 0 || hasDeletePermission
 
 const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWorkspace}&name_document=${title}`
 ---
@@ -79,31 +97,35 @@ const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWork
       </div>
     </div>
 
-    <div class="relative">
-      <button class="flex size-8 items-center justify-center rounded-main text-heading transition-colors duration-150 hover:bg-muted" data-btn-dropdown aria-label="Acciones del documento">
-        <Icon name="EllipsisVertical" stroke-width={1.5} size={18} />
-      </button>
-
-      <div
-        class="invisible absolute top-full right-0 z-20 mt-1 w-56 origin-top-right scale-95 transform rounded-main border border-border bg-background p-2 opacity-0 shadow-base transition-all duration-150 ease-out [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100"
-        data-card-dropdown
-      >
-        <div class="py-1">
-          {
-            ACTIONS.map((action) => (
-              <button class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-heading transition-colors duration-150 hover:bg-muted" data-action={action.action}>
-                <Icon name={action.icon as keyof typeof icons} stroke-width={1.5} class="size-4" />
-                {action.name}
-              </button>
-            ))
-          }
-          <button class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-red-600 transition-colors duration-150 hover:bg-red-500/20" data-action="delete">
-            <Icon name="Trash2" stroke-width={1.5} class="size-3" />
-            <span>Eliminar</span>
+    {
+      showDropdown && (
+        <div class="relative">
+          <button class="flex size-8 items-center justify-center rounded-main text-heading transition-colors duration-150 hover:bg-muted" data-btn-dropdown aria-label="Acciones del documento">
+            <Icon name="EllipsisVertical" stroke-width={1.5} size={18} />
           </button>
+
+          <div
+            class="invisible absolute top-full right-0 z-20 mt-1 w-56 origin-top-right scale-95 transform rounded-main border border-border bg-background p-2 opacity-0 shadow-base transition-all duration-150 ease-out [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100"
+            data-card-dropdown
+          >
+            <div class="py-1">
+              {ALLOWED_ACTIONS.map((action) => (
+                <button class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-heading transition-colors duration-150 hover:bg-muted" data-action={action.action}>
+                  <Icon name={action.icon as keyof typeof icons} stroke-width={1.5} class="size-4" />
+                  {action.name}
+                </button>
+              ))}
+              {hasDeletePermission && (
+                <button class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-red-600 transition-colors duration-150 hover:bg-red-500/20" data-action="delete">
+                  <Icon name="Trash2" stroke-width={1.5} class="size-3" />
+                  <span>Eliminar</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )
+    }
   </div>
 </CardList>
 

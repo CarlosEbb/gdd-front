@@ -5,6 +5,9 @@ import template from '@/assets/images/preview/template-1.png'
 import { formatShortDate } from '@/scripts/utils'
 import Icon from './Icon.astro'
 import Avatar from './Avatar.astro'
+import type { PermissionData } from '@/lib/permissions'
+import { hasPermission } from '@/lib/permissions'
+
 const { PUBLIC_PROJECT_URL } = import.meta.env
 
 interface Props {
@@ -16,34 +19,50 @@ const ACTIONS = [
     name: 'Documentación',
     icon: 'FileCode',
     action: 'view-documentation',
+    permission: 'templates.view',
   },
   {
     name: 'Visualizar',
     icon: 'FileText',
     action: 'view',
+    permission: 'templates.view',
   },
   {
     name: 'Documentos generados',
     icon: 'ListTree',
     action: 'generated',
+    permission: 'templates.view',
   },
   {
     name: 'Duplicar',
     icon: 'Copy',
     action: 'duplicate',
+    permission: 'templates.create',
   },
   {
     name: 'Crear plantilla',
     icon: 'FilePlusCorner',
     action: 'template',
+    permission: 'templates.create',
   },
-]
+] as const
 
 const { document } = Astro.props
 
 const { uuid, lastVersion, uuidWorkspace, title, updatedAt, description, owner, workspace } = document
 const { pathThumbnails = null, buildNumber, nameVersion, uuid: uuidVersion = '' } = lastVersion || {}
 const { name: autor, photo } = owner
+
+const permissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
+
+const ALLOWED_ACTIONS = ACTIONS.filter((action) => {
+  if (!action.permission) return true
+  if (!permissions) return false
+  return hasPermission(permissions, action.permission)
+})
+
+const hasDeletePermission = permissions ? hasPermission(permissions, 'templates.delete') : false
+const showDropdown = ALLOWED_ACTIONS.length > 0 || hasDeletePermission
 
 const thumbnails = pathThumbnails ? `${PUBLIC_PROJECT_URL}${pathThumbnails}` : template.src
 const editorUrl = new URL(`/editor/${uuid}`, Astro.url)
@@ -80,49 +99,53 @@ const url = editorUrl.pathname + editorUrl.search
         decoding="async"
         onload="this.classList.remove('opacity-0'); this.previousElementSibling.classList.add('hidden')"
       />
+      {
+        workspace && (
+          <div class="absolute top-2 left-2 z-20 flex max-w-[120px] min-w-0 -translate-y-1 scale-95 items-center gap-x-2 rounded-main border border-background bg-foreground px-2 py-0.5 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100">
+            <Icon name={workspace.icon as keyof typeof icons} stroke-width={1.5} class="size-2.5 shrink-0 text-primary" />
+            <p class="truncate text-[11px] text-heading">{workspace.name}</p>
+          </div>
+        )
+      }
     </div>
   </div>
 
-  <div class="my-2 flex items-center justify-between space-x-2 px-3">
-    {
-      workspace && (
-        <div class="flex max-w-[120px] min-w-0 items-center gap-x-2 rounded-main border border-primary bg-background px-1 py-0.5">
-          <Icon name={workspace.icon as keyof typeof icons} stroke-width={1.5} class="size-2.5 shrink-0 text-primary" />
-          <p class="truncate text-[11px] text-primary">{workspace.name}</p>
-        </div>
-      )
-    }
-    <div class="relative">
-      <button class="flex size-6 items-center justify-center rounded-main text-heading transition-colors duration-150 hover:bg-foreground" data-btn-dropdown>
-        <Icon name="EllipsisVertical" stroke-width={1.5} size={18} />
-      </button>
-
-      <div
-        class="invisible absolute top-full right-0 z-20 mt-1 w-56 origin-top-right scale-95 transform rounded-main border border-border bg-background p-2 opacity-0 shadow-base transition-all duration-150 ease-out [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100"
-        data-card-dropdown
-      >
-        <div class="py-1">
-          {
-            ACTIONS.map((action) => (
-              <button class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-heading transition-colors duration-150 hover:bg-muted" data-action={action.action}>
-                <Icon name={action.icon as keyof typeof icons} stroke-width={1.5} class="size-4" />
-                {action.name}
-              </button>
-            ))
-          }
-          <button class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-red-600 transition-colors duration-150 hover:bg-red-500/20" data-action="delete">
-            <Icon name="Trash2" stroke-width={1.5} class="size-3" />
-            <span>Eliminar</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="mb-2 px-3 pb-2">
+  <div class="my-2 flex items-center justify-between px-3">
     <div class="flex min-w-0 flex-1 items-center gap-x-2">
       <h3 class="truncate text-sm font-medium text-heading">{title}</h3>
     </div>
+    {
+      showDropdown && (
+        <div class="relative">
+          <button class="flex size-6 items-center justify-center rounded-main text-heading transition-colors duration-150 hover:bg-foreground" data-btn-dropdown>
+            <Icon name="EllipsisVertical" stroke-width={1.5} size={18} />
+          </button>
+
+          <div
+            class="invisible absolute top-full right-0 z-50 mt-1 w-56 origin-top-right scale-95 transform rounded-main border border-border bg-background p-2 opacity-0 shadow-base transition-all duration-150 ease-out [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100"
+            data-card-dropdown
+          >
+            <div class="py-1">
+              {ALLOWED_ACTIONS.map((action) => (
+                <button class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-heading transition-colors duration-150 hover:bg-muted" data-action={action.action}>
+                  <Icon name={action.icon as keyof typeof icons} stroke-width={1.5} class="size-4" />
+                  {action.name}
+                </button>
+              ))}
+              {hasDeletePermission && (
+                <button class="flex w-full items-center gap-x-2 rounded-main px-3 py-2 text-sm text-red-600 transition-colors duration-150 hover:bg-red-500/20" data-action="delete">
+                  <Icon name="Trash2" stroke-width={1.5} class="size-3" />
+                  <span>Eliminar</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )
+    }
+  </div>
+
+  <div class="mb-2 px-3 pb-2">
     {description && <p class="line-clamp-2 text-xs text-subheading">{description}</p>}
   </div>
 
