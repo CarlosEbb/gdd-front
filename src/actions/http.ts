@@ -50,8 +50,15 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic:
   const authorization = isPublic ? '' : `Bearer ${options.token}`
   headers.set('Authorization', authorization)
 
-  if (!isPublic && options.ctx?.clientAddress) {
-    headers.set('x-client-ip', options.ctx.clientAddress)
+  if (!isPublic && options.ctx) {
+    try {
+      const clientIp = options.ctx.clientAddress
+      if (clientIp) {
+        headers.set('x-client-ip', clientIp)
+      }
+    } catch {
+      // clientAddress no está disponible en páginas prerenderizadas, se ignora
+    }
   }
 
   const isFormData = options.body instanceof FormData
@@ -129,8 +136,15 @@ async function apiFetchBlob(endpoint: string, token: string, ctx?: ActionAPICont
   const headers = new Headers()
   headers.set('Authorization', `Bearer ${token}`)
 
-  if (ctx?.clientAddress) {
-    headers.set('x-client-ip', ctx.clientAddress)
+  if (ctx) {
+    try {
+      const clientIp = ctx.clientAddress
+      if (clientIp) {
+        headers.set('x-client-ip', clientIp)
+      }
+    } catch {
+      // clientAddress no disponible en páginas prerenderizadas
+    }
   }
 
   const config: RequestInit = {

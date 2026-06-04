@@ -306,4 +306,25 @@ export const documents = {
       }
     },
   }),
+
+  annulDocument: defineAction({
+    input: z.object({
+      uuid_template: z.string(),
+      uuid_document: z.string(),
+      type: z.enum(['WATERMARK', 'DISABLE']),
+    }),
+    handler: async ({ uuid_template, uuid_document, type }, request) => {
+      await requirePermission(request, ['documents.delete'])
+      const token = await requireAuth(request)
+      
+      const url = `/documents/${uuid_template}/annul/${uuid_document}`
+      const body = { type }
+      try {
+        const response = await http.put(url, token, request, body)
+        return response
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
 }

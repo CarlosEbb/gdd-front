@@ -2,6 +2,7 @@
 import { actions } from 'astro:actions'
 import { formatExtendedDate } from '@/scripts/utils'
 import EmptyState from '@/components/ui/EmptyState.astro'
+import Modal from '@/components/modal/Modal.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import Layout from '../_components/Layout.astro'
 import type { Stats, Pagination } from '@/types/documents'
@@ -62,13 +63,17 @@ const status = (status: string, code: number) => {
   const statusMap = {
     ACTIVO: `INFO [${code}]`,
     ERROR: `ERROR [${code}]`,
+    ANULADO: `ANULADO [${code}]`,
+    DESHABILITADO: `DESHABILITADO [${code}]`,
   }
   return statusMap[status as keyof typeof statusMap] || status
 }
 
-const statusColor = {
+const statusColor: Record<string, string> = {
   ACTIVO: 'text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-main border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold',
   ERROR: 'text-red-400 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-main border border-red-200 dark:border-red-800 text-[10px] font-bold',
+  ANULADO: 'text-amber-500 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-main border border-amber-200 dark:border-amber-800 text-[10px] font-bold',
+  DESHABILITADO: 'text-neutral-500 bg-neutral-50 dark:bg-neutral-900/50 px-2 py-0.5 rounded-main border border-neutral-300 dark:border-neutral-700 text-[10px] font-bold',
 }
 
 const currentPath = Astro.url.pathname
@@ -158,7 +163,7 @@ const statusIcons: Record<string, string> = {
           documents.map((document) => (
             <Accordion title={document.response_data.message || 'Sin mensaje'} titleClass="font-mono text-sm font-normal text-heading">
               <div slot="header" class="flex items-center gap-2" data-accordion-header>
-                <span slot="actions" class={`${statusColor[document.status]} me-2 inline-flex items-center rounded px-2.5 py-0.5 text-xs font-medium`}>
+                <span slot="actions" class={`${statusColor[document.status] || statusColor['ACTIVO']} me-2 inline-flex items-center rounded px-2.5 py-0.5 text-xs font-medium`}>
                   {status(document.status, document.response_data.code)}
                 </span>
 
@@ -186,6 +191,18 @@ const statusIcons: Record<string, string> = {
                       Ver documento
                       <Icon name="ExternalLink" size={13} />
                     </a>
+                  )}
+                  {document.status !== 'ANULADO' && document.status !== 'DESHABILITADO' && document.status !== 'ERROR' && (
+                    <button
+                      type="button"
+                      class="flex max-w-xs cursor-pointer items-center gap-3 rounded-main border border-red-200 bg-red-50 text-red-600 px-2 py-1 hover:bg-red-100 dark:bg-red-950/50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/50"
+                      data-open-modal="modal-annul"
+                      data-uuid-template={uuid}
+                      data-uuid-document={document.uuid}
+                    >
+                      Anular documento
+                      <Icon name="Ban" size={13} />
+                    </button>
                   )}
                 </div>
 
@@ -299,6 +316,88 @@ const statusIcons: Record<string, string> = {
     </div>
   </div>
 </Layout>
+
+<Modal modalId="modal-annul" title="Anular documento">
+  <form class="space-y-6" id="annul-document-form">
+    <div class="flex flex-col py-2">
+      <p class="mb-4 text-sm text-subheading">Elige cómo quieres anular este documento:</p>
+      
+      <div class="space-y-4">
+        <label class="flex items-start gap-3 rounded-main border border-border p-3 cursor-pointer hover:bg-foreground transition-colors">
+          <input type="radio" name="annul_type" value="WATERMARK" class="mt-1" checked />
+          <div>
+            <p class="text-sm font-semibold text-heading">Anular con Marca de Agua</p>
+            <p class="text-xs text-subheading">El documento seguirá siendo accesible, pero con una marca de "ANULADO" visible sobre el contenido.</p>
+          </div>
+        </label>
+        
+        <label class="flex items-start gap-3 rounded-main border border-border p-3 cursor-pointer hover:bg-foreground transition-colors">
+          <input type="radio" name="annul_type" value="DISABLE" class="mt-1" />
+          <div>
+            <p class="text-sm font-semibold text-heading">Deshabilitar acceso</p>
+            <p class="text-xs text-subheading">El documento dejará de estar disponible mediante su URL (borrado lógico, error 403).</p>
+          </div>
+        </label>
+      </div>
+      
+      <input type="hidden" name="uuid_template" id="annul-uuid-template" value="" />
+      <input type="hidden" name="uuid_document" id="annul-uuid-document" value="" />
+    </div>
+  </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" form="annul-document-form" id="btn-annul-document" loadingText="Anulando...">Anular documento</Button>
+  </div>
+</Modal>
+
+<script>
+  import { actions } from 'astro:actions'
+  
+  document.addEventListener('astro:page-load', () => {
+    // Handling open modal to set values
+    const annulButtons = document.querySelectorAll('[data-open-modal="modal-annul"]');
+    const inputTemplate = document.getElementById('annul-uuid-template') as HTMLInputElement;
+    const inputDocument = document.getElementById('annul-uuid-document') as HTMLInputElement;
+    
+    annulButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLElement;
+        if(inputTemplate && inputDocument) {
+          inputTemplate.value = target.dataset.uuidTemplate || '';
+          inputDocument.value = target.dataset.uuidDocument || '';
+        }
+      });
+    });
+
+    // Form submission
+    const form = document.getElementById('annul-document-form') as HTMLFormElement;
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const uuid_template = formData.get('uuid_template') as string;
+        const uuid_document = formData.get('uuid_document') as string;
+        const type = formData.get('annul_type') as 'WATERMARK' | 'DISABLE';
+        
+        const btn = document.getElementById('btn-annul-document') as HTMLButtonElement;
+        if (btn) btn.disabled = true;
+
+        try {
+          const { data, error } = await actions.documents.annulDocument({ uuid_template, uuid_document, type });
+          if (!error) {
+            window.location.reload();
+          } else {
+            console.error('Error:', error);
+            alert('No se pudo anular el documento. Verifique sus permisos o intente de nuevo.');
+          }
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      });
+    }
+  });
+</script>
 
 <script>
   document.addEventListener('astro:page-load', () => {
