@@ -129,8 +129,11 @@ const isEmpty = !validations && elements.length === 0 && fields.length === 0
 
         toast.success(data?.message ?? 'Validaciones guardadas correctamente.')
 
-        const buildNumber = (data as any)?.data?.version?.buildNumber
-        updateUrlWithNewVersion(buildNumber)
+        const newVersion = (data as any)?.data?.version;
+        if (newVersion) {
+          updateUrlWithNewVersion(newVersion.buildNumber)
+          saveButton.dataset.uuidVersion = newVersion.uuid;
+        }
       } catch (error) {
         toast.error('Ah ocurrido un error al guardar las validaciones. Por favor, intente nuevamente.')
       } finally {
@@ -150,8 +153,21 @@ const isEmpty = !validations && elements.length === 0 && fields.length === 0
       try {
         const parsed = JSON.parse(validationsEl.textContent)
         if (parsed) {
-          initialRules = parsed.validationRules
-          initialConditions = parsed.hiddenConditions
+          // Filtrar reglas huérfanas
+          const validFields = Object.keys(JSON.parse(document.getElementById('json-input-data')?.textContent || '{}'))
+          
+          if (parsed.validationRules) {
+            initialRules = {}
+            for (const key in parsed.validationRules) {
+              if (validFields.includes(key)) {
+                initialRules[key] = parsed.validationRules[key]
+              }
+            }
+          }
+          
+          if (parsed.hiddenConditions) {
+            initialConditions = parsed.hiddenConditions.filter((c: any) => validFields.includes(c.field))
+          }
         }
       } catch (e) {
         console.error('Error parsing initial validations data:', e)

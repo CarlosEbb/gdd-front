@@ -327,4 +327,103 @@ export const documents = {
       }
     },
   }),
+
+  downloadBulkTemplate: defineAction({
+    input: z.object({
+      uuid_template: z.string(),
+      template_name: z.string().optional(),
+    }),
+    handler: async ({ uuid_template, template_name }, request) => {
+      await requirePermission(request, ['documents.create'])
+      const token = await requireAuth(request)
+      const url = `/documents/bulk/template/${uuid_template}`
+      try {
+        const response = await http.download(url, token, request)
+        
+        const arrayBuffer = await response.arrayBuffer()
+        const uint8Array = new Uint8Array(arrayBuffer)
+        let binary = ''
+        for (let i = 0; i < uint8Array.length; i++) {
+          binary += String.fromCharCode(uint8Array[i])
+        }
+        const base64 = btoa(binary)
+        return {
+          base64: `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${base64}`,
+          type: 'xlsx',
+          filename: `CargaMasiva_${template_name || uuid_template}.xlsx`
+        }
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
+
+  uploadBulkDocument: defineAction({
+    accept: 'form',
+    input: z.object({
+      uuid_template: z.string(),
+      file: z.instanceof(File),
+    }),
+    handler: async ({ uuid_template, file }, request) => {
+      await requirePermission(request, ['documents.create'])
+      const token = await requireAuth(request)
+      const url = `/documents/bulk/upload/${uuid_template}`
+      
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      try {
+        const response = await http.post(url, token, request, formData)
+        return response
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
+
+  getBulkTaskStatus: defineAction({
+    input: z.object({
+      jobId: z.string(),
+    }),
+    handler: async ({ jobId }, request) => {
+      await requirePermission(request, ['documents.create'])
+      const token = await requireAuth(request)
+      const url = `/documents/bulk/status/${jobId}`
+      try {
+        const response = await http.get(url, token, request)
+        return response
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
+
+  downloadBulkReport: defineAction({
+    input: z.object({
+      jobId: z.string(),
+    }),
+    handler: async ({ jobId }, request) => {
+      await requirePermission(request, ['documents.create'])
+      const token = await requireAuth(request)
+      const url = `/documents/bulk/report/${jobId}`
+      try {
+        const response = await http.download(url, token, request)
+        
+        const arrayBuffer = await response.arrayBuffer()
+        const uint8Array = new Uint8Array(arrayBuffer)
+        let binary = ''
+        for (let i = 0; i < uint8Array.length; i++) {
+          binary += String.fromCharCode(uint8Array[i])
+        }
+        const base64 = btoa(binary)
+        return {
+          base64: `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${base64}`,
+          type: 'xlsx',
+          filename: `Reporte_Carga_Masiva_${jobId}.xlsx`
+        }
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
 }

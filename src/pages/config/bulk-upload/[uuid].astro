@@ -1,0 +1,386 @@
+---
+import Layout from '../_components/Layout.astro'
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+
+const { uuid } = Astro.params
+---
+
+<Layout title="Carga Masiva">
+  <div class="space-y-6 mt-6">
+    <div class="bg-card rounded-xl border border-border p-6 shadow-sm">
+      <h2 class="text-lg font-semibold text-heading mb-4 flex items-center gap-2">
+        <Icon name="FileSpreadsheet" class="h-5 w-5 text-primary" />
+        1. Descargar Plantilla Modelo
+      </h2>
+      <p class="text-subheading mb-4 text-sm">
+        Descarga el archivo Excel con las variables configuradas de este documento. Incluye las validaciones que hayas establecido.
+      </p>
+      
+      <form id="download-template-form" class="flex flex-col sm:flex-row gap-4 items-end">
+        <input type="hidden" id="current-template-uuid" value={uuid} />
+        <Button type="submit" id="btn-download" icon="Download" class="w-full sm:w-auto">Descargar Excel Modelo</Button>
+      </form>
+    </div>
+
+    <div class="bg-card rounded-xl border border-border p-6 shadow-sm">
+      <h2 class="text-lg font-semibold text-heading mb-4 flex items-center gap-2">
+        <Icon name="UploadCloud" class="h-5 w-5 text-primary" />
+        2. Subir Archivo y Procesar
+      </h2>
+      <p class="text-subheading mb-4 text-sm">
+        Sube el archivo Excel lleno con tus registros. El sistema procesará las filas y generará los nuevos documentos.
+      </p>
+      
+      <form id="upload-bulk-form" class="space-y-4">
+        <div class="border-2 border-dashed border-border rounded-lg p-8 text-center hover:bg-muted/50 transition-colors" id="drop-zone">
+          <input type="file" id="file-upload" accept=".xlsx,.csv" class="hidden" />
+          <label for="file-upload" class="cursor-pointer flex flex-col items-center gap-3">
+            <div class="bg-primary/10 p-3 rounded-full">
+              <Icon name="FileUp" class="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <span class="text-primary font-medium">Haz clic para seleccionar</span> o arrastra un archivo (.xlsx o .csv)
+            </div>
+            <p class="text-xs text-subheading" id="file-name-display">Ningún archivo seleccionado</p>
+          </label>
+        </div>
+
+        <div class="flex justify-end">
+          <Button type="submit" id="btn-upload" disabled icon="Play">Iniciar Procesamiento</Button>
+        </div>
+      </form>
+    </div>
+
+    <div id="results-area" class="hidden bg-card rounded-xl border border-border p-6 shadow-sm">
+      <h2 class="text-lg font-semibold text-heading mb-4 flex items-center gap-2">
+        <Icon name="Activity" class="h-5 w-5 text-primary" />
+        Progreso y Resultados
+      </h2>
+      
+      <div id="progress-container" class="mb-6">
+        <div class="flex justify-between text-sm mb-2">
+          <span class="font-medium text-heading" id="progress-text">Procesando...</span>
+          <span class="text-subheading" id="progress-percentage">0%</span>
+        </div>
+        <div class="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+          <div id="progress-bar" class="bg-primary h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <div class="flex justify-between text-xs text-subheading mt-2">
+          <span class="text-green-600 font-medium"><span id="count-success">0</span> Exitosos</span>
+          <span class="text-red-600 font-medium"><span id="count-error">0</span> Errores</span>
+          <span>Total: <span id="count-total">0</span></span>
+        </div>
+      </div>
+
+      <div id="errors-container" class="hidden mt-6">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-sm font-semibold text-heading" id="results-title">Detalle de Resultados</h3>
+          <button type="button" id="btn-download-report" class="hidden bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-3 py-1.5 rounded flex items-center gap-1 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Descargar Reporte Excel
+          </button>
+        </div>
+        <div class="overflow-x-auto rounded-lg border border-border max-h-96">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-muted text-heading sticky top-0">
+              <tr>
+                <th class="px-4 py-2 w-24">Fila Excel</th>
+                <th class="px-4 py-2 w-32">Estado</th>
+                <th class="px-4 py-2">Resultado / Enlace</th>
+              </tr>
+            </thead>
+            <tbody id="errors-tbody" class="divide-y divide-border">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="success-message" class="hidden mt-4 p-4 bg-green-50 text-green-800 rounded-lg border border-green-200 flex items-center gap-2">
+        <Icon name="CheckCircle" class="h-5 w-5" />
+        <span>El procesamiento ha finalizado. Ve a la pestaña "Generados" para visualizar los nuevos documentos.</span>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { actions } from 'astro:actions'
+  import Toastify from 'toastify-js'
+
+  function initBulkUpload() {
+    const downloadForm = document.getElementById('download-template-form') as HTMLFormElement
+    const uploadForm = document.getElementById('upload-bulk-form') as HTMLFormElement
+    const fileInput = document.getElementById('file-upload') as HTMLInputElement
+    const fileNameDisplay = document.getElementById('file-name-display')
+    const btnUpload = document.getElementById('btn-upload') as HTMLButtonElement
+    const currentTemplateUuid = (document.getElementById('current-template-uuid') as HTMLInputElement)?.value;
+    
+    if(!currentTemplateUuid) return;
+
+    const resultsArea = document.getElementById('results-area')
+    const progressBar = document.getElementById('progress-bar')
+    const progressText = document.getElementById('progress-text')
+    const progressPercentage = document.getElementById('progress-percentage')
+    const countSuccess = document.getElementById('count-success')
+    const countError = document.getElementById('count-error')
+    const countTotal = document.getElementById('count-total')
+    const errorsContainer = document.getElementById('errors-container')
+    const errorsTbody = document.getElementById('errors-tbody')
+    const successMessage = document.getElementById('success-message')
+    const btnDownloadReport = document.getElementById('btn-download-report') as HTMLButtonElement
+    const dropZone = document.getElementById('drop-zone')
+
+    let currentJobId: string | null = null;
+    let pollInterval: number;
+
+    const handleFile = (file: File | undefined) => {
+      if (file && fileNameDisplay) {
+        fileNameDisplay.textContent = file.name;
+        fileNameDisplay.classList.add('text-primary', 'font-medium');
+        btnUpload.disabled = false;
+        
+        // Asignar el archivo al input manualmente si viene por drag&drop
+        if (fileInput.files && fileInput.files.length === 0) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          fileInput.files = dataTransfer.files;
+        }
+      } else if (fileNameDisplay) {
+        fileNameDisplay.textContent = 'Ningún archivo seleccionado';
+        fileNameDisplay.classList.remove('text-primary', 'font-medium');
+        btnUpload.disabled = true;
+      }
+    };
+
+    fileInput?.addEventListener('change', (e) => {
+      handleFile((e.target as HTMLInputElement).files?.[0]);
+    });
+
+    // Eventos Drag and Drop
+    if (dropZone) {
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e: Event) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('bg-primary/5', 'border-primary'), false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('bg-primary/5', 'border-primary'), false);
+      });
+
+      dropZone.addEventListener('drop', (e: DragEvent) => {
+        const droppedFile = e.dataTransfer?.files?.[0];
+        if (droppedFile && (droppedFile.name.endsWith('.xlsx') || droppedFile.name.endsWith('.csv'))) {
+          handleFile(droppedFile);
+        } else {
+          Toastify({ text: "Solo se permiten archivos .xlsx o .csv", style: { background: "#ef4444" } }).showToast();
+        }
+      }, false);
+    }
+
+    downloadForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById('btn-download') as HTMLButtonElement;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'Descargando...';
+      btn.disabled = true;
+
+      try {
+        const { data, error } = await actions.documents.downloadBulkTemplate({ 
+          uuid_template: currentTemplateUuid, 
+          template_name: 'CargaMasiva'
+        });
+
+        if (error) throw error;
+        if (data && data.base64) {
+          const a = document.createElement('a');
+          a.href = data.base64;
+          a.download = data.filename || 'CargaMasiva.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          
+          Toastify({ text: "Plantilla descargada con éxito", style: { background: "#10b981" } }).showToast();
+        }
+      } catch (err: any) {
+        Toastify({ text: err.message || "Error al descargar plantilla", style: { background: "#ef4444" } }).showToast();
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    });
+
+    btnDownloadReport?.addEventListener('click', async () => {
+      if (!currentJobId) return;
+      const originalText = btnDownloadReport.innerHTML;
+      btnDownloadReport.innerHTML = 'Descargando...';
+      btnDownloadReport.disabled = true;
+
+      try {
+        const { data, error } = await actions.documents.downloadBulkReport({ jobId: currentJobId });
+        if (error) throw error;
+        if (data && data.base64) {
+          const a = document.createElement('a');
+          a.href = data.base64;
+          a.download = data.filename || `Reporte_${currentJobId}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          Toastify({ text: "Reporte descargado con éxito", style: { background: "#10b981" } }).showToast();
+        }
+      } catch (err: any) {
+        Toastify({ text: err.message || "Error al descargar reporte", style: { background: "#ef4444" } }).showToast();
+      } finally {
+        btnDownloadReport.innerHTML = originalText;
+        btnDownloadReport.disabled = false;
+      }
+    });
+
+    uploadForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = fileInput.files?.[0];
+      if (!file) return;
+
+      btnUpload.innerHTML = 'Subiendo...';
+      btnUpload.disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append('uuid_template', currentTemplateUuid);
+        formData.append('file', file);
+        
+        const { data, error } = await actions.documents.uploadBulkDocument(formData);
+        
+        if (error) throw error;
+        
+        const jobId = data?.data?.jobId;
+        if (jobId) {
+          currentJobId = jobId;
+          iniciarPolling();
+        } else {
+          throw new Error("No se recibió ID de tarea del servidor");
+        }
+      } catch (err: any) {
+        btnUpload.innerHTML = 'Iniciar Procesamiento';
+        btnUpload.disabled = false;
+        Toastify({ text: err.message || "Error al subir el archivo", style: { background: "#ef4444" } }).showToast();
+      }
+    });
+
+    function iniciarPolling() {
+      resultsArea?.classList.remove('hidden');
+      errorsContainer?.classList.add('hidden');
+      successMessage?.classList.add('hidden');
+      btnDownloadReport?.classList.add('hidden');
+      if (errorsTbody) errorsTbody.innerHTML = '';
+      
+      btnUpload.innerHTML = 'Procesando en servidor...';
+      
+      pollInterval = window.setInterval(async () => {
+        if (!currentJobId) return;
+        
+        try {
+          const { data, error } = await actions.documents.getBulkTaskStatus({ jobId: currentJobId });
+          if (error) throw error;
+          
+          const status = data?.data;
+          if (status) {
+            actualizarUIProgreso(status);
+            
+            if (status.status === 'completed' || status.status === 'error') {
+              clearInterval(pollInterval);
+              finalizarProceso(status);
+            }
+          }
+        } catch (err) {
+          console.error("Error consultando estado", err);
+          clearInterval(pollInterval);
+          btnUpload.innerHTML = 'Iniciar Procesamiento';
+          btnUpload.disabled = false;
+        }
+      }, 1500);
+    }
+
+    function actualizarUIProgreso(status: any) {
+      if (!progressBar || !progressPercentage || !countTotal || !countSuccess || !countError) return;
+      
+      const total = status.total || 0;
+      const processed = status.processed || 0;
+      const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+      
+      progressBar.style.width = `${pct}%`;
+      progressPercentage.textContent = `${pct}%`;
+      countTotal.textContent = total.toString();
+      countSuccess.textContent = (status.success || 0).toString();
+      countError.textContent = (status.errors || 0).toString();
+    }
+
+    function finalizarProceso(status: any) {
+      btnUpload.innerHTML = 'Iniciar Procesamiento';
+      btnUpload.disabled = false;
+      fileInput.value = '';
+      if (fileNameDisplay) fileNameDisplay.textContent = 'Ningún archivo seleccionado';
+      
+      btnDownloadReport?.classList.remove('hidden');
+      if (progressText) progressText.textContent = 'Procesamiento Finalizado';
+      
+      successMessage?.classList.remove('hidden');
+
+      if (status.results && status.results.length > 0 && errorsTbody && errorsContainer) {
+        errorsContainer.classList.remove('hidden');
+        
+        status.results.forEach((r: any) => {
+          const tr = document.createElement('tr');
+          const tdFila = document.createElement('td');
+          tdFila.className = 'px-4 py-3 text-center';
+          const numFila = r.row || '-';
+          tdFila.innerHTML = `<span class="inline-flex items-center justify-center min-w-[2rem] h-8 px-2 rounded-md bg-primary/10 text-primary font-bold text-xs border border-primary/20"># ${numFila}</span>`;
+
+          const tdEstado = document.createElement('td');
+          tdEstado.className = 'px-4 py-3';
+          if (r.status === 'success') {
+            tdEstado.innerHTML = '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Exitoso</span>';
+          } else {
+            tdEstado.innerHTML = '<span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">Error</span>';
+          }
+
+          const tdDetalle = document.createElement('td');
+          tdDetalle.className = 'px-4 py-3 text-xs';
+          if (r.status === 'success' && r.url) {
+            tdDetalle.innerHTML = `<a href="${r.url}" target="_blank" class="text-primary hover:underline font-medium inline-flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> Ver PDF Generado</a>`;
+          } else {
+            let msjError = r.error || 'Error desconocido';
+            if (msjError.startsWith('[')) {
+              try {
+                const parsed = JSON.parse(msjError);
+                msjError = parsed.join(', ');
+              } catch(e) {}
+            }
+            tdDetalle.innerHTML = `<span class="text-red-600">${msjError}</span>`;
+          }
+          
+          tr.appendChild(tdFila);
+          tr.appendChild(tdEstado);
+          tr.appendChild(tdDetalle);
+          errorsTbody.appendChild(tr);
+        });
+      }
+    }
+  }
+
+  document.addEventListener('astro:page-load', initBulkUpload);
+  if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    initBulkUpload();
+  } else {
+    document.addEventListener('DOMContentLoaded', initBulkUpload);
+  }
+</script>

@@ -19,6 +19,7 @@ const NAVIGATION = [
   // { href: `/config/security/${uuid}?build_number=${buildNumber}`, label: 'Seguridad' },
   { href: `/config/metrics/${uuid}?build_number=${buildNumber}`, label: 'Métricas' },
   { href: `/config/generated/${uuid}?build_number=${buildNumber}`, label: 'Generados' },
+  { href: `/config/bulk-upload/${uuid}?build_number=${buildNumber}`, label: 'Carga Masiva' },
 ]
 
 const { data } = await Astro.callAction(actions.documents.getByUser, { limit: null })
