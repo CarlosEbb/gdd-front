@@ -269,3 +269,29 @@ export interface User {
 }
 
 type Status = 'ACTIVO' | 'ELIMINADO'
+
+export interface BulkResult {
+  row?: number
+  status: string
+  error?: string
+  url?: string
+}
+
+export interface BulkStatus {
+  status: string
+  total?: number
+  processed?: number
+  success?: number
+  errors?: number
+  results?: BulkResult[]
+}
+
+export interface BulkUploadResponse {
+  jobId: string
+}
+
+export interface BulkFileResponse {
+  base64: string
+  type: string
+  filename: string
+}

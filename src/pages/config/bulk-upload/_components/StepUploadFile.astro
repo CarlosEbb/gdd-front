@@ -1,0 +1,47 @@
+---
+import AccordionStep from '@/components/ui/AccordionStep.astro'
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+---
+
+<AccordionStep step={2} title="Subir Archivo y Procesar" description="Sube el archivo Excel lleno con tus registros. El sistema procesará las filas y generará los nuevos documentos.">
+  <form id="upload-bulk-form">
+    <div class="rounded-lg border-2 border-dashed border-border p-8 text-center transition-colors hover:bg-muted/50" id="drop-zone">
+      <input type="file" id="file-upload" accept=".xlsx,.csv" class="hidden" />
+
+      <!-- Estado por defecto (Arrastrar y soltar) -->
+      <label for="file-upload" id="upload-state-default" class="flex cursor-pointer flex-col items-center gap-3">
+        <div class="rounded-full bg-primary/10 p-3">
+          <Icon name="FileUp" class="h-6 w-6 text-primary" />
+        </div>
+        <div class="text-center text-heading">
+          <span class="font-medium text-primary">Haz clic para seleccionar</span> o arrastra un archivo (.xlsx o .csv)
+        </div>
+        <p class="text-xs text-subheading" id="file-name-display">Ningún archivo seleccionado</p>
+      </label>
+
+      <!-- Estado de éxito (Archivo cargado con éxito) -->
+      <div id="upload-state-success" class="hidden flex-col items-center gap-3">
+        <div class="rounded-full bg-emerald-500/10 p-3">
+          <div class="rounded-full bg-emerald-500 p-2 text-white">
+            <Icon name="Check" class="h-6 w-6" />
+          </div>
+        </div>
+        <div class="text-center">
+          <h3 class="text-lg font-semibold text-emerald-600">¡Archivo cargado con éxito!</h3>
+          <p class="mt-1 text-sm text-subheading">El documento está listo para iniciar el procesamiento.</p>
+        </div>
+        <div class="mt-1 flex max-w-full items-center gap-2 rounded-md border border-border bg-muted px-4 py-2">
+          <Icon name="File" class="h-5 w-5 shrink-0 text-emerald-600" />
+          <span class="max-w-[200px] truncate text-sm font-medium text-heading md:max-w-[400px]" id="success-file-name">nombre_del_archivo.xlsx</span>
+          <span class="shrink-0 text-xs text-subheading" id="success-file-size">0 KB</span>
+        </div>
+        <button type="button" id="btn-change-file" class="mt-2 text-xs font-medium text-primary hover:underline"> Seleccionar otro archivo </button>
+      </div>
+    </div>
+
+    <div class="mt-4 flex justify-end">
+      <Button type="submit" id="btn-upload" size="sm" disabled icon="Play">Iniciar Procesamiento</Button>
+    </div>
+  </form>
+</AccordionStep>

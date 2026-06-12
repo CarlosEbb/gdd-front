@@ -1,7 +1,20 @@
 import { defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import { handleApiError, http } from './http'
-import type { CreateDocument, CreateNewVersion, Document, DocumentVersion, DocumentVersionHistory, GeneratedDocument, RequestForDocument, SchemaFile } from '@/types/documents'
+import type {
+  CreateDocument,
+  CreateNewVersion,
+  Document,
+  DocumentVersion,
+  DocumentVersionHistory,
+  GeneratedDocument,
+  RequestForDocument,
+  SchemaFile,
+  BulkResult,
+  BulkStatus,
+  BulkUploadResponse,
+  BulkFileResponse,
+} from '@/types/documents'
 import { requireAuth, requirePermission } from '@/lib/permissions'
 import { PAPER_SIZES, ORIENTATION, MARGIN_PRESETS } from '@/constants/file-settings'
 
@@ -316,7 +329,7 @@ export const documents = {
     handler: async ({ uuid_template, uuid_document, type }, request) => {
       await requirePermission(request, ['documents.delete'])
       const token = await requireAuth(request)
-      
+
       const url = `/documents/${uuid_template}/annul/${uuid_document}`
       const body = { type }
       try {
@@ -339,7 +352,7 @@ export const documents = {
       const url = `/documents/bulk/template/${uuid_template}`
       try {
         const response = await http.download(url, token, request)
-        
+
         const arrayBuffer = await response.arrayBuffer()
         const uint8Array = new Uint8Array(arrayBuffer)
         let binary = ''
@@ -350,8 +363,8 @@ export const documents = {
         return {
           base64: `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${base64}`,
           type: 'xlsx',
-          filename: `CargaMasiva_${template_name || uuid_template}.xlsx`
-        }
+          filename: `CargaMasiva_${template_name || uuid_template}.xlsx`,
+        } as BulkFileResponse
       } catch (error) {
         await handleApiError(error, request)
       }
@@ -368,12 +381,12 @@ export const documents = {
       await requirePermission(request, ['documents.create'])
       const token = await requireAuth(request)
       const url = `/documents/bulk/upload/${uuid_template}`
-      
+
       const formData = new FormData()
       formData.append('file', file)
-      
+
       try {
-        const response = await http.post(url, token, request, formData)
+        const response = await http.post<BulkUploadResponse>(url, token, request, formData)
         return response
       } catch (error) {
         await handleApiError(error, request)
@@ -390,7 +403,7 @@ export const documents = {
       const token = await requireAuth(request)
       const url = `/documents/bulk/status/${jobId}`
       try {
-        const response = await http.get(url, token, request)
+        const response = await http.get<BulkStatus>(url, token, request)
         return response
       } catch (error) {
         await handleApiError(error, request)
@@ -408,7 +421,7 @@ export const documents = {
       const url = `/documents/bulk/report/${jobId}`
       try {
         const response = await http.download(url, token, request)
-        
+
         const arrayBuffer = await response.arrayBuffer()
         const uint8Array = new Uint8Array(arrayBuffer)
         let binary = ''
@@ -419,8 +432,8 @@ export const documents = {
         return {
           base64: `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${base64}`,
           type: 'xlsx',
-          filename: `Reporte_Carga_Masiva_${jobId}.xlsx`
-        }
+          filename: `Reporte_Carga_Masiva_${jobId}.xlsx`,
+        } as BulkFileResponse
       } catch (error) {
         await handleApiError(error, request)
       }
