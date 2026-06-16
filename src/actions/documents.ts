@@ -199,11 +199,23 @@ export const documents = {
       page: z.number().optional(),
       limit: z.number().optional(),
       status: z.enum(['validation_error', 'success', 'validation_error', 'json_error', 'error']).optional().nullable(),
+      searchField: z.string().optional().nullable(),
+      searchValue: z.string().optional().nullable(),
     }),
-    handler: async ({ uuid_template, page, limit, status }, request) => {
+    handler: async ({ uuid_template, page, limit, status, searchField, searchValue }, request) => {
       // await requirePermission(request, ['templates.view'], 'all')
       const token = await requireAuth(request)
-      const url = `/documents/getTemplate/${uuid_template}?page=${page || 1}&limit=${limit || 10}&status=${status || ''}`
+      const searchParams = new URLSearchParams({
+        page: String(page || 1),
+        limit: String(limit || 10),
+        status: status || '',
+      })
+      if (searchField && searchValue) {
+        searchParams.append('searchField', searchField)
+        searchParams.append('searchValue', searchValue)
+      }
+      const url = `/documents/getTemplate/${uuid_template}?${searchParams.toString()}`
+      console.log(url)
       try {
         const response = await http.get<GeneratedDocument>(url, token, request)
         const documents = response.data

@@ -13,11 +13,16 @@ import Button from '@/components/ui/Button.astro'
 import Link from '@/components/ui/Link.astro'
 import Dropdown from '@/components/ui/Dropdown.astro'
 import Select from '@/components/form/Select.astro'
+import Input from '@/components/form/Input.astro'
 
 const { PUBLIC_PROJECT_URL } = import.meta.env
 
 const { uuid } = Astro.params
-if (!uuid) return Astro.redirect('/home')
+const build_number = Astro.url.searchParams.get('build_number') as string
+
+if (!uuid || !build_number) {
+  return Astro.redirect('/home')
+}
 
 const pageParam = Astro.url.searchParams.get('page')
 const currentPage = pageParam ? parseInt(pageParam, 10) : 1
@@ -30,7 +35,27 @@ const validStatuses = ['validation_error', 'success', 'json_error', 'error'] as 
 type FilterStatus = (typeof validStatuses)[number] | null
 const currentStatus: FilterStatus = statusParam && validStatuses.includes(statusParam as any) ? (statusParam as FilterStatus) : null
 
-const { data, error } = await Astro.callAction(actions.documents.getListGeneratedDocuments, { uuid_template: uuid, page: currentPage, limit: currentLimit, status: currentStatus })
+const searchFieldParam = Astro.url.searchParams.get('searchField') || ''
+const searchValueParam = Astro.url.searchParams.get('searchValue') || ''
+
+const { data, error } = await Astro.callAction(actions.documents.getListGeneratedDocuments, {
+  uuid_template: uuid,
+  page: currentPage,
+  limit: currentLimit,
+  status: currentStatus,
+  searchField: searchFieldParam || null,
+  searchValue: searchValueParam || null,
+})
+
+const { data: dataVars, error: varsError } = await Astro.callAction(actions.documents.getRequestForDocument, {
+  uuid_template: uuid,
+  build_number: build_number,
+})
+
+const selectedVariables = Object.keys(dataVars?.data.variables || {}).map((key) => ({ value: key, label: key }))
+
+const searchFieldQuery = searchFieldParam ? `&searchField=${encodeURIComponent(searchFieldParam)}` : ''
+const searchValueQuery = searchValueParam ? `&searchValue=${encodeURIComponent(searchValueParam)}` : ''
 
 const documents = data?.documents || []
 const stats: Stats = data?.stats || {
@@ -93,6 +118,11 @@ const statusIcons: Record<string, string> = {
   json_error: 'Braces',
   error: 'CircleX',
 }
+
+const canAnnulDocument = (status: string) => {
+  const nonAnnulableStatuses = ['ANULADO', 'DESHABILITADO', 'ERROR']
+  return !nonAnnulableStatuses.includes(status)
+}
 ---
 
 <Layout title="Documentos generados">
@@ -112,8 +142,8 @@ const statusIcons: Record<string, string> = {
 
         return (
           <a
-            href={`?page=1&status=${item.status}`}
-            class={`rounded-main border bg-background p-4 ${activeBorderClass} ${item.border} flex cursor-pointer flex-col justify-between shadow-base transition-all duration-300`}
+            href={`?page=1&status=${item.status}&build_number=${build_number}`}
+            class={`rounded-main border bg-background p-4 ${activeBorderClass} ${item.border} flex cursor-pointer flex-col justify-between transition-all duration-300`}
           >
             <p class="font-mono text-[11px] tracking-wider text-subheading uppercase">{item.label}</p>
             <p class={`mt-2 font-mono text-2xl font-bold tracking-tight ${item.color}`}>{item.value}</p>
@@ -122,38 +152,57 @@ const statusIcons: Record<string, string> = {
       })
     }
   </div>
-  <div class="mb-4 flex items-center justify-between">
-    <h2 class="text-lg font-semibold text-heading">Documentos generados</h2>
+  <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="shrink-0 text-lg font-semibold text-heading">Documentos generados</h2>
 
-    <div>
-      <Dropdown
-        buttonLabel={statusLabels[currentStatus || 'all']}
-        icon={statusIcons[currentStatus || 'all'] as any}
-        position="right"
-        mobileIcon={statusIcons[currentStatus || 'all'] as any}
-        menuClass="min-w-[180px] md:min-w-[200px]"
-      >
-        <a href={`?page=1&status=all`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
-          <Icon name="List" size={16} />
-          Todos
-        </a>
-        <a href={`?page=1&status=success`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
-          <Icon name="CircleCheck" class="text-emerald-500" size={16} />
-          Completados (2xx)
-        </a>
-        <a href={`?page=1&status=validation_error`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
-          <Icon name="TriangleAlert" class="text-amber-500" size={16} />
-          Errores Valid.
-        </a>
-        <a href={`?page=1&status=json_error`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
-          <Icon name="Braces" class="text-red-500" size={16} />
-          Errores JSON
-        </a>
-        <a href={`?page=1&status=error`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
-          <Icon name="CircleX" class="text-red-600" size={16} />
-          Errores Críticos
-        </a>
-      </Dropdown>
+    <div class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center md:justify-end">
+      <div id="search-input-container" class={searchFieldParam ? 'flex items-center gap-2' : 'hidden'}>
+        {searchValueParam && <Button id="search-clear-btn" class="h-10 shrink-0" variant="secondary" size="sm" icon="X" title="Limpiar filtro" />}
+        <Button id="search-apply-btn" class="h-10 shrink-0" variant="secondary" size="sm" icon="Search" title="Aplicar búsqueda" />
+        <div class="w-full shrink-0 sm:w-56">
+          <Input name="search" id="search-input" value={searchValueParam} placeholder="Buscar por valor de las variables" />
+        </div>
+      </div>
+      <div class="w-full shrink-0 sm:w-56">
+        <Select name="vars" id="vars-select" value={searchFieldParam} placeholder="Variables" options={selectedVariables} />
+      </div>
+      <div class="w-full shrink-0 sm:w-56">
+        <Dropdown
+          buttonLabel={statusLabels[currentStatus || 'all']}
+          icon={statusIcons[currentStatus || 'all'] as any}
+          position="right"
+          mobileIcon={statusIcons[currentStatus || 'all'] as any}
+          menuClass="min-w-[180px] md:min-w-[200px]"
+          shadow="none"
+        >
+          <a href={`?page=1&status=all&build_number=${build_number}`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
+            <Icon name="List" size={16} />
+            Todos
+          </a>
+          <a href={`?page=1&status=success&build_number=${build_number}`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
+            <Icon name="CircleCheck" class="text-emerald-500" size={16} />
+            Completados (2xx)
+          </a>
+          <a
+            href={`?page=1&status=validation_error&build_number=${build_number}`}
+            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted"
+          >
+            <Icon name="TriangleAlert" class="text-amber-500" size={16} />
+            Errores Valid.
+          </a>
+          <a
+            href={`?page=1&status=json_error&build_number=${build_number}`}
+            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted"
+          >
+            <Icon name="Braces" class="text-red-500" size={16} />
+            Errores JSON
+          </a>
+          <a href={`?page=1&status=error&build_number=${build_number}`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
+            <Icon name="CircleX" class="text-red-600" size={16} />
+            Errores Críticos
+          </a>
+        </Dropdown>
+      </div>
     </div>
   </div>
   <div class="mb-4">
@@ -192,10 +241,10 @@ const statusIcons: Record<string, string> = {
                       <Icon name="ExternalLink" size={13} />
                     </a>
                   )}
-                  {document.status !== 'ANULADO' && document.status !== 'DESHABILITADO' && document.status !== 'ERROR' && (
+                  {canAnnulDocument(document.status) && (
                     <button
                       type="button"
-                      class="flex max-w-xs cursor-pointer items-center gap-3 rounded-main border border-red-200 bg-red-50 text-red-600 px-2 py-1 hover:bg-red-100 dark:bg-red-950/50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/50"
+                      class="flex max-w-xs cursor-pointer items-center gap-3 rounded-main border border-red-200 bg-red-50 px-2 py-1 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400 dark:hover:bg-red-900/50"
                       data-open-modal="modal-annul"
                       data-uuid-template={uuid}
                       data-uuid-document={document.uuid}
@@ -242,7 +291,7 @@ const statusIcons: Record<string, string> = {
         />
 
         <EmptyState
-          href={`/config/generated/${uuid}??page=1&status=all`}
+          href={`/config/generated/${uuid}?page=1&status=all&build_number=${build_number}`}
           hrefText="Limpiar filtros"
           slot="empty"
           title="No se encontraron documentos"
@@ -281,7 +330,7 @@ const statusIcons: Record<string, string> = {
         {
           pagination.page > 1 ? (
             <Link
-              href={`?page=${pagination.page - 1}${currentLimit !== 10 ? `&limit=${currentLimit}` : ''}${currentStatus ? `&status=${currentStatus}` : ''}`}
+              href={`?page=${pagination.page - 1}&build_number=${build_number}${currentLimit !== 10 ? `&limit=${currentLimit}` : ''}${currentStatus ? `&status=${currentStatus}` : ''}${searchFieldQuery}${searchValueQuery}`}
               variant="secondary"
               icon="ChevronLeft"
               size="sm"
@@ -298,7 +347,7 @@ const statusIcons: Record<string, string> = {
         {
           pagination.page < pagination.totalPages ? (
             <Link
-              href={`?page=${pagination.page + 1}${currentLimit !== 10 ? `&limit=${currentLimit}` : ''}${currentStatus ? `&status=${currentStatus}` : ''}`}
+              href={`?page=${pagination.page + 1}&build_number=${build_number}${currentLimit !== 10 ? `&limit=${currentLimit}` : ''}${currentStatus ? `&status=${currentStatus}` : ''}${searchFieldQuery}${searchValueQuery}`}
               variant="secondary"
               icon="ChevronRight"
               size="sm"
@@ -321,17 +370,17 @@ const statusIcons: Record<string, string> = {
   <form class="space-y-6" id="annul-document-form">
     <div class="flex flex-col py-2">
       <p class="mb-4 text-sm text-subheading">Elige cómo quieres anular este documento:</p>
-      
+
       <div class="space-y-4">
-        <label class="flex items-start gap-3 rounded-main border border-border p-3 cursor-pointer hover:bg-foreground transition-colors">
+        <label class="flex cursor-pointer items-start gap-3 rounded-main border border-border p-3 transition-colors hover:bg-foreground">
           <input type="radio" name="annul_type" value="WATERMARK" class="mt-1" checked />
           <div>
             <p class="text-sm font-semibold text-heading">Anular con Marca de Agua</p>
             <p class="text-xs text-subheading">El documento seguirá siendo accesible, pero con una marca de "ANULADO" visible sobre el contenido.</p>
           </div>
         </label>
-        
-        <label class="flex items-start gap-3 rounded-main border border-border p-3 cursor-pointer hover:bg-foreground transition-colors">
+
+        <label class="flex cursor-pointer items-start gap-3 rounded-main border border-border p-3 transition-colors hover:bg-foreground">
           <input type="radio" name="annul_type" value="DISABLE" class="mt-1" />
           <div>
             <p class="text-sm font-semibold text-heading">Deshabilitar acceso</p>
@@ -339,7 +388,7 @@ const statusIcons: Record<string, string> = {
           </div>
         </label>
       </div>
-      
+
       <input type="hidden" name="uuid_template" id="annul-uuid-template" value="" />
       <input type="hidden" name="uuid_document" id="annul-uuid-document" value="" />
     </div>
@@ -353,54 +402,55 @@ const statusIcons: Record<string, string> = {
 
 <script>
   import { actions } from 'astro:actions'
-  
+
   document.addEventListener('astro:page-load', () => {
     // Handling open modal to set values
-    const annulButtons = document.querySelectorAll('[data-open-modal="modal-annul"]');
-    const inputTemplate = document.getElementById('annul-uuid-template') as HTMLInputElement;
-    const inputDocument = document.getElementById('annul-uuid-document') as HTMLInputElement;
-    
-    annulButtons.forEach(btn => {
+    const annulButtons = document.querySelectorAll('[data-open-modal="modal-annul"]')
+    const inputTemplate = document.getElementById('annul-uuid-template') as HTMLInputElement
+    const inputDocument = document.getElementById('annul-uuid-document') as HTMLInputElement
+
+    annulButtons.forEach((btn) => {
       btn.addEventListener('click', (e) => {
-        const target = e.currentTarget as HTMLElement;
-        if(inputTemplate && inputDocument) {
-          inputTemplate.value = target.dataset.uuidTemplate || '';
-          inputDocument.value = target.dataset.uuidDocument || '';
+        const target = e.currentTarget as HTMLElement
+        if (inputTemplate && inputDocument) {
+          inputTemplate.value = target.dataset.uuidTemplate || ''
+          inputDocument.value = target.dataset.uuidDocument || ''
         }
-      });
-    });
+      })
+    })
 
     // Form submission
-    const form = document.getElementById('annul-document-form') as HTMLFormElement;
+    const form = document.getElementById('annul-document-form') as HTMLFormElement
     if (form) {
       form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        const uuid_template = formData.get('uuid_template') as string;
-        const uuid_document = formData.get('uuid_document') as string;
-        const type = formData.get('annul_type') as 'WATERMARK' | 'DISABLE';
-        
-        const btn = document.getElementById('btn-annul-document') as HTMLButtonElement;
-        if (btn) btn.disabled = true;
+        e.preventDefault()
+        const formData = new FormData(form)
+        const uuid_template = formData.get('uuid_template') as string
+        const uuid_document = formData.get('uuid_document') as string
+        const type = formData.get('annul_type') as 'WATERMARK' | 'DISABLE'
+
+        const btn = document.getElementById('btn-annul-document') as HTMLButtonElement
+        if (btn) btn.disabled = true
 
         try {
-          const { data, error } = await actions.documents.annulDocument({ uuid_template, uuid_document, type });
+          const { data, error } = await actions.documents.annulDocument({ uuid_template, uuid_document, type })
           if (!error) {
-            window.location.reload();
+            window.location.reload()
           } else {
-            console.error('Error:', error);
-            alert('No se pudo anular el documento. Verifique sus permisos o intente de nuevo.');
+            console.error('Error:', error)
+            alert('No se pudo anular el documento. Verifique sus permisos o intente de nuevo.')
           }
         } finally {
-          if (btn) btn.disabled = false;
+          if (btn) btn.disabled = false
         }
-      });
+      })
     }
-  });
+  })
 </script>
 
 <script>
   document.addEventListener('astro:page-load', () => {
+    // Manejo de la cantidad de registros por página
     const limitSelect = document.getElementById('page-limit') as HTMLSelectElement | null
     if (limitSelect) {
       limitSelect.addEventListener('change', (event) => {
@@ -413,6 +463,80 @@ const statusIcons: Record<string, string> = {
         window.location.href = url.toString()
       })
     }
+
+    // Manejo de los filtros de búsqueda por variables
+    const varsSelect = document.getElementById('vars-select') as HTMLSelectElement | null
+    const searchContainer = document.getElementById('search-input-container')
+    const searchInput = document.getElementById('search-input') as HTMLInputElement | null
+    const applyBtn = document.getElementById('search-apply-btn') as HTMLButtonElement | null
+    const clearBtn = document.getElementById('search-clear-btn') as HTMLButtonElement | null
+
+    if (!varsSelect || !searchContainer || !searchInput) return
+
+    const executeSearch = () => {
+      const selectedField = varsSelect.value
+      if (!selectedField) return
+
+      const url = new URL(window.location.href)
+      url.searchParams.set('searchField', selectedField)
+
+      const searchValue = searchInput.value.trim()
+      if (searchValue) {
+        url.searchParams.set('searchValue', searchValue)
+      } else {
+        url.searchParams.delete('searchValue')
+      }
+
+      url.searchParams.set('page', '1')
+      window.location.href = url.toString()
+    }
+
+    const resetFilters = () => {
+      varsSelect.value = ''
+      searchContainer.classList.add('hidden')
+      searchContainer.classList.remove('flex', 'items-center', 'gap-2')
+      searchInput.value = ''
+
+      const url = new URL(window.location.href)
+      const hasField = url.searchParams.has('searchField')
+      const hasValue = url.searchParams.has('searchValue')
+      if (!hasField && !hasValue) return
+
+      url.searchParams.delete('searchField')
+      url.searchParams.delete('searchValue')
+      url.searchParams.set('page', '1')
+      window.location.href = url.toString()
+    }
+
+    varsSelect.addEventListener('change', (event) => {
+      const target = event.target as HTMLSelectElement
+      const selectedValue = target.value
+
+      if (!selectedValue) {
+        resetFilters()
+        return
+      }
+
+      searchContainer.classList.remove('hidden')
+      searchContainer.classList.add('flex', 'items-center', 'gap-2')
+      searchInput.focus()
+    })
+
+    searchInput.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return
+      event.preventDefault()
+      executeSearch()
+    })
+
+    applyBtn?.addEventListener('click', (event) => {
+      event.preventDefault()
+      executeSearch()
+    })
+
+    clearBtn?.addEventListener('click', (event) => {
+      event.preventDefault()
+      resetFilters()
+    })
   })
 </script>
 
