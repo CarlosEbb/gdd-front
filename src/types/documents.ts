@@ -121,7 +121,7 @@ export interface DocumentGenerated {
   id_template: number
   build_number: string
   encrypt: null | string
-  status: 'ACTIVO' | 'ERROR'
+  status: 'ACTIVO' | 'ERROR' | 'DESHABILITADO' | 'ANULADO'
   response_status: string
   response_data: ResponseDocumentGenerated
   error_details: null | string
