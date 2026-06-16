@@ -7,17 +7,19 @@ import Icon from '../ui/Icon.astro'
 import SelectionCard from '../form/SelectionCard.astro'
 import { PAPER_SIZES, ORIENTATION, MARGIN_PRESETS } from '@/constants/file-settings'
 
-const workspaces = (await Astro.session?.get('workspaces')) || []
+const workspaces = await Astro.session?.get('workspaces')
 
-const mapperWorkspaces = workspaces.map((workspace) => ({ value: workspace.uuid, label: workspace.name })) || []
+const mapperWorkspaces = workspaces?.map((workspace) => ({ value: workspace.uuid, label: workspace.name })) || []
+const showWarningFromServer = workspaces !== undefined && workspaces.length === 0
 ---
 
 <Modal modalId="save-template" title="Crear documento">
   <form class="space-y-4" id="save-template-form">
     <input type="hidden" name="uuidBaseTemplate" value="" />
     <div>
-      {mapperWorkspaces.length === 0 && <p class="text-sm text-warning">No tienes espacios de trabajo disponibles</p>}
+      <p class:list={['text-sm text-warning', { hidden: !showWarningFromServer }]} id="no-workspaces-warning">No tienes espacios de trabajo disponibles</p>
       <Select
+        id="select-workspace"
         disabled={mapperWorkspaces.length === 0}
         label="Espacio de trabajo"
         name="uuid_workspace"
@@ -196,6 +198,74 @@ const mapperWorkspaces = workspaces.map((workspace) => ({ value: workspace.uuid,
     }
 
     generateWithAIToggle.addEventListener('click', handleGenerateWithIA)
+
+    const checkAndLoadWorkspaces = async () => {
+      const selectWorkspace = document.getElementById('select-workspace') as HTMLSelectElement | null
+      const warningText = document.getElementById('no-workspaces-warning') as HTMLParagraphElement | null
+
+      if (!selectWorkspace) return
+
+      const optionsCount = Array.from(selectWorkspace.options).filter((opt) => opt.value !== '').length
+      if (optionsCount > 0) return
+
+      const placeholderOption = selectWorkspace.querySelector('option[value=""]') as HTMLOptionElement | null
+      const originalPlaceholder = placeholderOption?.textContent || 'Seleccione un espacio de trabajo'
+
+      try {
+        if (placeholderOption) {
+          placeholderOption.textContent = 'Cargando espacios de trabajo...'
+        }
+
+        const { data, error } = await callAction(actions.workspaces.list())
+
+        if (error || !data || !Array.isArray(data.data)) {
+          placeholderOption!.textContent = 'Error al cargar espacios de trabajo'
+          return
+        }
+
+        selectWorkspace.innerHTML = ''
+        const newPlaceholder = document.createElement('option')
+        newPlaceholder.value = ''
+        newPlaceholder.disabled = true
+        newPlaceholder.selected = true
+        newPlaceholder.textContent = originalPlaceholder
+        selectWorkspace.add(newPlaceholder)
+
+        const workspacesList = data.data
+        if (workspacesList.length === 0) {
+          selectWorkspace.disabled = true
+          warningText?.classList.remove('hidden')
+          return
+        }
+
+        workspacesList.forEach((workspace: any) => {
+          const opt = document.createElement('option')
+          opt.value = workspace.uuid
+          opt.textContent = workspace.name
+          selectWorkspace.add(opt)
+        })
+
+        selectWorkspace.disabled = false
+        warningText?.classList.add('hidden')
+      } catch (error) {
+        console.error('Error al cargar espacios de trabajo:', error)
+        placeholderOption!.textContent = 'Error al cargar espacios de trabajo'
+      }
+    }
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'open') {
+          if (modalSaveTemplate.hasAttribute('open')) {
+            checkAndLoadWorkspaces()
+          }
+        }
+      })
+    })
+
+    if (modalSaveTemplate) {
+      observer.observe(modalSaveTemplate, { attributes: true })
+    }
 
     form.addEventListener('submit', handleSaveTemplate)
   }
