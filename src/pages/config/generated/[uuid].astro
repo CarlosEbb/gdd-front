@@ -14,6 +14,7 @@ import Link from '@/components/ui/Link.astro'
 import Dropdown from '@/components/ui/Dropdown.astro'
 import Select from '@/components/form/Select.astro'
 import Input from '@/components/form/Input.astro'
+import Radio from '@/pages/audits/_components/Radio.astro'
 
 const { PUBLIC_PROJECT_URL } = import.meta.env
 
@@ -372,21 +373,15 @@ const canAnnulDocument = (status: string) => {
       <p class="mb-4 text-sm text-subheading">Elige cómo quieres anular este documento:</p>
 
       <div class="space-y-4">
-        <label class="flex cursor-pointer items-start gap-3 rounded-main border border-border p-3 transition-colors hover:bg-foreground">
-          <input type="radio" name="annul_type" value="WATERMARK" class="mt-1" checked />
-          <div>
-            <p class="text-sm font-semibold text-heading">Anular con Marca de Agua</p>
-            <p class="text-xs text-subheading">El documento seguirá siendo accesible, pero con una marca de "ANULADO" visible sobre el contenido.</p>
-          </div>
-        </label>
+        <Radio
+          name="annul_type"
+          value="WATERMARK"
+          label="Anular con Marca de Agua"
+          description='El documento seguirá siendo accesible, pero con una marca de "ANULADO" visible sobre el contenido.'
+          checked
+        />
 
-        <label class="flex cursor-pointer items-start gap-3 rounded-main border border-border p-3 transition-colors hover:bg-foreground">
-          <input type="radio" name="annul_type" value="DISABLE" class="mt-1" />
-          <div>
-            <p class="text-sm font-semibold text-heading">Deshabilitar acceso</p>
-            <p class="text-xs text-subheading">El documento dejará de estar disponible mediante su URL (borrado lógico, error 403).</p>
-          </div>
-        </label>
+        <Radio name="annul_type" value="DISABLE" label="Deshabilitar acceso" description="El documento dejará de estar disponible mediante su URL (borrado lógico, error 403)." />
       </div>
 
       <input type="hidden" name="uuid_template" id="annul-uuid-template" value="" />
