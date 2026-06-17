@@ -32,14 +32,43 @@ const urlLatest = `/documents/${uuid}`
 
 const token = data?.data?.jwtToken
 const bearerToken = token ?? 'tu_token'
-const authorizationHeader = {
+const authorizationHeaderJson = {
+  'Content-Type': 'application/json',
   Authorization: `Bearer ${bearerToken}`,
 }
+
+const authorizationHeaderXml = {
+  'Content-Type': 'application/xml',
+  Authorization: `Bearer ${bearerToken}`,
+}
+
+function jsonToXmlString(obj: any): string {
+  if (!obj) return '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n</document>';
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n';
+  for (const [key, value] of Object.entries(obj)) {
+    xml += `  <${key}>${value}</${key}>\n`;
+  }
+  xml += '</document>';
+  return xml;
+}
+const requestXml = jsonToXmlString(request);
 ---
 
 <Layout title="Documentación">
   <StateSwitch hasError={!!error} isEmpty={!request}>
     <div class="space-y-6">
+      <!-- Selector de formato global -->
+      <div class="flex items-center justify-between rounded-main border border-border bg-card p-4">
+        <div>
+          <h3 class="text-sm font-semibold text-heading">Formato de la Petición</h3>
+          <p class="text-xs text-subheading">Selecciona el formato en el que enviarás los datos. Esto actualizará los ejemplos a continuación.</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="format-tab active rounded bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors" data-format="json">JSON</button>
+          <button class="format-tab rounded bg-secondary px-4 py-1.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80" data-format="xml">XML</button>
+        </div>
+      </div>
+
       <Card class="overflow-visible">
         <div class="flex items-start gap-4">
           <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-sm font-semibold text-primary">1</div>
@@ -95,18 +124,37 @@ const authorizationHeader = {
           </div>
         </div>
 
-        <div class="mt-4 ml-12 overflow-hidden rounded-main border border-border bg-background">
-          <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
-            <div class="flex items-center gap-2">
-              <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
-              <span class="font-mono text-xs text-muted-foreground">headers</span>
+        <div class="mt-4 ml-12">
+          <!-- JSON Headers -->
+          <div id="header-json" class="format-block-header overflow-hidden rounded-main border border-border bg-background">
+            <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+              <div class="flex items-center gap-2">
+                <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+                <span class="font-mono text-xs text-muted-foreground">headers</span>
+              </div>
+              <button class="copy-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar código" data-content={JSON.stringify(authorizationHeaderJson, null, 2)}>
+                <Icon name="Copy" stroke-width={1.5} class="size-4" />
+              </button>
             </div>
-            <button class="copy-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar código" data-content={JSON.stringify(authorizationHeader, null, 2)}>
-              <Icon name="Copy" stroke-width={1.5} class="size-4" />
-            </button>
+            <div class="code-scroll code-container overflow-x-auto p-4">
+              <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(authorizationHeaderJson, null, 2)} />
+            </div>
           </div>
-          <div class="code-scroll code-container overflow-x-auto p-4">
-            <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(authorizationHeader, null, 2)} />
+
+          <!-- XML Headers -->
+          <div id="header-xml" class="format-block-header hidden overflow-hidden rounded-main border border-border bg-background">
+            <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+              <div class="flex items-center gap-2">
+                <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+                <span class="font-mono text-xs text-muted-foreground">headers</span>
+              </div>
+              <button class="copy-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar código" data-content={JSON.stringify(authorizationHeaderXml, null, 2)}>
+                <Icon name="Copy" stroke-width={1.5} class="size-4" />
+              </button>
+            </div>
+            <div class="code-scroll code-container overflow-x-auto p-4">
+              <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(authorizationHeaderXml, null, 2)} />
+            </div>
           </div>
         </div>
       </Card>
@@ -116,22 +164,40 @@ const authorizationHeader = {
           <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-sm font-semibold text-primary">3</div>
           <div class="flex-1">
             <h3 class="text-base font-semibold text-heading">Datos que debe contener la solicitud</h3>
-            <p class="mt-1 text-sm text-subheading">Envía un objeto JSON en el cuerpo de la petición. Todos los campos son obligatorios para iniciar el proceso.</p>
+            <p class="mt-1 text-sm text-subheading">Envía un objeto JSON o XML en el cuerpo de la petición. Todos los campos son obligatorios para iniciar el proceso.</p>
           </div>
         </div>
 
-        <div class="mt-4 ml-12 overflow-hidden rounded-main border border-border bg-background">
-          <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
-            <div class="flex items-center gap-2">
-              <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
-              <span class="font-mono text-xs text-muted-foreground">body.json</span>
+        <div class="mt-4 ml-12">
+          
+          <div id="block-json" class="format-block overflow-hidden rounded-main border border-border bg-background">
+            <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+              <div class="flex items-center gap-2">
+                <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+                <span class="font-mono text-xs text-muted-foreground">body.json</span>
+              </div>
+              <button class="copy-btn copy-body-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar código" data-content={JSON.stringify(request, null, 2)}>
+                <Icon name="Copy" stroke-width={1.5} class="size-4" />
+              </button>
             </div>
-            <button class="copy-btn copy-body-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar código" data-content={JSON.stringify(request, null, 2)}>
-              <Icon name="Copy" stroke-width={1.5} class="size-4" />
-            </button>
+            <div class="code-scroll code-container overflow-x-auto p-4">
+              <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(request, null, 2)} />
+            </div>
           </div>
-          <div class="code-scroll code-container overflow-x-auto p-4">
-            <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(request, null, 2)} />
+          
+          <div id="block-xml" class="format-block hidden overflow-hidden rounded-main border border-border bg-background">
+            <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+              <div class="flex items-center gap-2">
+                <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+                <span class="font-mono text-xs text-muted-foreground">body.xml</span>
+              </div>
+              <button class="copy-btn copy-body-xml-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar código" data-content={requestXml}>
+                <Icon name="Copy" stroke-width={1.5} class="size-4" />
+              </button>
+            </div>
+            <div class="code-scroll code-container overflow-x-auto p-4">
+              <Code theme="catppuccin-latte" lang="xml" defaultColor={false} code={requestXml} />
+            </div>
           </div>
         </div>
       </Card>
@@ -267,48 +333,59 @@ const authorizationHeader = {
 
         const copyBtn = document.querySelector('.copy-body-btn') as HTMLElement
         const requestBody = copyBtn?.getAttribute('data-content') || '{}'
+        
+        const copyXmlBtn = document.querySelector('.copy-body-xml-btn') as HTMLElement
+        const requestXmlBody = copyXmlBtn?.getAttribute('data-content') || '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n</document>'
+
+        const activeFormat = document.querySelector('.format-tab.active')?.getAttribute('data-format') || 'json'
+
+        const jsonItem = {
+          name: 'Crear Documento (JSON)',
+          request: {
+            method: 'POST',
+            header: [
+              { key: 'Content-Type', value: 'application/json' },
+              { key: 'Authorization', value: `Bearer ${button.getAttribute('data-token') || 'tu_token'}` },
+            ],
+            body: { mode: 'raw', raw: requestBody, options: { raw: { language: 'json' } } },
+            url: {
+              raw: PUBLIC_PROJECT_URL + endpoint,
+              protocol: 'https',
+              host: [PUBLIC_PROJECT_URL.replace('https://', '').replace('http://', '')],
+              path: endpoint.split('/').filter(Boolean),
+            },
+            description: 'Endpoint para crear un nuevo documento con las variables especificadas en formato JSON',
+          },
+          response: [],
+        }
+
+        const xmlItem = {
+          name: 'Crear Documento (XML)',
+          request: {
+            method: 'POST',
+            header: [
+              { key: 'Content-Type', value: 'application/xml' },
+              { key: 'Authorization', value: `Bearer ${button.getAttribute('data-token') || 'tu_token'}` },
+            ],
+            body: { mode: 'raw', raw: requestXmlBody, options: { raw: { language: 'xml' } } },
+            url: {
+              raw: PUBLIC_PROJECT_URL + endpoint,
+              protocol: 'https',
+              host: [PUBLIC_PROJECT_URL.replace('https://', '').replace('http://', '')],
+              path: endpoint.split('/').filter(Boolean),
+            },
+            description: 'Endpoint para crear un nuevo documento con las variables especificadas en formato XML',
+          },
+          response: [],
+        }
 
         const postmanCollection = {
           info: {
             name: `${PUBLIC_NAME_PROJECT} - Documento ${uuid}`,
-            description: 'Colección generada automáticamente para crear documentos.',
+            description: `Colección generada automáticamente para crear documentos en formato ${activeFormat.toUpperCase()}.`,
             schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
           },
-          item: [
-            {
-              name: 'Crear Documento',
-              request: {
-                method: 'POST',
-                header: [
-                  {
-                    key: 'Content-Type',
-                    value: 'application/json',
-                  },
-                  {
-                    key: 'Authorization',
-                    value: `Bearer ${button.getAttribute('data-token') || 'tu_token'}`,
-                  },
-                ],
-                body: {
-                  mode: 'raw',
-                  raw: requestBody,
-                  options: {
-                    raw: {
-                      language: 'json',
-                    },
-                  },
-                },
-                url: {
-                  raw: PUBLIC_PROJECT_URL + endpoint,
-                  protocol: 'https',
-                  host: [PUBLIC_PROJECT_URL.replace('https://', '').replace('http://', '')],
-                  path: endpoint.split('/').filter(Boolean),
-                },
-                description: 'Endpoint para crear un nuevo documento con las variables especificadas',
-              },
-              response: [],
-            },
-          ],
+          item: activeFormat === 'xml' ? [xmlItem] : [jsonItem],
           variable: [],
         }
 
@@ -337,12 +414,45 @@ const authorizationHeader = {
     })
   }
 
+  function setupTabs() {
+    const tabs = document.querySelectorAll('.format-tab')
+    
+    tabs.forEach(tab => {
+      if ((tab as HTMLElement).dataset.listenerAdded === 'true') return
+      
+      tab.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLElement
+        const format = target.dataset.format
+        
+        // Update active class on tabs
+        document.querySelectorAll('.format-tab').forEach(t => {
+          t.classList.remove('bg-primary', 'text-primary-foreground')
+          t.classList.add('bg-secondary', 'text-secondary-foreground', 'hover:bg-secondary/80')
+        })
+        
+        target.classList.remove('bg-secondary', 'text-secondary-foreground', 'hover:bg-secondary/80')
+        target.classList.add('bg-primary', 'text-primary-foreground')
+        
+        // Show/hide blocks
+        document.querySelectorAll('.format-block').forEach(b => b.classList.add('hidden'))
+        document.getElementById(`block-${format}`)?.classList.remove('hidden')
+        
+        document.querySelectorAll('.format-block-header').forEach(b => b.classList.add('hidden'))
+        document.getElementById(`header-${format}`)?.classList.remove('hidden')
+      })
+      
+      ;(tab as HTMLElement).dataset.listenerAdded = 'true'
+    })
+  }
+
   setupCopyButtons()
   setupPostmanButton()
+  setupTabs()
 
   document.addEventListener('astro:page-load', () => {
     setupCopyButtons()
     setupPostmanButton()
+    setupTabs()
   })
 </script>
 <style>
