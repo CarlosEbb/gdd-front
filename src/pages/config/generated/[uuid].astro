@@ -78,7 +78,7 @@ const itemStart = pagination.total === 0 ? 0 : (pagination.page - 1) * paginatio
 const itemEnd = Math.min(pagination.page * pagination.limit, pagination.total)
 
 const metricList = [
-  { label: 'Total Logs', value: stats.total, color: 'text-neutral-900 dark:text-neutral-50', border: 'hover:border-neutral-400 dark:hover:border-neutral-600', status: 'all' },
+  { label: 'Total Logs', value: stats.total, color: 'text-primary', border: 'hover:border-primary/30', status: 'all' },
   { label: 'Completados (2xx)', value: stats.success, color: 'text-emerald-500', border: 'hover:border-emerald-500/30', status: 'success' },
   { label: 'Errores Valid.', value: stats.validation_error, color: 'text-amber-500', border: 'hover:border-amber-500/30', status: 'validation_error' },
   { label: 'Errores JSON', value: stats.json_error, color: 'text-red-500', border: 'hover:border-red-500/30', status: 'json_error' },
@@ -127,13 +127,13 @@ const canAnnulDocument = (status: string) => {
 ---
 
 <Layout title="Documentos generados">
-  <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-5">
+  <div class="mb-6 grid grid-cols-2 gap-4 rounded-main border border-border p-2 md:grid-cols-5">
     {
       metricList.map((item) => {
         const isActive = (item.status === 'all' && !currentStatus) || currentStatus === item.status
         const activeBorderClass = isActive
           ? item.status === 'all'
-            ? 'border-neutral-500 ring-1 ring-neutral-500'
+            ? 'border-primary ring-1 ring-primary'
             : item.status === 'success'
               ? 'border-emerald-500 ring-1 ring-emerald-500'
               : item.status === 'validation_error'
@@ -144,29 +144,17 @@ const canAnnulDocument = (status: string) => {
         return (
           <a
             href={`?page=1&status=${item.status}&build_number=${build_number}`}
-            class={`rounded-main border bg-background p-4 ${activeBorderClass} ${item.border} flex cursor-pointer flex-col justify-between transition-all duration-300`}
+            class={`rounded-main border bg-background p-3 pt-2.5 pb-2 shadow-base ${activeBorderClass} ${item.border} flex cursor-pointer flex-col justify-between transition-all duration-300`}
           >
-            <p class="font-mono text-[11px] tracking-wider text-subheading uppercase">{item.label}</p>
-            <p class={`mt-2 font-mono text-2xl font-bold tracking-tight ${item.color}`}>{item.value}</p>
+            <p class="mb-0 text-xs text-subheading">{item.label}</p>
+            <p class={`font-mono text-sm font-extrabold ${item.color}`}>{item.value}</p>
           </a>
         )
       })
     }
   </div>
   <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <h2 class="shrink-0 text-lg font-semibold text-heading">Documentos generados</h2>
-
-    <div class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center md:justify-end">
-      <div id="search-input-container" class={searchFieldParam ? 'flex items-center gap-2' : 'hidden'}>
-        {searchValueParam && <Button id="search-clear-btn" class="h-10 shrink-0" variant="secondary" size="sm" icon="X" title="Limpiar filtro" />}
-        <Button id="search-apply-btn" class="h-10 shrink-0" variant="secondary" size="sm" icon="Search" title="Aplicar búsqueda" />
-        <div class="w-full shrink-0 sm:w-56">
-          <Input name="search" id="search-input" value={searchValueParam} placeholder="Buscar por valor de las variables" />
-        </div>
-      </div>
-      <div class="w-full shrink-0 sm:w-56">
-        <Select name="vars" id="vars-select" value={searchFieldParam} placeholder="Variables" options={selectedVariables} />
-      </div>
+    <div class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center md:justify-end">
       <div class="w-full shrink-0 sm:w-56">
         <Dropdown
           buttonLabel={statusLabels[currentStatus || 'all']}
@@ -203,6 +191,16 @@ const canAnnulDocument = (status: string) => {
             Errores Críticos
           </a>
         </Dropdown>
+      </div>
+      <div class="w-full shrink-0 sm:w-56">
+        <Select name="vars" id="vars-select" value={searchFieldParam} placeholder="Filtrar por campos disponibles" options={selectedVariables} />
+      </div>
+      <div id="search-input-container" class={searchFieldParam ? 'flex items-center gap-2' : 'hidden'}>
+        <div class="w-full shrink-0 sm:w-56">
+          <Input name="search" id="search-input" value={searchValueParam} placeholder="Buscar por valor de los campos" />
+        </div>
+        {searchValueParam && <Button id="search-clear-btn" class="h-10 shrink-0" variant="secondary" size="sm" icon="X" title="Limpiar filtro" />}
+        <Button id="search-apply-btn" class="h-10 shrink-0" variant="secondary" size="sm" icon="Search" title="Aplicar búsqueda" />
       </div>
     </div>
   </div>
