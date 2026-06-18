@@ -43,29 +43,31 @@ const authorizationHeaderXml = {
 }
 
 function jsonToXmlString(obj: any): string {
-  if (!obj) return '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n</document>';
-  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n';
+  if (!obj) return '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n</document>'
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n'
   for (const [key, value] of Object.entries(obj)) {
-    xml += `  <${key}>${value}</${key}>\n`;
+    xml += `  <${key}>${value}</${key}>\n`
   }
-  xml += '</document>';
-  return xml;
+  xml += '</document>'
+  return xml
 }
-const requestXml = jsonToXmlString(request);
+const requestXml = jsonToXmlString(request)
 ---
 
 <Layout title="Documentación">
   <StateSwitch hasError={!!error} isEmpty={!request}>
     <div class="space-y-6">
-      <!-- Selector de formato global -->
-      <div class="flex items-center justify-between rounded-main border border-border bg-card p-4">
-        <div>
-          <h3 class="text-sm font-semibold text-heading">Formato de la Petición</h3>
-          <p class="text-xs text-subheading">Selecciona el formato en el que enviarás los datos. Esto actualizará los ejemplos a continuación.</p>
+      <div class="flex items-center justify-between rounded-main border border-t-2 border-border border-t-primary/60 bg-background p-4">
+        <div class="flex items-start gap-2">
+          <Icon name="Info" stroke-width={1.5} class="mt-1 size-4 text-primary" />
+          <div>
+            <h3 class="text-sm font-semibold text-heading">Formato de la petición</h3>
+            <p class="text-xs text-subheading">Selecciona el formato en el que enviarás los datos. Esto actualizará los ejemplos a continuación.</p>
+          </div>
         </div>
-        <div class="flex gap-2">
-          <button class="format-tab active rounded bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors" data-format="json">JSON</button>
-          <button class="format-tab rounded bg-secondary px-4 py-1.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80" data-format="xml">XML</button>
+        <div class="inline-flex rounded-main border border-border bg-background p-0.5">
+          <button class="format-tab active rounded-main bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-all duration-200" data-format="json">JSON</button>
+          <button class="format-tab rounded-main px-4 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-heading" data-format="xml">XML</button>
         </div>
       </div>
 
@@ -169,7 +171,6 @@ const requestXml = jsonToXmlString(request);
         </div>
 
         <div class="mt-4 ml-12">
-          
           <div id="block-json" class="format-block overflow-hidden rounded-main border border-border bg-background">
             <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
               <div class="flex items-center gap-2">
@@ -184,7 +185,7 @@ const requestXml = jsonToXmlString(request);
               <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(request, null, 2)} />
             </div>
           </div>
-          
+
           <div id="block-xml" class="format-block hidden overflow-hidden rounded-main border border-border bg-background">
             <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
               <div class="flex items-center gap-2">
@@ -333,7 +334,7 @@ const requestXml = jsonToXmlString(request);
 
         const copyBtn = document.querySelector('.copy-body-btn') as HTMLElement
         const requestBody = copyBtn?.getAttribute('data-content') || '{}'
-        
+
         const copyXmlBtn = document.querySelector('.copy-body-xml-btn') as HTMLElement
         const requestXmlBody = copyXmlBtn?.getAttribute('data-content') || '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n</document>'
 
@@ -416,31 +417,30 @@ const requestXml = jsonToXmlString(request);
 
   function setupTabs() {
     const tabs = document.querySelectorAll('.format-tab')
-    
-    tabs.forEach(tab => {
+
+    tabs.forEach((tab) => {
       if ((tab as HTMLElement).dataset.listenerAdded === 'true') return
-      
+
       tab.addEventListener('click', (e) => {
         const target = e.currentTarget as HTMLElement
         const format = target.dataset.format
-        
+
         // Update active class on tabs
-        document.querySelectorAll('.format-tab').forEach(t => {
-          t.classList.remove('bg-primary', 'text-primary-foreground')
-          t.classList.add('bg-secondary', 'text-secondary-foreground', 'hover:bg-secondary/80')
+        document.querySelectorAll('.format-tab').forEach((t) => {
+          t.classList.remove('active', 'bg-primary', 'text-primary-foreground')
+          t.classList.add('text-muted-foreground', 'hover:text-heading')
         })
-        
-        target.classList.remove('bg-secondary', 'text-secondary-foreground', 'hover:bg-secondary/80')
-        target.classList.add('bg-primary', 'text-primary-foreground')
-        
+
+        target.classList.add('active', 'bg-primary', 'text-primary-foreground')
+        target.classList.remove('text-muted-foreground', 'hover:text-heading')
+
         // Show/hide blocks
-        document.querySelectorAll('.format-block').forEach(b => b.classList.add('hidden'))
+        document.querySelectorAll('.format-block').forEach((b) => b.classList.add('hidden'))
         document.getElementById(`block-${format}`)?.classList.remove('hidden')
-        
-        document.querySelectorAll('.format-block-header').forEach(b => b.classList.add('hidden'))
+
+        document.querySelectorAll('.format-block-header').forEach((b) => b.classList.add('hidden'))
         document.getElementById(`header-${format}`)?.classList.remove('hidden')
       })
-      
       ;(tab as HTMLElement).dataset.listenerAdded = 'true'
     })
   }
