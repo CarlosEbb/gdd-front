@@ -16,7 +16,8 @@ import Select from '@/components/form/Select.astro'
 import Input from '@/components/form/Input.astro'
 import Radio from '@/pages/audits/_components/Radio.astro'
 
-const { PUBLIC_PROJECT_URL } = import.meta.env
+const PUBLIC_PDF_URL = import.meta.env.PUBLIC_PDF_URL
+const pdfBaseUrl = PUBLIC_PDF_URL || 'http://localhost:8303'
 
 const { uuid } = Astro.params
 const build_number = Astro.url.searchParams.get('build_number') as string
@@ -231,7 +232,7 @@ const canAnnulDocument = (status: string) => {
                   </div>
                   {document.encrypt && (
                     <a
-                      href={`${PUBLIC_PROJECT_URL}/documents/viewPDF/${document.encrypt}`}
+                      href={`${pdfBaseUrl}/documents/viewPDF/${document.encrypt}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       class="flex max-w-xs cursor-pointer items-center gap-3 rounded-main border border-border px-2 py-1 hover:bg-foreground hover:text-subheading"

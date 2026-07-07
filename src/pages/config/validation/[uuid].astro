@@ -145,8 +145,8 @@ const isEmpty = !validations && elements.length === 0 && fields.length === 0
   document.addEventListener('astro:page-load', () => {
     resetDocumentValidation()
 
-    let initialRules = undefined
-    let initialConditions = undefined
+    let initialRules: Record<string, any> | undefined = undefined
+    let initialConditions: any[] | undefined = undefined
 
     const validationsEl = document.getElementById('json-validations-data')
     if (validationsEl && validationsEl.textContent) {

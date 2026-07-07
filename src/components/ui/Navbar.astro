@@ -6,7 +6,7 @@ import Icon from './Icon.astro'
 import Avatar from './Avatar.astro'
 import type { InfoProfile } from '@/types/profile'
 
-const { PUBLIC_NAME_PROJECT } = import.meta.env
+const PUBLIC_NAME_PROJECT = import.meta.env.PUBLIC_NAME_PROJECT
 
 const user = (await Astro.session?.get('user')) as InfoProfile | undefined
 const email = user?.email ?? ''

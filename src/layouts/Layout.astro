@@ -2,7 +2,7 @@
 import '@/styles/global.css'
 import { ClientRouter } from 'astro:transitions'
 
-const { PUBLIC_NAME_PROJECT } = import.meta.env
+const PUBLIC_NAME_PROJECT = import.meta.env.PUBLIC_NAME_PROJECT
 
 interface Props {
   title?: string | null

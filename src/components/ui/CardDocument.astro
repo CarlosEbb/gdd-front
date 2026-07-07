@@ -8,7 +8,7 @@ import Avatar from './Avatar.astro'
 import type { PermissionData } from '@/lib/permissions'
 import { hasPermission } from '@/lib/permissions'
 
-const { PUBLIC_PROJECT_URL } = import.meta.env
+const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
 
 interface Props {
   document: Document

@@ -11,7 +11,7 @@ import Card from '@/components/ui/Card.astro'
 import type { InfoProfile } from '@/types/profile'
 
 const getUser = (await Astro.session?.get('user')) as InfoProfile
-const { PUBLIC_PROJECT_URL } = import.meta.env
+const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
 
 const name = getUser?.name
 const lastName = getUser?.lastName

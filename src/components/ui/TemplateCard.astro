@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets'
 import type { Templates } from '@/types/templates'
 import Button from './Button.astro'
-const { PUBLIC_PROJECT_URL } = import.meta.env
+const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
 
 interface Props {
   template: Templates

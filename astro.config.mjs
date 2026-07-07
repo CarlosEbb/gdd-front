@@ -7,6 +7,7 @@ import node from '@astrojs/node'
 export default defineConfig({
   output: 'server',
   vite: {
+    // @ts-ignore
     plugins: [tailwindcss()],
   },
 

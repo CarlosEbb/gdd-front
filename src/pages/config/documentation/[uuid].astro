@@ -13,7 +13,8 @@ const { uuid } = Astro.params
 if (!uuid) return Astro.redirect('/home')
 
 const build_number = Astro.url.searchParams.get('build_number') as string
-const { API_URL: base_url, PUBLIC_PROJECT_URL: PUBLIC_PROJECT_URL } = import.meta.env
+const base_url = import.meta.env.API_URL
+const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
 
 const responseExample = {
   status: 200,

@@ -31,7 +31,7 @@ const { isEdit = false, userData, clients = [], clientsError, hasClients = false
 const user = userData?.data || null
 const userPermissionUuids = user?.permissionUuids || []
 
-const { PUBLIC_PROJECT_URL } = import.meta.env
+const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
 const getInitialsNameAndLastName = (name: string, lastName: string) => (name?.charAt(0) || '') + (lastName?.charAt(0) || '')
 const initials = user ? getInitialsNameAndLastName(user.name, user.lastName).toUpperCase() : ''
 const hasPhoto = !user?.photo || user?.photo === '{}'

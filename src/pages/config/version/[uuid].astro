@@ -18,7 +18,7 @@ const { uuid } = Astro.params
 
 if (!uuid) return Astro.redirect('/home')
 
-const { PUBLIC_PROJECT_URL } = import.meta.env
+const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
 
 const { data, error } = await Astro.callAction(actions.documents.getVersions, { uuid_template: uuid })
 const versions = data?.data.versions || []
