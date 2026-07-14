@@ -107,7 +107,7 @@ const btnId = isEdit ? 'btn-edit-workspace' : 'btn-create-workspace'
     if (selected && selected.servers.length > 0) {
       return selected.servers.map((s) => ({
         value: s.uuidServer,
-        label: `${s.server?.name || 'Servidor'} - ${s.server?.ip || ''}:${s.server?.puerto || ''}`,
+        label: `${s.server?.name || 'Servidor'}`,
       }))
     }
     return []
