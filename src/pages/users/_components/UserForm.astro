@@ -3,6 +3,7 @@ import Input from '@/components/form/Input.astro'
 import PasswordValidator from '@/components/form/PasswordValidator.astro'
 import FormPageLayout from '@/layouts/FormPageLayout.astro'
 import FormBlock from '@/components/ui/FormBlock.astro'
+import Button from '@/components/ui/Button.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import Accordion from '@/components/ui/Accordion.astro'
 import Select from '@/components/form/Select.astro'
@@ -12,6 +13,7 @@ import Icon from '@/components/ui/Icon.astro'
 import type { DetailsClient } from '@/types/clients'
 import type { PermissionCategory } from '@/types/permissions'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import { quickRoleConfigs } from '../_constants'
 
 interface Props {
   isEdit?: boolean
@@ -156,6 +158,19 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
 
   <FormBlock title="Roles" description="Configura el nivel de autorización por módulos para el usuario" cols={1}>
     <StateSwitch hasError={!!permissionsError} isEmpty={!hasPermissions}>
+      <div class="space-y-2" role="group" aria-label="Selección rápida de roles">
+        <p class="text-sm font-medium text-heading">Selección rápida de roles</p>
+        <div class="flex flex-wrap gap-2">
+          {
+            Object.entries(quickRoleConfigs).map(([roleKey, role]) => (
+              <Button type="button" variant="outline" size="sm" data-quick-role={roleKey} data-role-permissions={role.permissions.join(',')} aria-pressed="false">
+                {role.label}
+              </Button>
+            ))
+          }
+        </div>
+      </div>
+
       <div>
         {
           permissions.map((category) => (
@@ -285,114 +300,157 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
 
       updateBadge()
     })
+
+    const permissionCheckboxes = document.querySelectorAll<HTMLInputElement>('[data-permission-checkbox]')
+    const quickRoleButtons = document.querySelectorAll<HTMLButtonElement>('[data-quick-role]')
+
+    quickRoleButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const rolePermissions = new Set(
+          (button.dataset.rolePermissions || '')
+            .split(',')
+            .map((permissionName) => permissionName.trim())
+            .filter(Boolean)
+        )
+
+        permissionCheckboxes.forEach((checkbox) => {
+          const shouldBeChecked = rolePermissions.has(checkbox.dataset.permissionName || '')
+
+          if (checkbox.checked === shouldBeChecked) return
+
+          checkbox.checked = shouldBeChecked
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+        })
+
+        quickRoleButtons.forEach((roleButton) => {
+          roleButton.setAttribute('aria-pressed', String(roleButton === button))
+        })
+      })
+    })
   })
 </script>
 
 <script>
   // --- Reglas de permisología en tiempo real ---
   document.addEventListener('astro:page-load', () => {
-    const checkboxes = document.querySelectorAll<HTMLInputElement>('[data-permission-checkbox]');
-    if (checkboxes.length === 0) return;
+    const checkboxes = document.querySelectorAll<HTMLInputElement>('[data-permission-checkbox]')
+    if (checkboxes.length === 0) return
 
     const findCheckboxByName = (name: string) => {
-      return Array.from(checkboxes).find(cb => cb.dataset.permissionName === name);
-    };
+      return Array.from(checkboxes).find((cb) => cb.dataset.permissionName === name)
+    }
 
     const updateDependencies = () => {
-      const usersViewCb = findCheckboxByName('users.view');
-      const serversViewCb = findCheckboxByName('servers.view');
-      const documentsCreateCb = findCheckboxByName('documents.create');
-      const templatesCreateCb = findCheckboxByName('templates.create');
+      const usersViewCb = findCheckboxByName('users.view')
+      const serversViewCb = findCheckboxByName('servers.view')
+      const documentsCreateCb = findCheckboxByName('documents.create')
+      const templatesCreateCb = findCheckboxByName('templates.create')
 
       // Regla: si puedo crear una plantilla, debo poder crear un documento
       if (templatesCreateCb?.checked && documentsCreateCb && !documentsCreateCb.checked) {
-        documentsCreateCb.checked = true;
-        documentsCreateCb.dispatchEvent(new Event('change', { bubbles: true }));
+        documentsCreateCb.checked = true
+        documentsCreateCb.dispatchEvent(new Event('change', { bubbles: true }))
       }
 
       // Regla: si puedo crear, actualizar o eliminar un servidor, es necesario poder consultarlo/verlo
-      const needsServersView = Array.from(checkboxes).some(cb => {
-        const name = cb.dataset.permissionName || '';
-        const isDependent = 
-          name.startsWith('servers.create') || name.startsWith('servers.update') || name.startsWith('servers.delete') || name.startsWith('servers.manage');
-        return isDependent && cb.checked;
-      });
+      const needsServersView = Array.from(checkboxes).some((cb) => {
+        const name = cb.dataset.permissionName || ''
+        const isDependent = name.startsWith('servers.create') || name.startsWith('servers.update') || name.startsWith('servers.delete') || name.startsWith('servers.manage')
+        return isDependent && cb.checked
+      })
 
       if (needsServersView && serversViewCb && !serversViewCb.checked) {
-        serversViewCb.checked = true;
-        serversViewCb.dispatchEvent(new Event('change', { bubbles: true }));
+        serversViewCb.checked = true
+        serversViewCb.dispatchEvent(new Event('change', { bubbles: true }))
       }
 
       // Reglas:
       // - Si tengo actualizar o crear usuario o eliminar, es necesario el ver usuario
       // - Si tengo actualizar o crear servidores o eliminar, es necesario el ver usuario
       // - Si tengo actualizar o crear plantillas o eliminar, es necesario el ver usuario
-      const needsUsersView = Array.from(checkboxes).some(cb => {
-        const name = cb.dataset.permissionName || '';
-        const isDependent = 
-          name.startsWith('users.create') || name.startsWith('users.update') || name.startsWith('users.delete') || name.startsWith('users.manage') ||
-          name.startsWith('servers.create') || name.startsWith('servers.update') || name.startsWith('servers.delete') || name.startsWith('servers.manage') ||
-          name.startsWith('templates.create') || name.startsWith('templates.update') || name.startsWith('templates.delete') || name.startsWith('templates.publish');
-        return isDependent && cb.checked;
-      });
+      const needsUsersView = Array.from(checkboxes).some((cb) => {
+        const name = cb.dataset.permissionName || ''
+        const isDependent =
+          name.startsWith('users.create') ||
+          name.startsWith('users.update') ||
+          name.startsWith('users.delete') ||
+          name.startsWith('users.manage') ||
+          name.startsWith('servers.create') ||
+          name.startsWith('servers.update') ||
+          name.startsWith('servers.delete') ||
+          name.startsWith('servers.manage') ||
+          name.startsWith('templates.create') ||
+          name.startsWith('templates.update') ||
+          name.startsWith('templates.delete') ||
+          name.startsWith('templates.publish')
+        return isDependent && cb.checked
+      })
 
       if (needsUsersView && usersViewCb && !usersViewCb.checked) {
-        usersViewCb.checked = true;
-        usersViewCb.dispatchEvent(new Event('change', { bubbles: true }));
+        usersViewCb.checked = true
+        usersViewCb.dispatchEvent(new Event('change', { bubbles: true }))
       }
-    };
+    }
 
-    checkboxes.forEach(cb => {
+    checkboxes.forEach((cb) => {
       cb.addEventListener('change', () => {
-        const name = cb.dataset.permissionName || '';
-        
+        const name = cb.dataset.permissionName || ''
+
         // Cascade uncheck
         if (!cb.checked) {
           // Si desmarcas ver usuario, desmarcar todos los de gestión/edición
           if (name === 'users.view') {
-            checkboxes.forEach(otherCb => {
-              const otherName = otherCb.dataset.permissionName || '';
-              const isDependent = 
-                otherName.startsWith('users.create') || otherName.startsWith('users.update') || otherName.startsWith('users.delete') || otherName.startsWith('users.manage') ||
-                otherName.startsWith('servers.create') || otherName.startsWith('servers.update') || otherName.startsWith('servers.delete') || otherName.startsWith('servers.manage') ||
-                otherName.startsWith('templates.create') || otherName.startsWith('templates.update') || otherName.startsWith('templates.delete') || otherName.startsWith('templates.publish');
+            checkboxes.forEach((otherCb) => {
+              const otherName = otherCb.dataset.permissionName || ''
+              const isDependent =
+                otherName.startsWith('users.create') ||
+                otherName.startsWith('users.update') ||
+                otherName.startsWith('users.delete') ||
+                otherName.startsWith('users.manage') ||
+                otherName.startsWith('servers.create') ||
+                otherName.startsWith('servers.update') ||
+                otherName.startsWith('servers.delete') ||
+                otherName.startsWith('servers.manage') ||
+                otherName.startsWith('templates.create') ||
+                otherName.startsWith('templates.update') ||
+                otherName.startsWith('templates.delete') ||
+                otherName.startsWith('templates.publish')
               if (isDependent && otherCb.checked) {
-                otherCb.checked = false;
-                otherCb.dispatchEvent(new Event('change', { bubbles: true }));
+                otherCb.checked = false
+                otherCb.dispatchEvent(new Event('change', { bubbles: true }))
               }
-            });
+            })
           }
 
           // Si desmarcas ver servidor, desmarcar todos los de gestión/edición de servidores
           if (name === 'servers.view') {
-            checkboxes.forEach(otherCb => {
-              const otherName = otherCb.dataset.permissionName || '';
-              const isDependent = 
-                otherName.startsWith('servers.create') || otherName.startsWith('servers.update') || otherName.startsWith('servers.delete') || otherName.startsWith('servers.manage');
+            checkboxes.forEach((otherCb) => {
+              const otherName = otherCb.dataset.permissionName || ''
+              const isDependent = otherName.startsWith('servers.create') || otherName.startsWith('servers.update') || otherName.startsWith('servers.delete') || otherName.startsWith('servers.manage')
               if (isDependent && otherCb.checked) {
-                otherCb.checked = false;
-                otherCb.dispatchEvent(new Event('change', { bubbles: true }));
+                otherCb.checked = false
+                otherCb.dispatchEvent(new Event('change', { bubbles: true }))
               }
-            });
+            })
           }
-          
+
           // Si desmarcas crear documento, desmarcar crear plantilla
           if (name === 'documents.create') {
-            const templatesCreateCb = findCheckboxByName('templates.create');
+            const templatesCreateCb = findCheckboxByName('templates.create')
             if (templatesCreateCb?.checked) {
-              templatesCreateCb.checked = false;
-              templatesCreateCb.dispatchEvent(new Event('change', { bubbles: true }));
+              templatesCreateCb.checked = false
+              templatesCreateCb.dispatchEvent(new Event('change', { bubbles: true }))
             }
           }
         }
 
-        updateDependencies();
-      });
-    });
+        updateDependencies()
+      })
+    })
 
     // Ejecutar escaneo inicial al cargar
-    updateDependencies();
-  });
+    updateDependencies()
+  })
 </script>
 
 <script>
