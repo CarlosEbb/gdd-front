@@ -8,7 +8,7 @@ import Avatar from './Avatar.astro'
 import type { PermissionData } from '@/lib/permissions'
 import { hasPermission } from '@/lib/permissions'
 
-const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
+const API_URL = import.meta.env.API_URL
 
 interface Props {
   document: Document
@@ -70,7 +70,7 @@ const ALLOWED_ACTIONS = ACTIONS.filter((action) => {
 const hasDeletePermission = permissions ? hasPermission(permissions, 'templates.delete') : false
 const showDropdown = ALLOWED_ACTIONS.length > 0 || hasDeletePermission
 
-const thumbnails = pathThumbnails ? `${PUBLIC_PROJECT_URL}${pathThumbnails}` : template.src
+const thumbnails = pathThumbnails ? `${API_URL}${pathThumbnails}` : template.src
 const editorUrl = new URL(`/editor/${uuid}`, Astro.url)
 
 editorUrl.searchParams.set('build_number', String(buildNumber))

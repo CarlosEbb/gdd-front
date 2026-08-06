@@ -20,7 +20,7 @@ const hasSecondaryText = !!secondaryText
 const hasActionsSlot = Astro.slots.has('actions')
 const hasAvatarSlot = Astro.slots.has('avatar')
 
-const baseUrl = import.meta.env.PUBLIC_PROJECT_URL
+const baseUrl = import.meta.env.API_URL
 const urlImage = hasImage ? `${baseUrl}${img}` : undefined
 ---
 

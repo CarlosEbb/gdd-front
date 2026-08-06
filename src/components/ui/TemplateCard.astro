@@ -2,14 +2,14 @@
 import { Image } from 'astro:assets'
 import type { Templates } from '@/types/templates'
 import Button from './Button.astro'
-const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
+const API_URL = import.meta.env.API_URL
 
 interface Props {
   template: Templates
 }
 
 const { template } = Astro.props
-const thumbnails = `${PUBLIC_PROJECT_URL}${template.pathThumbnails}`
+const thumbnails = `${API_URL}${template.pathThumbnails}`
 const isMyTemplate = template.category?.toLowerCase() === 'mis plantillas'
 ---
 
