@@ -38,18 +38,25 @@ function isApiError(error: unknown): error is ApiError {
   return typeof error === 'object' && error !== null && '_isApiError' in error
 }
 
-async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic: boolean = false): Promise<ApiResponse<T>> {
-  const API_PROJECT_URL = options.useCargaUrl
-    ? (import.meta.env.PUBLIC_CARGA_URL ?? (globalThis as any).process?.env?.PUBLIC_CARGA_URL)
-    : (import.meta.env.API_URL ?? (globalThis as any).process?.env?.API_URL)
+function getEnvValue(name: 'API_URL' | 'PUBLIC_CARGA_URL'): string | undefined {
+  return import.meta.env[name] ?? (globalThis as any).process?.env?.[name]
+}
 
-  const envName = options.useCargaUrl ? 'PUBLIC_CARGA_URL' : 'API_URL'
+/** Bulk usa PUBLIC_CARGA_URL; el resto de la API usa API_URL */
+function resolveBaseUrl(useCargaUrl = false): string {
+  const envName = useCargaUrl ? 'PUBLIC_CARGA_URL' : 'API_URL'
+  const baseUrl = getEnvValue(envName)
 
-  if (!API_PROJECT_URL) {
+  if (!baseUrl) {
     throw new Error(`La variable de entorno ${envName} no está configurada. Configúrala en tu entorno.`)
   }
 
-  const url = `${API_PROJECT_URL}${endpoint}`
+  return baseUrl
+}
+
+async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic: boolean = false): Promise<ApiResponse<T>> {
+  const baseUrl = resolveBaseUrl(options.useCargaUrl)
+  const url = `${baseUrl}${endpoint}`
 
   const headers = new Headers()
   const authorization = isPublic ? '' : `Bearer ${options.token}`
@@ -130,13 +137,8 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic:
 }
 
 async function apiFetchBlob(endpoint: string, token: string, ctx?: ActionAPIContext, method: 'GET' | 'POST' = 'GET'): Promise<Blob> {
-  const API_PROJECT_URL = import.meta.env.PUBLIC_CARGA_URL ?? (globalThis as any).process?.env?.API_URL
-
-  if (!API_PROJECT_URL) {
-    throw new Error('La variable de entorno API_URL no está configurada. Configúrala en tu entorno.')
-  }
-
-  const url = `${API_PROJECT_URL}${endpoint}`
+  const baseUrl = resolveBaseUrl(true)
+  const url = `${baseUrl}${endpoint}`
 
   const headers = new Headers()
   headers.set('Authorization', `Bearer ${token}`)
