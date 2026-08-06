@@ -11,7 +11,7 @@ import Card from '@/components/ui/Card.astro'
 import type { InfoProfile } from '@/types/profile'
 
 const getUser = (await Astro.session?.get('user')) as InfoProfile
-const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
+const API_URL = import.meta.env.API_URL
 
 const name = getUser?.name
 const lastName = getUser?.lastName
@@ -23,7 +23,7 @@ const getInitialsNameAndLastName = (name: string, lastName: string) => name.char
 
 const initials = getInitialsNameAndLastName(name, lastName).toUpperCase()
 const hasPhoto = getUser?.photo === null || getUser?.photo === '{}'
-const photo = hasPhoto ? '' : `${PUBLIC_PROJECT_URL}${getUser.photo}`
+const photo = hasPhoto ? '' : `${API_URL}${getUser.photo}`
 const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
 ---
 

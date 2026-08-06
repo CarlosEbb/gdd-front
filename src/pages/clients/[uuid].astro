@@ -19,7 +19,7 @@ import Card from '@/components/ui/Card.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 import Dropdown from '@/components/ui/Dropdown.astro'
 
-const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
+const API_URL = import.meta.env.API_URL
 const { uuid } = Astro.params
 const { data, error } = await Astro.callAction(actions.clients.getByUuid, { uuid: uuid! })
 
@@ -39,7 +39,7 @@ const selectedClient = {
   createdAt: client?.createdAt || '',
   databases: client?.databases || [],
   servers: client?.servers || [],
-  logo: client?.logo ? `${PUBLIC_PROJECT_URL}${client.logo}` : null,
+  logo: client?.logo ? `${API_URL}${client.logo}` : null,
   user: client?.usersClients || null,
 }
 ---
@@ -147,19 +147,19 @@ const selectedClient = {
                 <TabsList>
                   <PermissionGuard permission="servers.view">
                     <TabsTrigger value="dataBase"
-                      >Base de Datos <span class="ml-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
+                      >Base de Datos <span class="ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
                         >{selectedClient.databases.length}</span
                       ></TabsTrigger
                     >
                     <TabsTrigger value="servidores"
-                      >Servidores <span class="ml-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
+                      >Servidores <span class="ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
                         >{selectedClient.servers.length}</span
                       ></TabsTrigger
                     >
                   </PermissionGuard>
                   <PermissionGuard permission="users.view">
                     <TabsTrigger value="usuarios"
-                      >Usuarios <span class="ml-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
+                      >Usuarios <span class="ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-semibold text-primary"
                         >{selectedClient.user?.length || 0}</span
                       ></TabsTrigger
                     >

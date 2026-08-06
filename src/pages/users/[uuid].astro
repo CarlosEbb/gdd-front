@@ -12,7 +12,7 @@ import { Status } from '@/types/users'
 import Modal from '@/components/modal/Modal.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
-const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
+const API_URL = import.meta.env.API_URL
 const PUBLIC_NAME_PROJECT = import.meta.env.PUBLIC_NAME_PROJECT
 const { uuid } = Astro.params
 const { data, error } = await Astro.callAction(actions.users.getByUuid, { uuid: uuid! })
@@ -21,7 +21,7 @@ const user = data?.data || null
 const selectedUser = {
   name: user?.name || '',
   email: user?.email || '',
-  photo: user?.photo ? `${PUBLIC_PROJECT_URL}${user.photo}` : null,
+  photo: user?.photo ? `${API_URL}${user.photo}` : null,
   country: user?.country || '',
   zipCode: user?.zipCode || '',
   lastName: user?.lastName || '',

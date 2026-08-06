@@ -18,14 +18,14 @@ const { uuid } = Astro.params
 
 if (!uuid) return Astro.redirect('/home')
 
-const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
+const API_URL = import.meta.env.API_URL
 
 const { data, error } = await Astro.callAction(actions.documents.getVersions, { uuid_template: uuid })
 const versions = data?.data.versions || []
 const nameTemplate = data?.data.template.name || ''
 const descriptionTemplate = data?.data.template.description || ''
 const getCurrentVersionPublished = versions.find((version) => version.isPublished)
-const thumbnail = getCurrentVersionPublished?.pathThumbnails ? `${PUBLIC_PROJECT_URL}/${getCurrentVersionPublished.pathThumbnails}` : null
+const thumbnail = getCurrentVersionPublished?.pathThumbnails ? `${API_URL}/${getCurrentVersionPublished.pathThumbnails}` : null
 const publishedBy = getCurrentVersionPublished?.publishedBy
 const filteredVersionsUnpublished = versions.filter((version) => !version.isPublished)
 ---

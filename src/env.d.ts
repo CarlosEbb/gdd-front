@@ -1,6 +1,7 @@
 interface ImportMetaEnv {
   readonly API_URL: string
   readonly PUBLIC_PROJECT_URL: string
+  readonly PUBLIC_CARGA_URL: string
   readonly PUBLIC_NAME_PROJECT: string
   readonly PUBLIC_TOKEN_EXPIRATION: string
   readonly PUBLIC_TOKEN_EXPIRATION_SHOW_MODAL: string
