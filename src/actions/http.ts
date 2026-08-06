@@ -7,6 +7,7 @@ interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   body?: unknown
   isPublic?: boolean
   ctx?: ActionAPIContext
+  useCargaUrl?: boolean
 }
 
 export class ApiError extends Error {
@@ -38,10 +39,14 @@ function isApiError(error: unknown): error is ApiError {
 }
 
 async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic: boolean = false): Promise<ApiResponse<T>> {
-  const API_PROJECT_URL = import.meta.env.API_URL ?? (globalThis as any).process?.env?.API_URL
+  const API_PROJECT_URL = options.useCargaUrl
+    ? (import.meta.env.PUBLIC_CARGA_URL ?? (globalThis as any).process?.env?.PUBLIC_CARGA_URL)
+    : (import.meta.env.API_URL ?? (globalThis as any).process?.env?.API_URL)
+
+  const envName = options.useCargaUrl ? 'PUBLIC_CARGA_URL' : 'API_URL'
 
   if (!API_PROJECT_URL) {
-    throw new Error('La variable de entorno API_URL no está configurada. Configúrala en tu entorno.')
+    throw new Error(`La variable de entorno ${envName} no está configurada. Configúrala en tu entorno.`)
   }
 
   const url = `${API_PROJECT_URL}${endpoint}`
@@ -125,7 +130,7 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic:
 }
 
 async function apiFetchBlob(endpoint: string, token: string, ctx?: ActionAPIContext, method: 'GET' | 'POST' = 'GET'): Promise<Blob> {
-  const API_PROJECT_URL = import.meta.env.API_URL ?? (globalThis as any).process?.env?.API_URL
+  const API_PROJECT_URL = import.meta.env.PUBLIC_CARGA_URL ?? (globalThis as any).process?.env?.API_URL
 
   if (!API_PROJECT_URL) {
     throw new Error('La variable de entorno API_URL no está configurada. Configúrala en tu entorno.')
@@ -176,8 +181,15 @@ export const http = {
     return apiFetch<T>(endpoint, { method: 'GET', token, ctx }, isPublic)
   },
 
-  post: <T>(endpoint: string, token: string, ctx: ActionAPIContext, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
-    return apiFetch<T>(endpoint, { method: 'POST', token, ctx, body }, isPublic)
+  post: <T>(
+    endpoint: string,
+    token: string,
+    ctx: ActionAPIContext,
+    body: unknown,
+    isPublic: boolean = false,
+    useCargaUrl: boolean = false,
+  ): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'POST', token, ctx, body, useCargaUrl }, isPublic)
   },
 
   put: <T>(endpoint: string, token: string, ctx: ActionAPIContext, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {

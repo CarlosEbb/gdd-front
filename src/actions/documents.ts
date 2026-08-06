@@ -398,7 +398,7 @@ export const documents = {
       formData.append('file', file)
 
       try {
-        const response = await http.post<BulkUploadResponse>(url, token, request, formData)
+        const response = await http.post<BulkUploadResponse>(url, token, request, formData, false, true)
         return response
       } catch (error) {
         await handleApiError(error, request)
