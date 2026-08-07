@@ -172,7 +172,19 @@ async function apiFetchBlob(endpoint: string, token: string, ctx?: ActionAPICont
     if (response.status === 401) {
       throw new UnauthorizedError('No autorizado')
     }
-    throw new ApiError('Error al descargar el archivo', response.status)
+    
+    let errorMessage = 'Error al descargar el archivo'
+    try {
+      // Intentar leer la respuesta como JSON para extraer el mensaje de la API
+      const errorData = await response.clone().json()
+      if (errorData && errorData.message) {
+        errorMessage = errorData.message
+      }
+    } catch (e) {
+      // Si no es JSON o falla, mantener el mensaje genérico
+    }
+    
+    throw new ApiError(errorMessage, response.status)
   }
 
   return await response.blob()

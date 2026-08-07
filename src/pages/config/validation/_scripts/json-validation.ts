@@ -11,6 +11,7 @@ interface JsonValidationElements {
 
   // Checkboxes
   requiredCheckbox: HTMLInputElement | null
+  uniqueCheckbox: HTMLInputElement | null
   typeCheckboxes: NodeListOf<HTMLInputElement>
 
   // Date format
@@ -47,6 +48,7 @@ function getElements(): JsonValidationElements {
     emptyCardState: document.getElementById('empty-card-state'),
     cardTitle: document.querySelector('[data-card-title]'),
     requiredCheckbox: document.querySelector('[data-required-checkbox]'),
+    uniqueCheckbox: document.querySelector('[data-unique-checkbox]'),
     typeCheckboxes: document.querySelectorAll('[data-type-checkbox]'),
     dateFormatContainer: document.querySelector('[data-date-format-container]'),
     dateFormatLabel: document.querySelector('[data-date-format-label]'),
@@ -111,7 +113,7 @@ function updateSidebar(): void {
     }
 
     // Mostrar info del campo si tiene configuración
-    const hasConfig = rule.required || rule.types.length > 0 || rule.customValidations.length > 0
+    const hasConfig = rule.required || rule.unique || rule.types.length > 0 || rule.customValidations.length > 0
 
     if (hasConfig) {
       fieldInfo?.classList.remove('hidden')
@@ -130,7 +132,8 @@ function updateSidebar(): void {
       if (validationsInfo) {
         const parts: string[] = []
 
-        if (rule.required) parts.push('required')
+        if (rule.required) parts.push('requerido')
+        if (rule.unique) parts.push('único')
 
         // Mostrar cada validación como "campo operator valor"
         rule.customValidations.forEach((v) => {
@@ -202,6 +205,11 @@ function updateCard(field: string): void {
   // Actualizar checkbox de requerido
   if (elements.requiredCheckbox) {
     elements.requiredCheckbox.checked = rule.required
+  }
+
+  // Actualizar checkbox de único
+  if (elements.uniqueCheckbox) {
+    elements.uniqueCheckbox.checked = rule.unique
   }
 
   // Actualizar checkboxes de tipos
@@ -367,6 +375,13 @@ function handleRequiredChange(checked: boolean): void {
   updateDebugPanel({ validationRules })
 }
 
+function handleUniqueChange(checked: boolean): void {
+  if (!currentField) return
+  validationRules[currentField].unique = checked
+  updateSidebar()
+  updateDebugPanel({ validationRules })
+}
+
 function handleTypeChange(type: string, checked: boolean): void {
   if (!currentField) return
 
@@ -475,6 +490,12 @@ function setupEventListeners(): void {
   elements.requiredCheckbox?.addEventListener('change', (e) => {
     const target = e.target as HTMLInputElement
     handleRequiredChange(target.checked)
+  })
+
+  // Checkbox de único
+  elements.uniqueCheckbox?.addEventListener('change', (e) => {
+    const target = e.target as HTMLInputElement
+    handleUniqueChange(target.checked)
   })
 
   // Checkboxes de tipos

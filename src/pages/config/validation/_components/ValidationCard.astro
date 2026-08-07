@@ -21,20 +21,36 @@ import DateFormatSelector from './DateFormatSelector.astro'
       </div>
     </div>
 
-    <div class="mb-4">
-      <h4 class="mb-2 text-base text-heading">Requerido</h4>
-
-      <label
-        class="flex cursor-pointer justify-between rounded-main border border-border p-2.5 text-sm text-heading transition-all duration-200 hover:border-primary hover:bg-primary-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-2 focus-visible:outline-ring has-checked:bg-primary-foreground has-checked:text-primary has-checked:ring-primary"
-      >
-        <span class="flex items-center gap-2">
-          <span class="flex items-center justify-center rounded-main bg-primary-foreground p-1" aria-hidden="true">
-            <Icon name="BadgeCheck" class="size-4" />
+    <div class="mb-4 grid grid-cols-2 gap-4">
+      <div>
+        <h4 class="mb-2 text-base text-heading">Requerido</h4>
+        <label
+          class="flex cursor-pointer justify-between rounded-main border border-border p-2.5 text-sm text-heading transition-all duration-200 hover:border-primary hover:bg-primary-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-2 focus-visible:outline-ring has-checked:bg-primary-foreground has-checked:text-primary has-checked:ring-primary"
+        >
+          <span class="flex items-center gap-2">
+            <span class="flex items-center justify-center rounded-main bg-primary-foreground p-1" aria-hidden="true">
+              <Icon name="BadgeCheck" class="size-4" />
+            </span>
+            Requerido
           </span>
-          Requerido
-        </span>
-        <input type="checkbox" data-required-checkbox class="block accent-primary checked:border-primary focus-visible:outline-2 focus-visible:outline-ring" aria-label="Marcar campo como requerido" />
-      </label>
+          <input type="checkbox" data-required-checkbox class="block accent-primary checked:border-primary focus-visible:outline-2 focus-visible:outline-ring" aria-label="Marcar campo como requerido" />
+        </label>
+      </div>
+
+      <div>
+        <h4 class="mb-2 text-base text-heading">Valor Único</h4>
+        <label
+          class="flex cursor-pointer justify-between rounded-main border border-border p-2.5 text-sm text-heading transition-all duration-200 hover:border-primary hover:bg-primary-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-2 focus-visible:outline-ring has-checked:bg-primary-foreground has-checked:text-primary has-checked:ring-primary"
+        >
+          <span class="flex items-center gap-2">
+            <span class="flex items-center justify-center rounded-main bg-primary-foreground p-1" aria-hidden="true">
+              <Icon name="Fingerprint" class="size-4" />
+            </span>
+            Único
+          </span>
+          <input type="checkbox" data-unique-checkbox class="block accent-primary checked:border-primary focus-visible:outline-2 focus-visible:outline-ring" aria-label="Marcar campo como único" />
+        </label>
+      </div>
     </div>
 
     <div class="mb-4">

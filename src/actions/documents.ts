@@ -378,6 +378,7 @@ export const documents = {
           filename: `CargaMasiva_${template_name || uuid_template}.xlsx`,
         } as BulkFileResponse
       } catch (error) {
+        console.error('❌ Error en downloadBulkTemplate:', error);
         await handleApiError(error, request)
       }
     },
