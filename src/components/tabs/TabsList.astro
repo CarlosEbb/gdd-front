@@ -6,6 +6,13 @@ interface Props {
 const { class: className } = Astro.props
 ---
 
-<div class:list={['inline-flex h-11 items-center justify-center rounded-main border border-border bg-background p-1', className]} role="tablist">
+<div
+  class:list={[
+    'inline-flex h-11 items-center justify-center rounded-main border border-border bg-background p-1',
+    'in-data-[tabs-variant=line]:h-auto in-data-[tabs-variant=line]:w-full in-data-[tabs-variant=line]:justify-start in-data-[tabs-variant=line]:gap-6 in-data-[tabs-variant=line]:rounded-none in-data-[tabs-variant=line]:border-0 in-data-[tabs-variant=line]:bg-transparent in-data-[tabs-variant=line]:p-0',
+    className,
+  ]}
+  role="tablist"
+>
   <slot />
 </div>
