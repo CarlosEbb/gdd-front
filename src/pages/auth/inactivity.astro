@@ -3,7 +3,7 @@ import AuthLayout from '@/layouts/AuthLayout.astro'
 import Icon from '@/components/ui/Icon.astro'
 ---
 
-<AuthLayout titleTabBrowser="Sesión expirada" titleCardAuth="Sesión expirada">
+<AuthLayout titleTabBrowser="Sesión expirada" titleCardAuth="Sesión expirada" descriptionCardAuth="Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente.">
   <div class="flex flex-col items-center justify-center py-5">
     <Icon name="Clock" size={64} stroke-width={1.5} class="text-yellow-500" />
     <p class="mt-5 text-lg font-semibold text-gray-900">Tu session ha expirado por inactividad.</p>
