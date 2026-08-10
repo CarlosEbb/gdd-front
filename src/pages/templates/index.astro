@@ -1,19 +1,26 @@
 ---
 import TemplateCard from '@/components/ui/TemplateCard.astro'
 import MainLayout from '@/layouts/MainLayout.astro'
-import { Box, File, FileText, NotepadText, Scale, ScrollText } from '@lucide/astro'
-import Icon from '@/components/ui/Icon.astro'
+import { Box, File, FileText, LayoutGrid, NotepadText, Scale, ScrollText } from '@lucide/astro'
 import { actions } from 'astro:actions'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import Modal from '@/components/modal/Modal.astro'
 import Select from '@/components/form/Select.astro'
 import Input from '@/components/form/Input.astro'
 import Button from '@/components/ui/Button.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import Container from '@/components/ui/Container.astro'
+import type { Templates } from '@/types/templates'
+import Header from '@/components/ui/Header.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Icon from '@/components/ui/Icon.astro'
+import ModalCreateTemplatesOfDocuments from './_components/ModalCreateTemplatesOfDocuments.astro'
 
 const workspaces = (await Astro.session?.get('workspaces')) || []
 const { data, error } = await Astro.callAction(actions.templates.get, {})
 
-const TEMPLATES = data?.data?.categories ?? []
+const TEMPLATES = data?.data ?? []
 
 const CATEGORIES = {
   Facturas: { name: 'Facturas', icon: File, color: 'bg-blue-500/20 text-blue-500/80' },
@@ -22,20 +29,30 @@ const CATEGORIES = {
   Productos: { name: 'Productos', icon: Box, color: 'bg-pink-500/20 text-pink-500/80' },
   Documentos: { name: 'Documentos', icon: Scale, color: 'bg-purple-500/20 text-purple-500/80' },
   Boletas: { name: 'Boletas', icon: NotepadText, color: 'bg-green-500/20 text-green-500/80' },
+  'Mis plantillas': { name: 'Mis plantillas', icon: LayoutGrid, color: 'bg-gray-500/20 text-gray-500/80' },
 } as const
 
-const categories = TEMPLATES.map((template) => template.category)
+const getNormalizedCategory = (category: string) => {
+  const keys = Object.keys(CATEGORIES) as Array<keyof typeof CATEGORIES>
+  const matchedKey = keys.find((key) => key.toLowerCase() === category.toLowerCase())
+  return matchedKey || category
+}
+
+const categories = TEMPLATES.map((template: Templates) => getNormalizedCategory(template.category))
 const uniqueCategories = [...new Set(categories)]
-const AssignedCategories = uniqueCategories.map((category) => CATEGORIES[category as keyof typeof CATEGORIES])
+const AssignedCategories = uniqueCategories
+  .map((category) => CATEGORIES[category as keyof typeof CATEGORIES])
+  .filter((category): category is (typeof CATEGORIES)[keyof typeof CATEGORIES] => category !== undefined)
 
 const groupedTemplates = () => {
   const grouped: { [key: string]: typeof TEMPLATES } = {}
 
   TEMPLATES.forEach((template) => {
-    if (!grouped[template.category]) {
-      grouped[template.category] = []
+    const normCategory = getNormalizedCategory(template.category)
+    if (!grouped[normCategory]) {
+      grouped[normCategory] = []
     }
-    grouped[template.category].push(template)
+    grouped[normCategory].push(template)
   })
   return grouped
 }
@@ -43,73 +60,94 @@ const groupedTemplates = () => {
 const currentPath = Astro.url.pathname
 ---
 
-<MainLayout class="ml-16 p-0 md:ml-24">
-  <div class="relative flex-1 overflow-auto">
-    <div class="w-full bg-linear-to-l from-blue-300/30 via-indigo-300/30 to-violet-300/30 mask-b-from-20% mask-b-to-95%">
-      <div class="mx-auto max-w-6xl p-6">
-        <div class="mb-8 text-center">
-          <h1 class="mt-24 text-2xl font-bold md:text-4xl">Descubre nuestras plantillas más recientes</h1>
-
-          <div class="relative mx-auto my-2 mb-8 max-w-2xl py-5 md:my-5 md:py-10">
-            <div class="absolute top-1/2 left-4 -translate-y-1/2">
-              <Icon name="Search" stroke-width={1.5} size={16} />
-            </div>
-            <input
-              type="text"
-              id="search-input"
-              placeholder="Buscar plantillas"
-              class="w-full rounded-lg border border-custom-blue3/40 bg-white py-4 pr-14 pl-12 text-xl text-neutral-950 placeholder-gray-500 shadow-lg focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-            <div class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400"></div>
+<MainLayout title="Plantillas">
+  <Container>
+    <Header title="Plantillas recientes" subtitle={`Total: ${TEMPLATES.length} plantillas`}>
+      <PermissionGuard slot="actions" permission="templates.create">
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Button size="sm" icon="Plus" data-open-modal="create-template-of-document">Crear plantilla</Button>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <button class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted" data-open-modal="create-template-of-document">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear plantilla
+              </button>
+            </Dropdown>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+      </PermissionGuard>
+    </Header>
 
-  {
-    !error ? (
-      <>
-        <div id="categories-sticky" class="sticky top-14 z-10 -mt-10 flex snap-x items-center gap-2 overflow-x-auto transition-colors duration-300 md:justify-center md:gap-3">
-          {AssignedCategories.map((item, idx) => (
-            <a href={`#${item.name}`} class="group flex snap-start flex-col items-center gap-2 rounded-lg px-2 py-1 whitespace-nowrap transition-all duration-100 hover:bg-white/30 md:px-4 md:py-2">
-              <div class={`size-10 rounded-lg md:size-14 ${item.color} flex items-center justify-center text-xl group-hover:scale-105`}>
-                <item.icon class="size-5 group-hover:animate-bounce md:size-8" stroke-width={1.5} />
-              </div>
-              <span class="text-xs font-medium text-gray-700">{item.name}</span>
-            </a>
-          ))}
-        </div>
-        <div class="mx-auto max-w-7xl">
-          <section class="mt-20 mb-24">
-            <div id="no-results-message" class="hidden px-10 py-16">
-              <EmptyState
-                title="No se encontraron plantillas"
-                description="No hay plantillas que coincidan con tu búsqueda. Intenta con otros términos."
-                state="notFound"
-                href="#"
-                hrefText="Limpiar búsqueda"
-              />
-            </div>
-            <div class="space-y-8" id="category-templates">
-              {Object.entries(groupedTemplates()).map(([category, templates]) => (
+    <StateSwitch hasError={error !== undefined}>
+      <div class="sticky top-14 z-30 mb-4 w-full bg-foreground py-2">
+        <Input type="search" placeholder="Buscar por nombre o categoría..." id="search-input" name="search" />
+      </div>
+
+      <div id="categories-sticky" class="flex gap-8 border-b border-border">
+        <button
+          type="button"
+          data-category="all"
+          class="category-tab -mb-px flex cursor-pointer items-center gap-2 border-b-2 border-primary pb-3 text-sm font-semibold text-primary transition-all hover:text-primary"
+        >
+          <LayoutGrid class="size-4" stroke-width={1.5} />
+          <span class="text-sm">Todas</span>
+        </button>
+        {
+          AssignedCategories.map((item) => (
+            <button
+              type="button"
+              data-category={item.name}
+              class="category-tab -mb-px flex cursor-pointer items-center gap-2 border-b-2 border-transparent pb-3 text-sm text-subheading transition-all hover:text-primary"
+            >
+              <item.icon class="size-4" stroke-width={1.5} />
+              <span class="text-sm">{item.name}</span>
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="mt-6 mb-10">
+        <section class="">
+          <div id="no-results-message" class="hidden px-10 py-16">
+            <EmptyState
+              title="No se encontraron plantillas"
+              description="No hay plantillas que coincidan con tu búsqueda. Intenta con otros términos."
+              state="notFound"
+              href="#"
+              hrefText="Limpiar búsqueda"
+            />
+          </div>
+          <div class="space-y-8" id="category-templates">
+            {
+              Object.entries(groupedTemplates()).map(([category, templates]) => (
                 <div id={category.charAt(0).toUpperCase() + category.slice(1)} class="category-section md-px-4 scroll-mt-44 px-10 lg:px-0">
-                  <h2 class="mb-4 text-lg font-semibold text-gray-700">{category.charAt(0).toUpperCase() + category.slice(1)}</h2>
+                  <h2 class="mb-4 text-lg font-semibold text-heading">{category.charAt(0).toUpperCase() + category.slice(1)}</h2>
                   <div class="xs:grid-cols-2 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
                     {templates.map((template) => (
                       <TemplateCard template={template} />
                     ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </>
-    ) : (
-      <EmptyState title="Error al cargar las plantillas" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
-    )
-  }
+              ))
+            }
+          </div>
+        </section>
+      </div>
+
+      <div slot="error">
+        <Container>
+          <EmptyState title="Error al cargar las plantillas" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
+        </Container>
+      </div>
+      <div slot="empty">
+        <Container>
+          <EmptyState title="No se encontraron plantillas" description="No hay plantillas disponibles." state="notFound" />
+        </Container>
+      </div>
+    </StateSwitch>
+  </Container>
 
   <Modal modalId="create-template" title="Crear plantilla">
     <form class="space-y-6" id="create-template-form">
@@ -131,13 +169,28 @@ const currentPath = Astro.url.pathname
         <Input label="Descripción" name="description" placeholder="Ingrese la descripción del documento" required />
         <input type="hidden" name="uuid_category" id="uuid_category" value="" required readonly />
       </div>
-
-      <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
-        <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-        <Button type="submit" size="sm" id="btn-create-template" loadingText="Creando documento...">Crear documento</Button>
-      </div>
     </form>
+
+    <div slot="footer">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" form="create-template-form" id="btn-create-template" loadingText="Creando documento...">Crear documento</Button>
+    </div>
   </Modal>
+
+  <Modal modalId="delete-template" title="Eliminar plantilla">
+    <div class="flex flex-col items-center justify-center py-5">
+      <Icon name="Trash" size={48} stroke-width={1.5} class="text-red-300" />
+      <p class="mb-4 text-center">¿Estás seguro de querer eliminar esta plantilla?</p>
+
+      <input type="hidden" name="uuid_template" id="uuid_template" value="" required hidden />
+    </div>
+    <div slot="footer">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="button" size="sm" variant="destructive" id="btn-delete-template">Eliminar</Button>
+    </div>
+  </Modal>
+
+  <ModalCreateTemplatesOfDocuments />
 </MainLayout>
 
 <script type="application/json" id="templates-data" set:html={JSON.stringify(TEMPLATES)} />
@@ -151,6 +204,7 @@ const currentPath = Astro.url.pathname
   interface Template {
     uuid: string
     title: string
+    category: string
   }
 
   document.addEventListener('astro:page-load', () => {
@@ -162,12 +216,17 @@ const currentPath = Astro.url.pathname
       inputIdTemplate: document.getElementById('uuid_category') as HTMLInputElement,
       searchInput: document.getElementById('search-input') as HTMLInputElement,
       noResultsMessage: document.getElementById('no-results-message') as HTMLElement,
+      modalDeleteTemplate: document.getElementById('delete-template') as HTMLDialogElement,
+      btnDeleteTemplate: document.getElementById('btn-delete-template') as HTMLButtonElement,
+      inputIdDeleteTemplate: document.getElementById('uuid_template') as HTMLInputElement,
     }
 
     if (!elements.categoryTemplates || !elements.createTemplateForm) return
 
     const dataScript = document.getElementById('templates-data')
     const templates: Template[] = dataScript ? JSON.parse(dataScript.textContent || '[]') : []
+    const categoryTabs = document.querySelectorAll<HTMLButtonElement>('.category-tab')
+    let activeCategory = 'all'
 
     const toggleElement = (element: HTMLElement, show: boolean) => {
       element.style.display = show ? '' : 'none'
@@ -178,8 +237,20 @@ const currentPath = Astro.url.pathname
       add ? element.classList.add(className) : element.classList.remove(className)
     }
 
+    // Actualizar estado visual de las tabs
+    const updateTabsActiveState = (activeCat: string) => {
+      categoryTabs.forEach((tab) => {
+        const isActive = tab.dataset.category === activeCat
+        tab.classList.toggle('border-primary', isActive)
+        tab.classList.toggle('text-primary', isActive)
+        tab.classList.toggle('font-semibold', isActive)
+        tab.classList.toggle('border-transparent', !isActive)
+        tab.classList.toggle('text-subheading', !isActive)
+      })
+    }
+
     const showAllTemplates = () => {
-      const allCards = elements.categoryTemplates.querySelectorAll<HTMLElement>('[id]')
+      const allCards = elements.categoryTemplates.querySelectorAll<HTMLElement>('.category-section [id]')
       const allSections = elements.categoryTemplates.querySelectorAll<HTMLElement>('.category-section')
 
       allCards.forEach((card) => toggleElement(card, true))
@@ -187,8 +258,16 @@ const currentPath = Astro.url.pathname
       toggleClass(elements.noResultsMessage, 'hidden', true)
     }
 
-    const getFilteredUuids = (term: string): Set<string> => {
-      return new Set(templates.filter((template) => template.title?.toLowerCase().includes(term)).map((template) => template.uuid))
+    const getFilteredUuids = (term: string, category: string): Set<string> => {
+      return new Set(
+        templates
+          .filter((template) => {
+            const matchesSearch = term === '' || template.title?.toLowerCase().includes(term) || template.category?.toLowerCase().includes(term)
+            const matchesCategory = category === 'all' || template.category?.toLowerCase() === category.toLowerCase()
+            return matchesSearch && matchesCategory
+          })
+          .map((template) => template.uuid)
+      )
     }
 
     const processSectionVisibility = (section: HTMLElement, filteredUuids: Set<string>): number => {
@@ -205,16 +284,16 @@ const currentPath = Astro.url.pathname
       return visibleCount
     }
 
-    // Función principal de filtrado
-    const filterTemplates = (searchTerm: string) => {
-      const term = searchTerm.toLowerCase().trim()
+    // Función principal de filtrado (combina búsqueda + categoría)
+    const applyFilters = () => {
+      const term = (elements.searchInput?.value || '').toLowerCase().trim()
 
-      if (term === '') {
+      if (term === '' && activeCategory === 'all') {
         showAllTemplates()
         return
       }
 
-      const filteredUuids = getFilteredUuids(term)
+      const filteredUuids = getFilteredUuids(term, activeCategory)
       const categorySections = elements.categoryTemplates.querySelectorAll<HTMLElement>('.category-section')
 
       let totalVisible = 0
@@ -227,8 +306,8 @@ const currentPath = Astro.url.pathname
 
     // Event Listeners - Búsqueda
     const setupSearchListeners = () => {
-      elements.searchInput?.addEventListener('input', (e) => {
-        filterTemplates((e.target as HTMLInputElement).value)
+      elements.searchInput?.addEventListener('input', () => {
+        applyFilters()
       })
 
       elements.noResultsMessage?.addEventListener('click', (e) => {
@@ -238,8 +317,22 @@ const currentPath = Astro.url.pathname
         if (isLink && elements.searchInput) {
           e.preventDefault()
           elements.searchInput.value = ''
-          filterTemplates('')
+          activeCategory = 'all'
+          updateTabsActiveState(activeCategory)
+          applyFilters()
         }
+      })
+    }
+
+    // Event Listeners - Filtros de categoría
+    const setupCategoryFilters = () => {
+      categoryTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const category = tab.dataset.category || 'all'
+          activeCategory = category
+          updateTabsActiveState(activeCategory)
+          applyFilters()
+        })
       })
     }
 
@@ -247,7 +340,23 @@ const currentPath = Astro.url.pathname
     const setupTemplateClickListener = () => {
       elements.categoryTemplates.addEventListener('click', (event) => {
         const target = event.target as HTMLElement
-        const uuidTemplate = target.closest('[id]')?.id
+
+        // Si se hizo click en el botón de eliminar, abrir el modal de delete-template
+        const deleteBtn = target.closest('.delete-template-btn') as HTMLButtonElement | null
+        if (deleteBtn) {
+          event.stopPropagation()
+          const uuid = deleteBtn.dataset.uuid
+          if (elements.inputIdDeleteTemplate && uuid) {
+            elements.inputIdDeleteTemplate.value = uuid
+          }
+          elements.modalDeleteTemplate?.showModal()
+          return
+        }
+
+        const card = target.closest('.category-section [id]') as HTMLElement | null
+        if (!card) return
+
+        const uuidTemplate = card.id
 
         if (elements.inputIdTemplate && uuidTemplate) {
           elements.inputIdTemplate.value = uuidTemplate
@@ -256,11 +365,42 @@ const currentPath = Astro.url.pathname
       })
     }
 
+    // Observer para destacar la categoría visible al hacer scroll
+    const setupSectionObserver = () => {
+      const categorySections = elements.categoryTemplates.querySelectorAll<HTMLElement>('.category-section')
+      if (!categorySections.length) return
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          // Solo actualizar tabs por scroll si no hay filtro de categoría activo
+          if (activeCategory !== 'all') return
+          const searchTerm = (elements.searchInput?.value || '').trim()
+          if (searchTerm !== '') return
+
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              const sectionId = entry.target.id
+              if (sectionId) {
+                updateTabsActiveState(sectionId)
+              }
+              break
+            }
+          }
+        },
+        {
+          threshold: 0.3,
+          rootMargin: '-80px 0px -60% 0px',
+        }
+      )
+
+      categorySections.forEach((section) => observer.observe(section))
+    }
+
     // Configurar sticky header observer
     const setupStickyObserver = () => {
       if (!elements.sticky) return
 
-      const stickyClasses = ['bg-[#fdfaff]', 'backdrop-blur-sm', 'border-b', 'border-gray-200']
+      const stickyClasses = ['bg-[#fdfaff]', 'backdrop-blur-sm', 'border-gray-200']
 
       const observer = new IntersectionObserver(
         ([entry]) => {
@@ -298,10 +438,10 @@ const currentPath = Astro.url.pathname
         }
 
         toast.success(data.message)
-        const { uuid, id_workspace, title: templateTitle } = data.data.template
-        const { build_number } = data.data.version
+        const { uuid, uuidWorkspace, title: templateTitle } = data.data.template
+        const { buildNumber } = data.data.lastVersion || {}
 
-        navigate(`/editor/${uuid}?build_number=${build_number}&id_workspace=${id_workspace}&name_document=${templateTitle}`)
+        navigate(`/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWorkspace}&name_document=${templateTitle}`)
         elements.modalCreateTemplate?.close()
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Error al guardar la plantilla'
@@ -312,10 +452,40 @@ const currentPath = Astro.url.pathname
       }
     }
 
+    // Handler para eliminar template
+    const handleDeleteTemplate = async () => {
+      const uuid = elements.inputIdDeleteTemplate?.value
+      if (!uuid) return
+
+      try {
+        setButtonLoading('#btn-delete-template', true)
+        const { data, error } = await callAction(actions.templates.delete({ uuid }))
+
+        if (error) {
+          toast.error(error.message)
+          return
+        }
+
+        toast.success('Plantilla eliminada correctamente')
+        elements.modalDeleteTemplate?.close()
+        navigate(data.data.redirect)
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error al eliminar la plantilla'
+        console.log(message)
+        toast.error('Error al eliminar la plantilla')
+        elements.modalDeleteTemplate?.close()
+      } finally {
+        setButtonLoading('#btn-delete-template', false)
+      }
+    }
+
     // Inicializar todos los listeners
     setupSearchListeners()
+    setupCategoryFilters()
     setupTemplateClickListener()
     setupStickyObserver()
+    setupSectionObserver()
     elements.createTemplateForm.addEventListener('submit', handleCreateTemplate)
+    elements.btnDeleteTemplate?.addEventListener('click', handleDeleteTemplate)
   })
 </script>

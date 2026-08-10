@@ -1,10 +1,11 @@
 ---
-import AuthLayout from '@/layouts/AuthLayout.astro'
-import Input from '@/components/form/Input.astro'
-import Button from '@/components/ui/Button.astro'
+const token = Astro.cookies.get('token')
 
-const remembered = Astro.cookies.get('remembered_username')?.value ?? ''
-const isRemembered = Astro.cookies.has('remembered_username') ?? ''
+if (token) {
+  return Astro.redirect('/home')
+} else {
+  return Astro.redirect('/auth/login')
+}
 ---
 
 <AuthLayout titleTabBrowser="Iniciar sesión" titleCardAuth="Ingresa tu información">

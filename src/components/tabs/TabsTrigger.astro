@@ -9,11 +9,13 @@ const { value, class: className } = Astro.props
 
 <button
   class:list={[
-    'inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium text-custom-lucky-gray-medium transition-all duration-200',
-    'hover:text-custom-purple-light',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-custom-purple-light focus-visible:ring-offset-2',
+    'inline-flex flex-1 cursor-pointer items-center justify-center self-stretch rounded-main px-3 text-sm font-medium whitespace-nowrap text-subheading transition-all duration-200',
+    'hover:text-heading',
+    'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none',
     'disabled:pointer-events-none disabled:opacity-50',
-    'data-[state=active]:bg-white data-[state=active]:text-custom-purple-light data-[state=active]:shadow-sm',
+    'data-[state=active]:bg-muted data-[state=active]:text-heading',
+    'in-data-[tabs-variant=line]:flex-none in-data-[tabs-variant=line]:rounded-none in-data-[tabs-variant=line]:border-b-2 in-data-[tabs-variant=line]:border-transparent in-data-[tabs-variant=line]:px-1 in-data-[tabs-variant=line]:pb-2.5',
+    'in-data-[tabs-variant=line]:data-[state=active]:border-primary in-data-[tabs-variant=line]:data-[state=active]:bg-transparent in-data-[tabs-variant=line]:data-[state=active]:text-primary',
     className,
   ]}
   role="tab"

@@ -1,0 +1,83 @@
+---
+import Container from '@/components/ui/Container.astro'
+import MainLayout from '@/layouts/MainLayout.astro'
+import Link from '@/components/ui/Link.astro'
+import Icon from '@/components/ui/Icon.astro'
+import { actions } from 'astro:actions'
+import DataGrid from '@/components/ui/DataGrid.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import type { DetailsClient } from '@/types/clients'
+import SearchFilter from '@/components/form/SearchFilter.astro'
+import { formatDate } from '@/scripts/utils'
+import Header from '@/components/ui/Header.astro'
+import CardList from '@/components/ui/CardList.astro'
+import Avatar from '@/components/ui/Avatar.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+
+const currentPath = Astro.url.pathname
+const { data, error } = await Astro.callAction(actions.clients.list, {})
+
+const clients = data?.data || []
+const hasClients = clients.length > 0
+const totalClients = clients.length
+---
+
+<MainLayout title="Clientes">
+  <Container>
+    <Header title="Gestión de clientes" subtitle={`Total: ${totalClients} clientes`}>
+      <PermissionGuard slot="actions" permission="clients.create">
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Link size="sm" icon="Plus" href="/clients/new">Crear Cliente</Link>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <a href="/clients/new" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear cliente
+              </a>
+            </Dropdown>
+          </div>
+        </div>
+      </PermissionGuard>
+    </Header>
+
+    <DataGrid hasData={hasClients} isError={error} grid="x1">
+      <EmptyState slot="error-state" title="Error al cargar los clientes" description="Intenta nuevamente." href={currentPath} state="error" />
+
+      <EmptyState slot="empty-state" title="No hay clientes disponibles" description="No tienes ningún cliente registrado." href={currentPath} state="notFound" />
+
+      <div slot="header" class="mb-4">
+        <SearchFilter placeholder="Buscar cliente..." target=".client-item" keys={['name', 'rif']} />
+      </div>
+
+      <div class="overflow-hidden rounded-main border border-border bg-background">
+        {
+          clients.map((client: DetailsClient) => (
+            <CardList
+              class="client-item"
+              data-name={client.name}
+              data-rif={client.rif}
+              title={client.name}
+              description={client.rif}
+              secondaryText={client.createdAt ? `Creado: ${formatDate(client.createdAt as string)}` : ''}
+            >
+              <Avatar slot="avatar" size="lg" name={client.name} lastName={client.rif} photo={client.logo} />
+              <div slot="actions" class="flex gap-1">
+                <PermissionGuard permission="clients.update">
+                  <Link href={`/clients/${client.uuid}/edit`} variant="outline" size="sm" iconOnly>
+                    <Icon stroke-width={1.5} name="Pencil" size={16} />
+                  </Link>
+                </PermissionGuard>
+                <Link href={`/clients/${client.uuid}`} variant="outline" size="sm" iconOnly>
+                  <Icon stroke-width={1.5} name="ChevronRight" size={16} />
+                </Link>
+              </div>
+            </CardList>
+          ))
+        }
+      </div>
+    </DataGrid>
+  </Container>
+</MainLayout>

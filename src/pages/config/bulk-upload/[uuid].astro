@@ -1,0 +1,442 @@
+---
+import Layout from '../_components/Layout.astro'
+import StepDownloadTemplate from './_components/StepDownloadTemplate.astro'
+import StepUploadFile from './_components/StepUploadFile.astro'
+import StepProgressResults from './_components/StepProgressResults.astro'
+
+const { uuid = '' } = Astro.params
+
+const stats = [
+  { id: 'count-processed', label: 'Procesados', color: 'text-heading' },
+  { id: 'count-success', label: 'Exitosos', color: 'text-green-600' },
+  { id: 'count-error', label: 'Errores', color: 'text-red-600' },
+]
+---
+
+<Layout title="Carga Masiva">
+  <div class="space-y-4">
+    <StepDownloadTemplate uuid={uuid} />
+    <StepUploadFile />
+    <StepProgressResults stats={stats} />
+    <div class="mt-10 h-20"></div>
+  </div>
+</Layout>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { setButtonLoading } from '@/scripts/utils'
+  import type { BulkResult, BulkStatus } from '@/types/documents'
+
+  const VALID_EXTENSIONS = ['.xlsx', '.csv']
+  const MAX_FILE_SIZE_MB = 10
+  const POLL_INTERVAL_MS = 1500
+  const CIRCLE_RADIUS = 28
+  const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS
+
+  function initBulkUpload() {
+    const currentTemplateUuid = (document.getElementById('current-template-uuid') as HTMLInputElement)?.value
+    if (!currentTemplateUuid) return
+
+    const downloadForm = document.getElementById('download-template-form') as HTMLFormElement
+    const uploadForm = document.getElementById('upload-bulk-form') as HTMLFormElement
+    const fileInput = document.getElementById('file-upload') as HTMLInputElement
+    const fileNameDisplay = document.getElementById('file-name-display')
+    const btnUpload = document.getElementById('btn-upload') as HTMLButtonElement
+    const dropZone = document.getElementById('drop-zone')
+
+    // Elementos del estado de carga de archivo
+    const uploadStateDefault = document.getElementById('upload-state-default')
+    const uploadStateSuccess = document.getElementById('upload-state-success')
+    const successFileName = document.getElementById('success-file-name')
+    const successFileSize = document.getElementById('success-file-size')
+    const btnChangeFile = document.getElementById('btn-change-file')
+
+    const progressIdle = document.getElementById('progress-idle')
+    const progressContainer = document.getElementById('progress-container')
+    const progressCircle = document.querySelector<SVGCircleElement>('#progress-circle')
+    const progressText = document.getElementById('progress-text')
+    const progressPercentage = document.getElementById('progress-percentage')
+    const countProcessed = document.getElementById('count-processed')
+    const countSuccess = document.getElementById('count-success')
+    const countError = document.getElementById('count-error')
+    const resultsContainer = document.getElementById('results-container')
+    const resultsList = document.getElementById('bulk-results-list')
+    const resultTemplate = document.getElementById('result-item-template') as HTMLTemplateElement
+    const btnDownloadReport = document.getElementById('btn-download-report') as HTMLButtonElement
+
+    let currentJobId: string | null = null
+    let pollInterval: number
+    let renderedRows = 0
+
+    if (progressCircle) {
+      progressCircle.style.strokeDasharray = `${CIRCLE_CIRCUMFERENCE}`
+      progressCircle.style.strokeDashoffset = `${CIRCLE_CIRCUMFERENCE}`
+    }
+
+    const getStep = (step: number) => document.querySelector<HTMLDetailsElement>(`.accordion-step[data-step="${step}"]`)
+
+    const completeStepAndAdvance = (step: number) => {
+      const current = getStep(step)
+      if (!current) return
+      current.dataset.completed = 'true'
+      current.open = false
+
+      const next = getStep(step + 1)
+      if (next) next.open = true
+    }
+
+    const isValidFile = (file: File): boolean => {
+      const hasValidExtension = VALID_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext))
+      if (!hasValidExtension) {
+        toast.error(`Solo se permiten archivos ${VALID_EXTENSIONS.join(' o ')}`)
+        return false
+      }
+      if (file.size === 0) {
+        toast.error('El archivo está vacío')
+        return false
+      }
+      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        toast.error(`El archivo no puede superar los ${MAX_FILE_SIZE_MB} MB`)
+        return false
+      }
+      return true
+    }
+
+    const triggerDownload = (base64: string, filename: string) => {
+      const a = document.createElement('a')
+      a.href = base64
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    }
+
+    const formatBytes = (bytes: number, decimals = 1): string => {
+      if (bytes === 0) return '0 Bytes'
+      const k = 1024
+      const dm = decimals < 0 ? 0 : decimals
+      const sizes = ['Bytes', 'KB', 'MB', 'GB']
+      const i = Math.floor(Math.log(bytes) / Math.log(k))
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+    }
+
+    const handleFile = (file: File | undefined) => {
+      if (file && isValidFile(file)) {
+        if (fileNameDisplay) {
+          fileNameDisplay.textContent = file.name
+          fileNameDisplay.classList.add('text-primary', 'font-medium')
+        }
+        if (successFileName) {
+          successFileName.textContent = file.name
+        }
+        if (successFileSize) {
+          successFileSize.textContent = formatBytes(file.size)
+        }
+
+        // Mostrar estado de éxito y ocultar por defecto
+        if (uploadStateDefault) {
+          uploadStateDefault.classList.add('hidden')
+          uploadStateDefault.classList.remove('flex')
+        }
+        if (uploadStateSuccess) {
+          uploadStateSuccess.classList.remove('hidden')
+          uploadStateSuccess.classList.add('flex')
+        }
+
+        btnUpload.disabled = false
+
+        // Asignar el archivo al input manualmente si viene por drag&drop
+        if (fileInput.files && fileInput.files.length === 0) {
+          const dataTransfer = new DataTransfer()
+          dataTransfer.items.add(file)
+          fileInput.files = dataTransfer.files
+        }
+      } else {
+        fileInput.value = ''
+        if (fileNameDisplay) {
+          fileNameDisplay.textContent = 'Ningún archivo seleccionado'
+          fileNameDisplay.classList.remove('text-primary', 'font-medium')
+        }
+
+        // Mostrar estado por defecto y ocultar éxito
+        if (uploadStateDefault) {
+          uploadStateDefault.classList.remove('hidden')
+          uploadStateDefault.classList.add('flex')
+        }
+        if (uploadStateSuccess) {
+          uploadStateSuccess.classList.add('hidden')
+          uploadStateSuccess.classList.remove('flex')
+        }
+
+        btnUpload.disabled = true
+      }
+    }
+
+    fileInput?.addEventListener('change', (e) => {
+      handleFile((e.target as HTMLInputElement).files?.[0])
+    })
+
+    btnChangeFile?.addEventListener('click', (e) => {
+      e.preventDefault()
+      fileInput.click()
+    })
+
+    if (dropZone) {
+      const preventDefaults = (e: Event) => {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+
+      ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+        dropZone.addEventListener(eventName, preventDefaults)
+      })
+      ;['dragenter', 'dragover'].forEach((eventName) => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('bg-primary/5', 'border-primary'))
+      })
+      ;['dragleave', 'drop'].forEach((eventName) => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('bg-primary/5', 'border-primary'))
+      })
+
+      dropZone.addEventListener('drop', (e: DragEvent) => {
+        handleFile(e.dataTransfer?.files?.[0])
+      })
+    }
+
+    downloadForm?.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      setButtonLoading('#btn-download', true)
+
+      try {
+        const { data, error } = await actions.documents.downloadBulkTemplate({
+          uuid_template: currentTemplateUuid,
+          template_name: 'CargaMasiva',
+        })
+
+        if (error) throw error
+        if (!data?.base64) throw new Error('No se recibió el archivo del servidor')
+
+        triggerDownload(data.base64, data.filename || 'CargaMasiva.xlsx')
+        toast.success('Plantilla descargada con éxito')
+        completeStepAndAdvance(1)
+      } catch (err: any) {
+        toast.error(err.message || 'Error al descargar plantilla')
+      } finally {
+        setButtonLoading('#btn-download', false)
+      }
+    })
+
+    uploadForm?.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const file = fileInput.files?.[0]
+      if (!file) {
+        toast.error('Selecciona un archivo antes de iniciar el procesamiento')
+        return
+      }
+      if (!isValidFile(file)) return
+
+      setButtonLoading(btnUpload, true, { loadingText: 'Subiendo...' })
+
+      try {
+        const formData = new FormData()
+        formData.append('uuid_template', currentTemplateUuid)
+        formData.append('file', file)
+
+        const { data, error } = await actions.documents.uploadBulkDocument(formData)
+        if (error) throw error
+
+        const jobId = data?.data?.jobId
+        if (!jobId) throw new Error('No se recibió ID de tarea del servidor')
+
+        currentJobId = jobId
+        completeStepAndAdvance(2)
+        startPolling()
+      } catch (err: any) {
+        setButtonLoading(btnUpload, false)
+        toast.error(err.message || 'Error al subir el archivo')
+      }
+    })
+
+    btnDownloadReport?.addEventListener('click', async () => {
+      if (!currentJobId) {
+        toast.error('No hay un procesamiento finalizado para descargar el reporte')
+        return
+      }
+      setButtonLoading(btnDownloadReport, true)
+
+      try {
+        const { data, error } = await actions.documents.downloadBulkReport({ jobId: currentJobId })
+        if (error) throw error
+        if (!data?.base64) throw new Error('No se recibió el reporte del servidor')
+
+        triggerDownload(data.base64, data.filename || `Reporte_${currentJobId}.xlsx`)
+        toast.success('Reporte descargado con éxito')
+      } catch (err: any) {
+        toast.error(err.message || 'Error al descargar reporte')
+      } finally {
+        setButtonLoading(btnDownloadReport, false)
+      }
+    })
+
+    function resetProgressUI() {
+      renderedRows = 0
+      if (resultsList) resultsList.innerHTML = ''
+      progressIdle?.classList.add('hidden')
+      progressContainer?.classList.remove('hidden')
+      document.getElementById('processing-banner')?.classList.remove('hidden')
+      resultsContainer?.classList.add('hidden')
+      btnDownloadReport?.classList.add('hidden')
+      updateProgress({ status: 'queued' })
+    }
+
+    function startPolling() {
+      clearInterval(pollInterval)
+      resetProgressUI()
+      setButtonLoading(btnUpload, true, { loadingText: 'Procesando en servidor...' })
+
+      pollInterval = window.setInterval(async () => {
+        if (!currentJobId) return
+
+        try {
+          const { data, error } = await actions.documents.getBulkTaskStatus({ jobId: currentJobId })
+          if (error) throw error
+
+          const status = data?.data as BulkStatus | undefined
+          if (!status) return
+
+          updateProgress(status)
+          appendNewResults(status.results)
+
+          if (status.status === 'completed' || status.status === 'error') {
+            clearInterval(pollInterval)
+            finishProcess()
+          }
+        } catch (err) {
+          console.error('Error consultando estado', err)
+          clearInterval(pollInterval)
+          setButtonLoading(btnUpload, false)
+          document.getElementById('processing-banner')?.classList.add('hidden')
+          if (progressText) progressText.textContent = 'Se perdió la conexión con el servidor'
+          toast.error('No se pudo consultar el estado del procesamiento')
+        }
+      }, POLL_INTERVAL_MS)
+    }
+
+    function updateProgress(status: BulkStatus) {
+      const total = status.total || 0
+      const processed = status.processed || 0
+      const pct = total > 0 ? Math.round((processed / total) * 100) : 0
+
+      if (progressCircle) progressCircle.style.strokeDashoffset = `${CIRCLE_CIRCUMFERENCE * (1 - pct / 100)}`
+      if (progressPercentage) progressPercentage.textContent = `${pct}%`
+      if (countProcessed) countProcessed.textContent = `${processed}/${total}`
+      if (countSuccess) countSuccess.textContent = `${status.success || 0}`
+      if (countError) countError.textContent = `${status.errors || 0}`
+      if (progressText) progressText.textContent = total > 0 ? `Procesando fila ${Math.min(processed + 1, total)} de ${total}...` : 'En cola, esperando al servidor...'
+    }
+
+    function appendNewResults(results: BulkResult[] | undefined) {
+      if (!results || results.length <= renderedRows || !resultsList || !resultTemplate) return
+
+      resultsContainer?.classList.remove('hidden')
+      results.slice(renderedRows).forEach((result) => {
+        resultsList.appendChild(buildResultItem(result))
+      })
+      renderedRows = results.length
+    }
+
+    function buildResultItem(result: BulkResult): DocumentFragment {
+      const clone = resultTemplate.content.cloneNode(true) as DocumentFragment
+      const titleEl = clone.querySelector('h3')
+      const descEl = clone.querySelector('p')
+
+      if (titleEl) titleEl.textContent = `Fila #${result.row || '-'}`
+
+      if (result.status === 'success') {
+        showAvatar(clone, '.avatar-success')
+        if (descEl) descEl.textContent = 'Procesado con éxito'
+
+        const resultLink = clone.querySelector('.result-link') as HTMLAnchorElement | null
+        if (result.url && resultLink) {
+          resultLink.href = result.url
+          resultLink.classList.remove('hidden')
+        }
+      } else {
+        showAvatar(clone, '.avatar-error')
+        if (descEl) {
+          descEl.textContent = parseErrorMessage(result.error)
+          descEl.classList.replace('text-subheading', 'text-red-600')
+        }
+      }
+
+      return clone
+    }
+
+    function showAvatar(clone: DocumentFragment, selector: string) {
+      const avatar = clone.querySelector(selector)
+      avatar?.classList.remove('hidden')
+      avatar?.classList.add('flex')
+    }
+
+    function parseErrorMessage(error: string | undefined): string {
+      const message = error || 'Error desconocido'
+      if (!message.startsWith('[')) return message
+      try {
+        return JSON.parse(message).join(', ')
+      } catch {
+        return message
+      }
+    }
+
+    function finishProcess() {
+      setButtonLoading(btnUpload, false)
+      btnUpload.disabled = true
+      handleFile(undefined)
+
+      document.getElementById('processing-banner')?.classList.add('hidden')
+      btnDownloadReport?.classList.remove('hidden')
+      if (progressText) progressText.textContent = 'Procesamiento Finalizado'
+
+      toast.success('El procesamiento ha finalizado. Ve a la pestaña "Generados" para visualizar los nuevos documentos.')
+    }
+  }
+
+  document.addEventListener('astro:page-load', initBulkUpload)
+</script>
+
+<style>
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-8px) rotate(1.5deg);
+    }
+  }
+
+  @keyframes glow-shift {
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1) translate(0px, 0px);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.15) translate(4px, -4px);
+    }
+  }
+
+  .animate-float {
+    animation: float 4.5s ease-in-out infinite;
+  }
+
+  .animate-glow-shift {
+    animation: glow-shift 6s ease-in-out infinite;
+  }
+
+  .excel-grid-pattern {
+    background-size: 24px 24px;
+    background-image: linear-gradient(to right, rgba(16, 185, 129, 0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(16, 185, 129, 0.08) 1px, transparent 1px);
+  }
+</style>

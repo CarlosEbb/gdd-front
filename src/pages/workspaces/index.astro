@@ -1,0 +1,99 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import Container from '@/components/ui/Container.astro'
+import Header from '@/components/ui/Header.astro'
+import { actions } from 'astro:actions'
+import DataGrid from '@/components/ui/DataGrid.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import SearchFilter from '@/components/form/SearchFilter.astro'
+import Card from '@/components/ui/Card.astro'
+import Icon from '@/components/ui/Icon.astro'
+import { formatISODateWithIntl } from '@/scripts/utils'
+import Button from '@/components/ui/Button.astro'
+import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Select from '@/components/form/Select.astro'
+import FilterByClients from './_components/FilterByClients.astro'
+
+const currentPath = Astro.url.pathname
+const { data, error } = await Astro.callAction(actions.workspaces.list, {})
+
+const workspaces = data?.data || []
+const hasWorkspaces = workspaces.length > 0
+---
+
+<MainLayout title="Espacios de trabajo">
+  <Container>
+    <Header title="Gestión de espacios de trabajo" subtitle={`Total: ${workspaces.length} espacios`}>
+      <PermissionGuard slot="actions" permission="workspaces.create">
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Button size="sm" data-open-modal="create-workspace" icon="Plus">Crear Espacio</Button>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <button class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted" data-open-modal="create-workspace">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear espacio
+              </button>
+            </Dropdown>
+          </div>
+        </div>
+      </PermissionGuard>
+    </Header>
+
+    <DataGrid hasData={hasWorkspaces} isError={error} grid="x2">
+      <div slot="header" class="mb-4 flex w-full flex-col gap-3 md:flex-row md:items-center" data-workspaces-filters>
+        <div class="w-full md:flex-1">
+          <SearchFilter placeholder="Buscar espacio..." target=".workspace-item" keys="name" />
+        </div>
+
+        <PermissionGuard permission="admin.full">
+          <div class="hidden shrink-0 md:block md:w-64">
+            <FilterByClients />
+          </div>
+        </PermissionGuard>
+      </div>
+      {
+        workspaces.map((workspace: any) => (
+          <Card href={`/workspaces/${workspace.uuid}`} class="workspace-item" data-name={workspace.name} data-client={workspace.client?.uuid || ''}>
+            <div class="flex items-center gap-3">
+              <div class="flex size-9 items-center justify-center rounded-main border border-border text-heading">
+                <Icon name={workspace.icon || 'Folder'} stroke-width={1.6} size={18} />
+              </div>
+              <div class="flex w-full justify-between">
+                <div>
+                  <a href={`/workspaces/${workspace.uuid}`} class="relative z-20 leading-none font-medium tracking-tight text-heading hover:underline">
+                    {workspace.name}
+                  </a>
+                  {workspace.createdAt && <p class="text-sm text-subheading">Creado: {formatISODateWithIntl(workspace.createdAt)}</p>}
+                </div>
+                <div class:list={['size-2.5 rounded-full', workspace.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500']} title={workspace.status === 'ACTIVE' ? 'Activo' : 'Inactivo'} />
+              </div>
+            </div>
+
+            <div class="mt-4 flex flex-col items-start justify-start gap-2">
+              <a href={`/clients/${workspace.client?.uuid}`} class="relative z-20 cursor-pointer rounded-main bg-foreground p-1 text-sm font-medium text-heading hover:underline">
+                {workspace.client?.name || 'N/A'}
+              </a>
+              <a href={`/servers/${workspace.dataBase?.server?.uuid}`} class="relative z-20 cursor-pointer text-sm text-subheading hover:underline">
+                Servidor: {`${workspace.dataBase?.server?.ip}:${workspace.dataBase?.server?.puerto}` || 'N/A'}
+              </a>
+            </div>
+
+            <div slot="footer" class="flex items-center justify-between">
+              <span class="text-xs text-subheading">Documentos: {workspace.documents?.length || 0}</span>
+            </div>
+          </Card>
+        ))
+      }
+
+      <EmptyState slot="error-state" title="Error al cargar los espacios" description="Intenta nuevamente." href={currentPath} state="error" />
+
+      <EmptyState slot="empty-state" title="No hay espacios disponibles" description="No tienes ningún espacio registrado." href={currentPath} state="notFound" />
+    </DataGrid>
+
+    <WorkspaceFormModal mode="create" />
+  </Container>
+</MainLayout>

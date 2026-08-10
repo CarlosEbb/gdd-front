@@ -1,0 +1,25 @@
+---
+import Modal from './Modal.astro'
+import Input from '../form/Input.astro'
+import Button from '../ui/Button.astro'
+---
+
+<Modal modalId="edit-document-metadata" title="Editar metadata del documento">
+  <form class="space-y-6" id="edit-document-metadata-form">
+    <input type="hidden" name="uuid" />
+    <div>
+      <Input label="Titulo" type="text" name="titulo" data-error-required="El titulo es obligatorio" required placeholder="Escriba aquí" />
+    </div>
+    <div>
+      <Input label="Nombre" type="text" name="name" data-error-required="El nombre es obligatorio" required placeholder="Escriba aquí" />
+    </div>
+    <div>
+      <Input label="Descripción" type="text" name="descripcion" data-error-required="La descripción es obligatoria" required placeholder="Escriba aquí" />
+    </div>
+  </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" form="edit-document-metadata-form" id="btn-edit-document-metadata" loadingText="Guardando...">Guardar</Button>
+  </div>
+</Modal>

@@ -1,28 +1,119 @@
 ---
 import ListDocuments from './ListDocuments.astro'
 import SCardDocument from '@/components/skeleton/SCardDocument.astro'
+import Tabs from '@/components/tabs/Tabs.astro'
+import TabsList from '@/components/tabs/TabsList.astro'
+import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
+import Icon from '@/components/ui/Icon.astro'
 
 interface Props {
   title?: string
+  subtitle?: string
   limit?: number | null
   uuidWorkspace?: string | null
 }
 
-const { title = 'Documentos recientes', limit = null, uuidWorkspace = null } = Astro.props
-let grid = ''
-
-if (uuidWorkspace) {
-  grid = 'xs:grid-cols-2 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-3'
-} else {
-  grid = 'grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-}
+const { title = null, subtitle = null, limit = null, uuidWorkspace = null } = Astro.props
+const grid = uuidWorkspace ? 'xs:grid-cols-2 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-3' : 'grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+const hasFilters = Astro.slots.has('filters')
 ---
 
-<section class="mb-10">
-  <h2 class="mb-4 text-lg font-semibold text-gray-700">{title}</h2>
-  <ListDocuments limit={limit} uuidWorkspace={uuidWorkspace} server:defer>
-    <div class={`mb-10 grid ${grid}`} slot="fallback">
-      <SCardDocument number={limit ?? 7} />
+<section class="mb-10" data-documents-view-tabs>
+  <Tabs defaultValue="grid">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+      {
+        hasFilters ? (
+          <div class="min-w-0 flex-1">
+            <slot name="filters" />
+          </div>
+        ) : (
+          <div class="min-w-0 flex-1">
+            {title && <h2 class="text-lg font-semibold text-heading">{title}</h2>}
+            {subtitle && <p class="text-sm text-subheading">{subtitle}</p>}
+          </div>
+        )
+      }
+      <TabsList>
+        <TabsTrigger value="grid" class="gap-x-2">
+          <Icon name="LayoutGrid" stroke-width={1.5} size={16} />
+        </TabsTrigger>
+        <TabsTrigger value="list" class="gap-x-2">
+          <Icon name="List" stroke-width={1.5} size={16} />
+        </TabsTrigger>
+      </TabsList>
     </div>
-  </ListDocuments>
+
+    <ListDocuments limit={limit} uuidWorkspace={uuidWorkspace} server:defer>
+      <div class={`mb-10 grid ${grid}`} slot="fallback">
+        <SCardDocument number={limit ?? 7} />
+      </div>
+    </ListDocuments>
+  </Tabs>
 </section>
+
+<script>
+  const STORAGE_KEY = 'documents:view-mode'
+
+  function getTabsContainer(section: HTMLElement): HTMLElement | null {
+    return section.querySelector<HTMLElement>('[data-tabs-container]')
+  }
+
+  function syncContainer(section: HTMLElement) {
+    const tabsContainer = getTabsContainer(section)
+    if (!tabsContainer) return
+    const value = tabsContainer.getAttribute('data-tabs-value') || 'grid'
+    tabsContainer.querySelectorAll<HTMLElement>('[data-tabs-trigger]').forEach((trigger) => {
+      trigger.setAttribute('data-state', trigger.getAttribute('data-tabs-trigger') === value ? 'active' : 'inactive')
+    })
+    tabsContainer.querySelectorAll<HTMLElement>('[data-tabs-content]').forEach((content) => {
+      content.setAttribute('data-state', content.getAttribute('data-tabs-content') === value ? 'active' : 'inactive')
+    })
+  }
+
+  function applyStoredViewMode() {
+    const sections = document.querySelectorAll<HTMLElement>('[data-documents-view-tabs]')
+    if (!sections.length) return
+
+    const stored = localStorage.getItem(STORAGE_KEY)
+
+    sections.forEach((section) => {
+      const tabsContainer = getTabsContainer(section)
+      if (tabsContainer && (stored === 'grid' || stored === 'list')) {
+        tabsContainer.setAttribute('data-tabs-value', stored)
+      }
+      syncContainer(section)
+
+      // Observar inserciones del fragmento server:defer para reaplicar el estado a los nuevos [data-tabs-content].
+      if (section.dataset.viewModeObserved === 'true') return
+      section.dataset.viewModeObserved = 'true'
+
+      const observer = new MutationObserver(() => {
+        syncContainer(section)
+      })
+      observer.observe(section, { childList: true, subtree: true })
+    })
+  }
+
+  function handleTabsClick(e: Event) {
+    const trigger = (e.target as Element).closest<HTMLElement>('[data-tabs-trigger]')
+    if (!trigger) return
+    const container = trigger.closest<HTMLElement>('[data-documents-view-tabs]')
+    if (!container) return
+    const value = trigger.getAttribute('data-tabs-trigger')
+    if (value === 'grid' || value === 'list') {
+      localStorage.setItem(STORAGE_KEY, value)
+    }
+  }
+
+  let initialized = false
+  function initDocumentsViewMode() {
+    applyStoredViewMode()
+    if (!initialized) {
+      initialized = true
+      document.addEventListener('click', handleTabsClick)
+    }
+  }
+
+  initDocumentsViewMode()
+  document.addEventListener('astro:page-load', initDocumentsViewMode)
+</script>

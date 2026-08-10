@@ -1,0 +1,582 @@
+---
+import Input from '@/components/form/Input.astro'
+import PasswordValidator from '@/components/form/PasswordValidator.astro'
+import FormPageLayout from '@/layouts/FormPageLayout.astro'
+import FormBlock from '@/components/ui/FormBlock.astro'
+import Button from '@/components/ui/Button.astro'
+import SelectionCard from '@/components/form/SelectionCard.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import Accordion from '@/components/ui/Accordion.astro'
+import Select from '@/components/form/Select.astro'
+import { countries } from '@/constants/countries'
+import Avatar from '@/components/ui/Avatar.astro'
+import Icon from '@/components/ui/Icon.astro'
+import type { DetailsClient } from '@/types/clients'
+import type { PermissionCategory } from '@/types/permissions'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import { quickRoleConfigs } from '../_constants'
+
+interface Props {
+  isEdit?: boolean
+  userData?: any
+  clients?: (DetailsClient & { selected?: boolean })[]
+  clientsError?: any
+  hasClients?: boolean
+  permissions?: PermissionCategory[]
+  permissionsError?: any
+  hasPermissions?: boolean
+  role?: string
+}
+
+const { isEdit = false, userData, clients = [], clientsError, hasClients = false, permissions = [], permissionsError, hasPermissions = false, role } = Astro.props
+
+const user = userData?.data || null
+const userPermissionUuids = user?.permissionUuids || []
+
+const API_URL = import.meta.env.API_URL
+const getInitialsNameAndLastName = (name: string, lastName: string) => (name?.charAt(0) || '') + (lastName?.charAt(0) || '')
+const initials = user ? getInitialsNameAndLastName(user.name, user.lastName).toUpperCase() : ''
+const hasPhoto = !user?.photo || user?.photo === '{}'
+const photo = hasPhoto ? '' : `${API_URL}${user.photo}`
+const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
+
+const btnText = isEdit ? 'Actualizar usuario' : 'Crear usuario'
+const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
+---
+
+<FormPageLayout formId="form-user" submitText={btnText} loadingText={loadingText} cancelHref="/users" isEdit={isEdit}>
+  <FormBlock title="Foto de perfil" description="Sube una foto de perfil para el usuario." cols={1}>
+    <div class="flex flex-col items-center gap-6 md:flex-row">
+      <img
+        src={photo}
+        alt="Foto de perfil"
+        class={`aspect-square size-28 rounded-full border border-border object-cover ${isHiddenPhoto}`}
+        id="photo-profile"
+        data-has-existing-photo={String(!hasPhoto)}
+        data-original-photo={photo}
+      />
+
+      <div
+        class={`flex aspect-square size-28 items-center justify-center rounded-full border border-border bg-linear-to-bl from-primary-foreground/30 to-primary/80 object-cover text-5xl text-heading font-semibold ${isHiddenPhoto ? '' : 'hidden'}`}
+        id="initials-profile"
+      >
+        {isEdit ? initials : ''}
+      </div>
+
+      <div class="w-11/12 overflow-hidden md:w-auto">
+        <div class="flex items-center gap-2">
+          <label class="black cursor-pointer rounded-main bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-border">
+            <span class="sr-only">Cambiar foto</span>
+            <input type="file" form="form-user" accept="image/jpeg, image/png" name="img_profile_file" class="cursor-pointer" />
+          </label>
+          <button type="button" id="remove-photo-btn" class={`rounded-main bg-red-50 px-2 py-2 text-red-600 transition-colors hover:bg-red-100 ${isHiddenPhoto ? 'hidden' : ''}`} title="Eliminar foto">
+            <Icon name="Trash" class="size-5" stroke-width={1.5} />
+          </button>
+        </div>
+        <p class="mt-2 text-sm text-subheading">JPEG, PNG. Máximo 5MB.</p>
+      </div>
+    </div>
+  </FormBlock>
+
+  <FormBlock title="Información General" description="Ingrese los datos del usuario ya que serán utilizados en el sistema para identificarlo y tener una mejor experiencia" cols={2}>
+    {isEdit && <input type="hidden" name="uuid" value={user?.uuid || ''} />}
+
+    <div>
+      <Input required type="text" placeholder="ej. Juan" name="name" data-error-required="El nombre es obligatorio" label="Nombre" value={user?.name || ''} />
+    </div>
+
+    <div>
+      <Input required type="text" placeholder="ej. Pérez" name="lastName" data-error-required="El apellido es obligatorio" label="Apellido" value={user?.lastName || ''} />
+    </div>
+
+    <div>
+      <Select name="country" required data-error-required="El país es obligatorio" label="País" options={countries} value={user?.country || ''} />
+    </div>
+
+    <div>
+      <Input type="number" name="zipCode" label="Código Postal" value={user?.zipCode || ''} required data-error-required="El código postal es obligatorio" />
+    </div>
+  </FormBlock>
+
+  <FormBlock title="Credenciales" description="Ingrese las credenciales del usuario para el acceso al sistema" cols={2}>
+    <div>
+      <Input required type="email" autocomplete="email" placeholder="ej. juan.perez@example.com" name="email" data-error-required="El email es obligatorio" label="Email" value={user?.email || ''} />
+    </div>
+
+    <div>
+      <Input required={!isEdit} type="password" autocomplete="new-password" placeholder="********" name="password" data-error-required="La contraseña es obligatoria" label="Contraseña" value="" />
+    </div>
+
+    <div>
+      <Input
+        required={!isEdit}
+        type="password"
+        autocomplete="new-password"
+        placeholder="********"
+        name="confirmPassword"
+        data-error-required="La confirmación de contraseña es obligatoria"
+        label="Confirmar Contraseña"
+        value=""
+      />
+    </div>
+
+    <PasswordValidator passwordName="password" confirmName="confirmPassword" />
+  </FormBlock>
+
+  <PermissionGuard permissions={['databases.create', 'users.create']}>
+    <FormBlock title="Asignar clientes" description="Seleccione los clientes que tendrá el usuario" cols={1}>
+      <div class="space-y-3" id="clients-selector">
+        <Input type="search" name="searchClients" placeholder="Buscar cliente por nombre o RIF..." data-search-clients form="none" />
+
+        <div class="custom-scrollbar grid max-h-62.5 grid-cols-1 gap-2 overflow-y-auto pr-2 md:grid-cols-2">
+          <StateSwitch hasError={!!clientsError} isEmpty={!hasClients}>
+            {
+              clients.map((client) => (
+                <label
+                  class="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-background p-3 transition-all has-checked:border-primary has-checked:bg-primary-foreground"
+                  data-client-item
+                  data-client-name={client.name.toLowerCase()}
+                  data-client-rif={client.rif.toLowerCase()}
+                >
+                  <Avatar size="md" name={client.name} lastName={client.rif} photo={client.logo} />
+                  <div class="min-w-0 flex-1">
+                    <span class="block truncate text-sm font-medium text-heading">{client.name}</span>
+                    <span class="block truncate text-xs text-subheading">{client.rif}</span>
+                  </div>
+                  <input type="checkbox" name="clientUuids[]" value={client.uuid} class="shrink-0 accent-primary" checked={client.selected} />
+                </label>
+              ))
+            }
+
+            <p slot="error" class="col-span-full text-sm text-subheading">Error al cargar los clientes.</p>
+            <p slot="empty" class="col-span-full text-sm text-subheading">No hay clientes disponibles.</p>
+          </StateSwitch>
+        </div>
+
+        <p id="no-clients-match" style="display: none;" class="text-center text-sm text-subheading">No se encontraron clientes con ese criterio.</p>
+      </div>
+    </FormBlock>
+  </PermissionGuard>
+
+  <FormBlock title="Roles" description="Configura el nivel de autorización por módulos para el usuario" cols={1}>
+    <StateSwitch hasError={!!permissionsError} isEmpty={!hasPermissions}>
+      <div class="space-y-2" role="radiogroup" aria-label="Roles del usuario">
+        <p class="text-sm font-medium text-heading">Rol del usuario</p>
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+          {
+            Object.entries(quickRoleConfigs).map(([roleKey, roleConfig]) => (
+              <SelectionCard
+                name="role"
+                value={roleKey}
+                label={roleConfig.label}
+                checked={roleKey === role}
+                required
+                data-quick-role={roleKey}
+                data-role-permissions={roleConfig.permissions.join(',')}
+              />
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <Button type="button" variant="secondary" size="sm" id="toggle-permissions" aria-expanded="false" aria-controls="permissions-accordion">
+          <span data-permissions-toggle-label>Ver permisos</span>
+          <Icon name="ChevronDown" size={16} data-permissions-toggle-icon="down" />
+          <Icon name="ChevronUp" size={16} data-permissions-toggle-icon="up" class="hidden" />
+        </Button>
+      </div>
+
+      <div id="permissions-accordion" class="hidden">
+        {
+          permissions.map((category) => (
+            <Accordion title={category.category}>
+              <div slot="header" class="flex items-center gap-2" data-accordion-header>
+                <span class="rounded-full bg-primary-foreground px-2 py-0.5 text-xs text-primary" data-permission-badge>
+                  0/{category.permissions.length}
+                </span>
+                <label class="flex items-center gap-1.5" data-select-all-label>
+                  <input type="checkbox" class="accent-primary" data-select-all />
+                  <span class="text-sm text-subheading">Todos</span>
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 gap-2 md:grid-cols-3" data-permission-list>
+                {category.permissions.map((permission) => (
+                  <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-background p-3 transition-all has-checked:border-primary has-checked:bg-primary-foreground">
+                    <span class="block flex-1 text-sm font-normal text-heading">{permission.displayName}</span>
+                    <input
+                      type="checkbox"
+                      name="permissionUuids[]"
+                      value={permission.uuid}
+                      data-permission-name={permission.name}
+                      class="shrink-0 accent-primary"
+                      data-permission-checkbox
+                      checked={userPermissionUuids.includes(permission.uuid)}
+                    />
+                  </label>
+                ))}
+              </div>
+            </Accordion>
+          ))
+        }
+      </div>
+
+      <p slot="error" class="text-sm text-subheading">Error al cargar los permisos.</p>
+      <p slot="empty" class="text-sm text-subheading">No hay permisos disponibles.</p>
+    </StateSwitch>
+  </FormBlock>
+</FormPageLayout>
+
+<!-- Edit and create client -->
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading, validateImage } from '@/scripts/utils'
+  import { navigate } from 'astro:transitions/client'
+
+  const validateImageProfile = (valueImgProfileFile: File) => {
+    const { valid, messages } = validateImage(valueImgProfileFile)
+    if (!valid) {
+      toast.error(messages)
+      return false
+    }
+    return true
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('form-user') as HTMLFormElement
+    if (!form) return
+
+    const isEdit = form.getAttribute('data-is-edit') === 'true'
+
+    const handleSubmit = async (e: Event) => {
+      e.preventDefault()
+
+      const dataForm = new FormData(form)
+
+      const imgProfileFile = dataForm.get('img_profile_file') as File
+
+      if (imgProfileFile && imgProfileFile.size > 0) {
+        if (!validateImageProfile(imgProfileFile)) return
+      }
+
+      if (!imgProfileFile || imgProfileFile.size === 0) {
+        dataForm.delete('img_profile_file')
+      }
+
+      setButtonLoading('#form-user-submit', true)
+      const { data, error } = isEdit ? await callAction(actions.users.update(dataForm)) : await callAction(actions.users.register(dataForm))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#form-user-submit', false)
+        return
+      }
+
+      toast.success(data.message)
+      navigate(data.data.redirect)
+      setButtonLoading('#form-user-submit', false)
+    }
+
+    form.addEventListener('submit', handleSubmit)
+  })
+</script>
+<script>
+  // --- Permisos: badge de conteo y seleccionar todo ---
+  document.addEventListener('astro:page-load', () => {
+    const accordions = document.querySelectorAll<HTMLDetailsElement>('details:has([data-permission-list])')
+
+    accordions.forEach((accordion) => {
+      const badge = accordion.querySelector('[data-permission-badge]') as HTMLElement | null
+      const selectAll = accordion.querySelector('[data-select-all]') as HTMLInputElement | null
+      const checkboxes = accordion.querySelectorAll<HTMLInputElement>('[data-permission-checkbox]')
+
+      if (!badge || !selectAll || checkboxes.length === 0) return
+
+      const total = checkboxes.length
+
+      const updateBadge = () => {
+        const selected = accordion.querySelectorAll<HTMLInputElement>('[data-permission-checkbox]:checked').length
+        badge.textContent = `${selected}/${total}`
+        selectAll.checked = selected === total
+        selectAll.indeterminate = selected > 0 && selected < total
+      }
+
+      selectAll.addEventListener('click', (e) => {
+        e.stopPropagation()
+      })
+
+      selectAll.addEventListener('change', () => {
+        checkboxes.forEach((cb) => (cb.checked = selectAll.checked))
+        updateBadge()
+      })
+
+      checkboxes.forEach((cb) => cb.addEventListener('change', updateBadge))
+
+      updateBadge()
+    })
+
+    const permissionCheckboxes = document.querySelectorAll<HTMLInputElement>('[data-permission-checkbox]')
+    const roleRadios = document.querySelectorAll<HTMLInputElement>('[data-quick-role]')
+
+    roleRadios.forEach((radio) => {
+      radio.addEventListener('change', () => {
+        const rolePermissions = new Set(
+          (radio.dataset.rolePermissions || '')
+            .split(',')
+            .map((permissionName) => permissionName.trim())
+            .filter(Boolean)
+        )
+
+        permissionCheckboxes.forEach((checkbox) => {
+          const shouldBeChecked = rolePermissions.has(checkbox.dataset.permissionName || '')
+
+          if (checkbox.checked === shouldBeChecked) return
+
+          checkbox.checked = shouldBeChecked
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+        })
+      })
+    })
+
+    const permissionsAccordion = document.getElementById('permissions-accordion')
+    const togglePermissionsButton = document.getElementById('toggle-permissions')
+    const permissionsToggleLabel = togglePermissionsButton?.querySelector('[data-permissions-toggle-label]')
+    const permissionsToggleDownIcon = togglePermissionsButton?.querySelector('[data-permissions-toggle-icon="down"]')
+    const permissionsToggleUpIcon = togglePermissionsButton?.querySelector('[data-permissions-toggle-icon="up"]')
+
+    togglePermissionsButton?.addEventListener('click', () => {
+      if (!permissionsAccordion || !permissionsToggleLabel || !permissionsToggleDownIcon || !permissionsToggleUpIcon) return
+
+      const isHidden = permissionsAccordion.classList.toggle('hidden')
+      const isExpanded = !isHidden
+
+      togglePermissionsButton.setAttribute('aria-expanded', String(isExpanded))
+      permissionsToggleLabel.textContent = isExpanded ? 'Ocultar permisos' : 'Ver permisos'
+      permissionsToggleDownIcon.classList.toggle('hidden', isExpanded)
+      permissionsToggleUpIcon.classList.toggle('hidden', !isExpanded)
+    })
+  })
+</script>
+
+<script>
+  // --- Reglas de permisología en tiempo real ---
+  document.addEventListener('astro:page-load', () => {
+    const checkboxes = document.querySelectorAll<HTMLInputElement>('[data-permission-checkbox]')
+    if (checkboxes.length === 0) return
+
+    const findCheckboxByName = (name: string) => {
+      return Array.from(checkboxes).find((cb) => cb.dataset.permissionName === name)
+    }
+
+    const updateDependencies = () => {
+      const usersViewCb = findCheckboxByName('users.view')
+      const serversViewCb = findCheckboxByName('servers.view')
+      const documentsCreateCb = findCheckboxByName('documents.create')
+      const templatesCreateCb = findCheckboxByName('templates.create')
+
+      // Regla: si puedo crear una plantilla, debo poder crear un documento
+      if (templatesCreateCb?.checked && documentsCreateCb && !documentsCreateCb.checked) {
+        documentsCreateCb.checked = true
+        documentsCreateCb.dispatchEvent(new Event('change', { bubbles: true }))
+      }
+
+      // Regla: si puedo crear, actualizar o eliminar un servidor, es necesario poder consultarlo/verlo
+      const needsServersView = Array.from(checkboxes).some((cb) => {
+        const name = cb.dataset.permissionName || ''
+        const isDependent = name.startsWith('servers.create') || name.startsWith('servers.update') || name.startsWith('servers.delete') || name.startsWith('servers.manage')
+        return isDependent && cb.checked
+      })
+
+      if (needsServersView && serversViewCb && !serversViewCb.checked) {
+        serversViewCb.checked = true
+        serversViewCb.dispatchEvent(new Event('change', { bubbles: true }))
+      }
+
+      // Reglas:
+      // - Si tengo actualizar o crear usuario o eliminar, es necesario el ver usuario
+      // - Si tengo actualizar o crear servidores o eliminar, es necesario el ver usuario
+      // - Si tengo actualizar o crear plantillas o eliminar, es necesario el ver usuario
+      const needsUsersView = Array.from(checkboxes).some((cb) => {
+        const name = cb.dataset.permissionName || ''
+        const isDependent =
+          name.startsWith('users.create') ||
+          name.startsWith('users.update') ||
+          name.startsWith('users.delete') ||
+          name.startsWith('users.manage') ||
+          name.startsWith('servers.create') ||
+          name.startsWith('servers.update') ||
+          name.startsWith('servers.delete') ||
+          name.startsWith('servers.manage') ||
+          name.startsWith('templates.create') ||
+          name.startsWith('templates.update') ||
+          name.startsWith('templates.delete') ||
+          name.startsWith('templates.publish')
+        return isDependent && cb.checked
+      })
+
+      if (needsUsersView && usersViewCb && !usersViewCb.checked) {
+        usersViewCb.checked = true
+        usersViewCb.dispatchEvent(new Event('change', { bubbles: true }))
+      }
+    }
+
+    checkboxes.forEach((cb) => {
+      cb.addEventListener('change', () => {
+        const name = cb.dataset.permissionName || ''
+
+        // Cascade uncheck
+        if (!cb.checked) {
+          // Si desmarcas ver usuario, desmarcar todos los de gestión/edición
+          if (name === 'users.view') {
+            checkboxes.forEach((otherCb) => {
+              const otherName = otherCb.dataset.permissionName || ''
+              const isDependent =
+                otherName.startsWith('users.create') ||
+                otherName.startsWith('users.update') ||
+                otherName.startsWith('users.delete') ||
+                otherName.startsWith('users.manage') ||
+                otherName.startsWith('servers.create') ||
+                otherName.startsWith('servers.update') ||
+                otherName.startsWith('servers.delete') ||
+                otherName.startsWith('servers.manage') ||
+                otherName.startsWith('templates.create') ||
+                otherName.startsWith('templates.update') ||
+                otherName.startsWith('templates.delete') ||
+                otherName.startsWith('templates.publish')
+              if (isDependent && otherCb.checked) {
+                otherCb.checked = false
+                otherCb.dispatchEvent(new Event('change', { bubbles: true }))
+              }
+            })
+          }
+
+          // Si desmarcas ver servidor, desmarcar todos los de gestión/edición de servidores
+          if (name === 'servers.view') {
+            checkboxes.forEach((otherCb) => {
+              const otherName = otherCb.dataset.permissionName || ''
+              const isDependent = otherName.startsWith('servers.create') || otherName.startsWith('servers.update') || otherName.startsWith('servers.delete') || otherName.startsWith('servers.manage')
+              if (isDependent && otherCb.checked) {
+                otherCb.checked = false
+                otherCb.dispatchEvent(new Event('change', { bubbles: true }))
+              }
+            })
+          }
+
+          // Si desmarcas crear documento, desmarcar crear plantilla
+          if (name === 'documents.create') {
+            const templatesCreateCb = findCheckboxByName('templates.create')
+            if (templatesCreateCb?.checked) {
+              templatesCreateCb.checked = false
+              templatesCreateCb.dispatchEvent(new Event('change', { bubbles: true }))
+            }
+          }
+        }
+
+        updateDependencies()
+      })
+    })
+
+    // Ejecutar escaneo inicial al cargar
+    updateDependencies()
+  })
+</script>
+
+<script>
+  // --- Clientes: búsqueda ---
+  document.addEventListener('astro:page-load', () => {
+    const container = document.getElementById('clients-selector')
+    if (!container) return
+
+    const searchInput = container.querySelector('[data-search-clients]') as HTMLInputElement | null
+    const items = container.querySelectorAll<HTMLElement>('[data-client-item]')
+    const noMatch = document.getElementById('no-clients-match')
+
+    if (!searchInput || !noMatch) return
+
+    searchInput.addEventListener('input', () => {
+      const term = searchInput.value.toLowerCase().trim()
+      let visibleCount = 0
+
+      items.forEach((item) => {
+        const name = item.dataset.clientName || ''
+        const rif = item.dataset.clientRif || ''
+        const matches = term === '' || name.includes(term) || rif.includes(term)
+
+        item.style.display = matches ? '' : 'none'
+        if (matches) visibleCount++
+      })
+
+      noMatch.style.display = visibleCount > 0 || term === '' ? 'none' : ''
+    })
+  })
+</script>
+
+<script>
+  // --- Foto de perfil: preview y eliminar ---
+  import { toast } from '@/scripts/toast'
+  import { validateImage } from '@/scripts/utils'
+
+  const validateImageProfile = (valueImgProfileFile: File) => {
+    const { valid, messages } = validateImage(valueImgProfileFile)
+    if (!valid) {
+      toast.error(messages)
+      return false
+    }
+    return true
+  }
+
+  const updatePhotoProfile = (e: Event) => {
+    const target = e.target as HTMLInputElement
+    const valueImgProfileFile = target.files?.[0] as File
+    const photoProfile = document.getElementById('photo-profile') as HTMLImageElement
+    const initialsProfile = document.getElementById('initials-profile') as HTMLDivElement
+    const removePhotoBtn = document.getElementById('remove-photo-btn') as HTMLButtonElement
+    const originalPhoto = photoProfile?.dataset.originalPhoto || ''
+    const hasExistingPhoto = photoProfile?.dataset.hasExistingPhoto === 'true'
+
+    if (valueImgProfileFile) {
+      if (!validateImageProfile(valueImgProfileFile)) return
+      photoProfile.src = URL.createObjectURL(valueImgProfileFile)
+      initialsProfile.classList.add('hidden')
+      photoProfile.classList.remove('hidden')
+      removePhotoBtn?.classList.remove('hidden')
+    } else {
+      if (hasExistingPhoto && originalPhoto) {
+        photoProfile.src = originalPhoto
+        initialsProfile.classList.add('hidden')
+        photoProfile.classList.remove('hidden')
+        removePhotoBtn?.classList.remove('hidden')
+      } else {
+        photoProfile.src = ''
+        initialsProfile.classList.remove('hidden')
+        photoProfile.classList.add('hidden')
+        removePhotoBtn?.classList.add('hidden')
+      }
+    }
+  }
+
+  const removePhoto = () => {
+    const photoProfile = document.getElementById('photo-profile') as HTMLImageElement
+    const initialsProfile = document.getElementById('initials-profile') as HTMLDivElement
+    const fileInput = document.querySelector('input[name="img_profile_file"]') as HTMLInputElement
+    const removePhotoBtn = document.getElementById('remove-photo-btn') as HTMLButtonElement
+
+    if (fileInput) fileInput.value = ''
+
+    photoProfile.src = ''
+    photoProfile.classList.add('hidden')
+    initialsProfile.classList.remove('hidden')
+
+    removePhotoBtn?.classList.add('hidden')
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const photoProfileInput = document.querySelector('input[name="img_profile_file"]')
+    const removePhotoBtn = document.getElementById('remove-photo-btn')
+
+    if (photoProfileInput) photoProfileInput.addEventListener('input', updatePhotoProfile)
+    if (removePhotoBtn) removePhotoBtn.addEventListener('click', removePhoto)
+  })
+</script>

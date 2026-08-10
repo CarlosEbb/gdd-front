@@ -32,7 +32,11 @@ export function deleteCookie(name: string) {
  * @returns La fecha formateada (ej: "Mar, 4 noviembre 2025")
  */
 export function formatISODateWithIntl(isoString: string): string {
+  if (!isoString) return ''
   const date = new Date(isoString)
+
+  if (Number.isNaN(date.getTime())) return ''
+
   const options: Intl.DateTimeFormatOptions = {
     weekday: 'short', // "lun", "mar", "mié"
     day: 'numeric', // "4", "20"
@@ -67,6 +71,83 @@ export function formatDate(isoString: string): string {
   const [year, month, day] = datePart.split('-').map(Number)
   const formatter = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
   return formatter.format(Date.UTC(year, month - 1, day))
+}
+
+/**
+ * Convierte una fecha ISO (UTC) a un formato corto español
+ * con el mes abreviado y capitalizado.
+ * @param isoString La fecha en formato ISO (ej: "2025-11-04T15:45:54.868Z")
+ * @returns La fecha formateada (ej: "04 Nov 2025")
+ */
+export function formatShortDate(isoString: string): string {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+
+  if (Number.isNaN(date.getTime())) return ''
+
+  const options: Intl.DateTimeFormatOptions = {
+    day: '2-digit', // "04", "11"
+    month: 'short', // "nov", "abr"
+    year: 'numeric', // "2025"
+    timeZone: 'UTC',
+  }
+
+  const formatter = new Intl.DateTimeFormat('es', options)
+  const parts = formatter.formatToParts(date)
+  const partMap = new Map(parts.map((part) => [part.type, part.value]))
+
+  const day = partMap.get('day') || ''
+  const month = (partMap.get('month') || '').replace('.', '')
+  const year = partMap.get('year') || ''
+
+  const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1)
+
+  return `${day} ${capitalizedMonth} ${year}`
+}
+
+/**
+ * Convierte una fecha ISO (UTC o Local) a un formato español con hora y milisegundos.
+ * @param isoString La fecha en formato ISO (ej: "2026-04-10T14:56:08.098Z")
+ * @returns La fecha formateada (ej: "Vie, 10 abril 2026 14:56:08:09")
+ */
+export function formatExtendedDate(isoString: string): string {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+
+  if (Number.isNaN(date.getTime())) return ''
+
+  // Usamos las opciones de Intl para formatear cada parte según el idioma español
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'short', // "vie", "sáb"
+    day: '2-digit', // "10", "22"
+    month: 'long', // "abril", "mayo"
+    year: 'numeric', // "2026"
+    hour: '2-digit', // "14" o "02"
+    minute: '2-digit', // "56"
+    second: '2-digit', // "08"
+    hour12: false,
+  }
+
+  const formatter = new Intl.DateTimeFormat('es', options)
+  const parts = formatter.formatToParts(date)
+  const partMap = new Map(parts.map((part) => [part.type, part.value]))
+
+  const weekday = partMap.get('weekday') || ''
+  const day = partMap.get('day') || ''
+  const month = partMap.get('month') || ''
+  const year = partMap.get('year') || ''
+  const hour = partMap.get('hour') || ''
+  const minute = partMap.get('minute') || ''
+  const second = partMap.get('second') || ''
+
+  // Formatear los milisegundos a dos dígitos (ej: "098" -> "09")
+  const milliseconds = String(date.getMilliseconds()).padStart(3, '0').slice(0, 2)
+
+  // Capitalizar el día de la semana y quitar el punto si existiese (ej: "vie." -> "Vie")
+  const cleanedWeekday = weekday.replace('.', '')
+  const capitalizedWeekday = cleanedWeekday.charAt(0).toUpperCase() + cleanedWeekday.slice(1)
+
+  return `${capitalizedWeekday}, ${day} ${month} ${year} ${hour}:${minute}:${second}:${milliseconds}`
 }
 
 /**

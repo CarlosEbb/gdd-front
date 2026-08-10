@@ -1,0 +1,36 @@
+---
+import Container from '@/components/ui/Container.astro'
+import MainLayout from '@/layouts/MainLayout.astro'
+import Header from '@/components/ui/Header.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import { actions } from 'astro:actions'
+import ServerForm from '../_components/ServerForm.astro'
+
+const { uuid } = Astro.params
+
+const { data: serverData, error: serverError } = await Astro.callAction(actions.servers.getByUuid, { uuid: uuid as string })
+
+const serverValues = serverData?.data
+  ? {
+      ip: serverData.data.ip,
+      name: serverData.data.name,
+      puerto: serverData.data.puerto?.toString(),
+      uuid: serverData.data.uuid,
+      username: serverData.data.username,
+      password: serverData.data.password,
+    }
+  : { ip: '', name: '', puerto: '', uuid: '', username: '', password: '' }
+---
+
+<MainLayout title={`Actualizar servidor ${serverData?.data?.name || ''}`}>
+  <Container>
+    <Header title="Actualizar servidor" />
+
+    <StateSwitch hasError={serverError !== undefined}>
+      <ServerForm isEdit={true} values={serverValues} />
+
+      <EmptyState slot="error" title="Ha ocurrido un error al cargar el servidor" description="Por favor, intenta nuevamente" state="error" />
+    </StateSwitch>
+  </Container>
+</MainLayout>

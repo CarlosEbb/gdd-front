@@ -4,6 +4,7 @@
 
 export type ValidationRule = {
   required: boolean
+  unique: boolean
   types: string[]
   customValidations: CustomValidation[]
   dateFormat: string | null
@@ -21,6 +22,7 @@ export type HiddenCondition = {
   field: string
   operator: string
   value: string
+  hiddenBy: string
   logicalOperator: 'and' | 'or'
 }
 
@@ -76,6 +78,7 @@ export function getOperatorLabel(operator: string): string {
 export function createDefaultRule(): ValidationRule {
   return {
     required: false,
+    unique: false,
     types: [],
     customValidations: [],
     dateFormat: null,
@@ -83,7 +86,7 @@ export function createDefaultRule(): ValidationRule {
 }
 
 export function hasValidationContent(rule: ValidationRule): boolean {
-  return rule.required || rule.types.length > 0 || rule.customValidations.length > 0
+  return rule.required || rule.unique || rule.types.length > 0 || rule.customValidations.length > 0
 }
 
 export function filterEmptyRules(rules: ValidationRules): ValidationRules {

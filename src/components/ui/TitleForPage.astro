@@ -1,9 +1,69 @@
 ---
+import Button from './Button.astro'
+import Icon from './Icon.astro'
+
 interface Props {
   title: string
+  backHref?: string
+  class?: string
+  titleStyle?: string
+  showBackButton?: boolean
+  subtitle?: string | null
 }
 
-const { title } = Astro.props
+const { title, class: className, backHref = undefined, showBackButton = true, subtitle = null, titleStyle = '' } = Astro.props
 ---
 
-<h1 class="mb-6 text-2xl font-bold text-gray-900 md:text-3xl" transition:animate="fade" transition:name="title">{title}</h1>
+<div class="flex min-w-0 items-start gap-4">
+  {
+    showBackButton && (
+      <Button type="button" data-history-back data-fallback-href={backHref} variant="ghost" title="Volver a la página anterior" size="sm" aria-label="Volver a la página anterior">
+        <Icon name="ArrowLeft" size={20} />
+      </Button>
+    )
+  }
+
+  <div class:list={['min-w-0', className]}>
+    <h1 class="truncate text-xl font-semibold text-heading md:text-2xl" class:list={[titleStyle]} transition:animate="fade" transition:name="title" title={title}>
+      {title}
+    </h1>
+    {
+      subtitle && (
+        <p class="truncate text-sm text-subheading" title={subtitle}>
+          {subtitle}
+        </p>
+      )
+    }
+  </div>
+</div>
+
+<script>
+  import { navigate } from 'astro:transitions/client'
+
+  const w = window as typeof window & { __titleForPageBackInitialized?: boolean }
+
+  if (!w.__titleForPageBackInitialized) {
+    w.__titleForPageBackInitialized = true
+
+    document.addEventListener('click', (event) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+
+      const button = target.closest('[data-history-back]')
+      if (!(button instanceof HTMLButtonElement)) return
+
+      const fallbackHref = button.dataset.fallbackHref
+      if (fallbackHref) {
+        navigate(fallbackHref)
+        return
+      }
+
+      if (window.history.length > 1) {
+        window.history.back()
+        return
+      }
+
+      navigate('/')
+    })
+  }
+</script>

@@ -1,44 +1,60 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
+import Icon from './Icon.astro'
+import { icons } from '@lucide/astro'
 
 export interface Props extends HTMLAttributes<'button'> {
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient'
-  size?: 'default' | 'sm' | 'lg' | 'icon'
-  href?: string
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient' | 'transparent'
+  size?: 'default' | 'sm' | 'lg'
   rounded?: 'default' | 'full'
   loadingText?: string
   showTextOnLoading?: boolean
+  icon?: keyof typeof icons
+  iconPosition?: 'left' | 'right'
+  iconOnly?: boolean
 }
 
-const { variant = 'default', size = 'default', class: className, href, rounded = 'default', loadingText, showTextOnLoading = true, ...props } = Astro.props
+const { variant = 'default', size = 'default', class: className, rounded = 'default', loadingText, showTextOnLoading = true, icon, iconPosition = 'left', iconOnly = false, ...props } = Astro.props
 
 const baseClasses =
-  'inline-flex items-center justify-center whitespace-nowrap rounded-full font-semibold ring-offset-white transition-colors focus:outline-none focus:ring-2 focus-visible:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+  'inline-flex items-center font-normal cursor-pointer justify-center whitespace-nowrap rounded-main ring-offset-white transition-colors focus:outline-none focus:ring-1 focus-visible:ring-slate-950 focus:ring-offset-1 disabled:bg-muted disabled:border-border disabled:text-subheading disabled:cursor-not-allowed'
 
 const variantClasses = {
-  default: 'bg-custom-purple-light text-white hover:bg-custom-blue3',
-  destructive: 'bg-red-500/30 text-red-500 hover:bg-red-500/40',
-  outline: 'border border-custom-purple-light bg-custom-purple-light/10 hover:custom-purple-light hover:text-custom-purple-light',
-  secondary: 'bg-custom-purple-light/30 text-custom-purple-light hover:bg-custom-purple-light/40',
-  ghost: 'hover:bg-custom-purple-light/10 hover:text-custom-purple-light',
-  gradient: 'bg-gradient-to-r from-custom-purple-light to-custom-blue3 hover:bg-gradient-to-r hover:from-custom-blue hover:to-custom-purple-light text-white',
+  default: 'border border-primary bg-primary text-white hover:bg-primary/80',
+  destructive: 'border border-destructive/30 text-destructive hover:bg-destructive/20',
+  outline: 'border border-border bg-foreground hover:bg-background text-heading',
+  secondary: 'border border-border bg-background text-heading hover:bg-foreground/60',
+  ghost: 'hover:bg-background bg-foreground text-heading',
+  gradient: 'bg-gradient-to-r from-primary via-primary/80 to-primary/60 hover:bg-gradient-to-r hover:from-primary/90 hover:via-primary/70 hover:to-primary/50 text-white transition-color',
+  transparent: 'bg-transparent text-heading hover:bg-foreground',
 }
 
 const sizeClasses = {
   default: 'h-12 px-4 py-2.5 ',
-  sm: 'h-9 px-3',
-  lg: 'h-11 px-8',
-  icon: 'h-9 w-9',
+  sm: 'h-8 px-1.5',
+  lg: 'h-10 px-8',
+}
+
+const iconOnlyClasses = {
+  sm: 'h-8 w-8',
+  default: 'h-10 w-10',
+  lg: 'h-10 w-10',
+}
+
+const iconSizes = {
+  default: 16,
+  sm: 17,
+  lg: 18,
 }
 
 const roundedClasses = {
-  default: 'rounded-lg',
+  default: 'rounded-main',
   full: 'rounded-full',
 }
 ---
 
 <button
-  class:list={[baseClasses, variantClasses[variant], sizeClasses[size], roundedClasses[rounded], className]}
+  class:list={[baseClasses, variantClasses[variant], iconOnly ? iconOnlyClasses[size] : sizeClasses[size], roundedClasses[rounded], className]}
   data-loading-text={loadingText}
   data-show-text-on-loading={showTextOnLoading}
   {...props}
@@ -49,8 +65,22 @@ const roundedClasses = {
       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
     </svg>
   </span>
-  <span data-button-content>
+  <span data-button-content class="flex items-center gap-2 px-1.5">
+    {
+      icon && iconPosition === 'left' && (
+        <span data-button-icon>
+          <Icon name={icon} size={iconSizes[size]} />
+        </span>
+      )
+    }
     <slot />
+    {
+      icon && iconPosition === 'right' && (
+        <span data-button-icon>
+          <Icon name={icon} size={iconSizes[size]} />
+        </span>
+      )
+    }
   </span>
 </button>
 
@@ -74,11 +104,16 @@ const roundedClasses = {
       button.addEventListener('button:start-loading', () => {
         const loadingText = button.dataset.loadingText
         const showTextOnLoading = button.dataset.showTextOnLoading !== 'false'
+        const iconElement = button.querySelector('[data-button-icon]') as HTMLElement
 
         button.setAttribute('data-loading', 'true')
         button.disabled = true
 
         spinner.classList.remove('hidden')
+
+        if (iconElement) {
+          iconElement.classList.add('hidden')
+        }
 
         if (loadingText) {
           content.textContent = loadingText
@@ -90,11 +125,16 @@ const roundedClasses = {
       button.addEventListener('button:stop-loading', () => {
         const loadingText = button.dataset.loadingText
         const showTextOnLoading = button.dataset.showTextOnLoading !== 'false'
+        const iconElement = button.querySelector('[data-button-icon]') as HTMLElement
 
         button.removeAttribute('data-loading')
         button.disabled = false
 
         spinner.classList.add('hidden')
+
+        if (iconElement) {
+          iconElement.classList.remove('hidden')
+        }
 
         if (loadingText || !showTextOnLoading) {
           content.innerHTML = originalContent

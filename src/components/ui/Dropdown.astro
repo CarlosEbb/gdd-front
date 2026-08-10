@@ -16,36 +16,42 @@ interface Props {
 const { buttonLabel = 'Seleccionar', withSearch = false, size = 'default', shadow = 'sm', border = 'border', position = 'default', mobileIcon = 'Menu', hideLabel = false } = Astro.props
 
 const sizeClasses = {
-  default: 'px-4 py-3',
-  sm: 'px-3 py-1.5',
+  default: 'h-10 px-2',
+  sm: 'h-8 px-2',
 }
 
 const shadowClasses = {
   lg: 'shadow-lg',
   md: 'shadow-md',
   sm: 'shadow-sm',
+  base: 'shadow-base',
   none: '',
 }
 
 const borderClasses = {
-  border: 'border border-gray-200',
+  border: 'border border-border',
   none: '',
 }
 
 const positionClasses = {
-  left: 'left-0',
-  right: 'right-0',
-  default: 'left-0',
+  left: 'md:left-0 md:right-auto',
+  right: 'md:right-0 md:left-auto',
+  default: 'md:left-0 md:right-auto',
 }
 ---
 
 <div class="relative inline-block w-full cursor-pointer text-left" data-dropdown-container>
+  <div class="fixed inset-0 z-40 hidden bg-background/50 opacity-0 transition-opacity duration-300 in-[.is-open]:block in-[.is-open]:opacity-100 md:hidden!" data-dropdown-backdrop></div>
   <button
     class:list={[
-      'inline-flex w-full cursor-pointer items-center justify-between gap-x-1.5 rounded-lg bg-white/80 backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
-      sizeClasses[size],
-      shadowClasses[shadow],
-      borderClasses[border],
+      hasTriggerSlot
+        ? 'inline-flex cursor-pointer items-center justify-center rounded-full bg-transparent p-0 text-subheading transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground disabled:cursor-not-allowed disabled:opacity-50'
+        : [
+            'inline-flex w-full cursor-pointer items-center justify-between gap-x-1.5 rounded-main bg-background backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:ring-primary-foreground focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+            sizeClasses[size],
+            shadowClasses[shadow],
+            borderClasses[border],
+          ],
     ]}
     data-dropdown-toggle
   >
@@ -80,16 +86,18 @@ const positionClasses = {
     class:list={[
       'ring-opacity-5 invisible absolute z-10 mt-1 max-h-72 scale-95 transform overflow-y-auto rounded-lg bg-white opacity-0 shadow-lg ring-1 ring-gray-200 transition-all duration-150 ease-out focus:outline-none [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100',
       positionClasses[position],
-      position === 'right' ? 'origin-top-right' : 'origin-top-left',
+      position === 'right' ? 'md:origin-top-right' : 'md:origin-top-left',
+      menuClass,
     ]}
     data-dropdown-menu
   >
+    <div class="mx-auto mt-3 mb-2 h-1.5 w-12 shrink-0 rounded-full bg-gray-300 md:hidden"></div>
     {
       withSearch && (
-        <div class="border-b border-gray-100 p-2">
+        <div class="border-b border-border p-2">
           <input
             type="text"
-            class="block w-full rounded-lg border border-gray-200 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
+            class="block w-full rounded-main border border-border bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-primary-foreground focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50"
             placeholder="Buscar..."
             data-dropdown-search
           />
@@ -147,7 +155,9 @@ const positionClasses = {
   document.addEventListener('click', (e) => {
     document.querySelectorAll('[data-dropdown-menu].is-open').forEach((menu) => {
       const container = menu.closest('[data-dropdown-container]')
-      if (container && !container.contains(e.target as Node)) {
+      const backdrop = container?.querySelector('[data-dropdown-backdrop]')
+
+      if (container && (!container.contains(e.target as Node) || e.target === backdrop)) {
         menu.classList.remove('is-open')
         container.classList.remove('is-open')
       }

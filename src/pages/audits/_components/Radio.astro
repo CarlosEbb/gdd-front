@@ -1,0 +1,33 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+interface Props extends HTMLAttributes<'input'> {
+  label: string
+  name: string
+  value: string
+  checked?: boolean
+  title?: string
+  description?: string
+}
+
+const { label, name, value, checked = false, title, description, ...rest } = Astro.props
+---
+
+{
+  description ? (
+    <label class="flex cursor-pointer items-start gap-3 rounded-main border border-border p-3 transition-colors duration-200 focus-within:ring-1 focus-within:ring-ring hover:bg-foreground has-checked:bg-primary/5 has-checked:ring-primary">
+      <input type="radio" name={name} value={value} checked={checked} class="mt-1 size-3.5 shrink-0 cursor-pointer accent-primary" {...rest} />
+      <div>
+        <p class="text-sm font-semibold text-heading">{label}</p>
+        <p class="text-xs text-subheading">{description}</p>
+      </div>
+    </label>
+  ) : (
+    <label class="flex cursor-pointer items-center justify-between px-3 py-1.5 text-xs text-heading transition-all duration-200 last:border-b-0 focus-within:ring-1 focus-within:ring-ring hover:bg-foreground hover:text-subheading has-checked:bg-primary/5 has-checked:text-subheading">
+      <span class="truncate pr-2" title={title || label}>
+        {label}
+      </span>
+      <input type="radio" name={name} value={value} checked={checked} class="size-3.5 shrink-0 cursor-pointer accent-primary" {...rest} />
+    </label>
+  )
+}

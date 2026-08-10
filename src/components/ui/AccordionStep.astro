@@ -1,0 +1,40 @@
+---
+import Icon from './Icon.astro'
+
+interface Props {
+  step: number
+  title: string
+  description: string
+  defaultOpen?: boolean
+}
+
+const { step, title, description, defaultOpen = false } = Astro.props
+---
+
+<details class="accordion-step group overflow-visible rounded-main border border-border bg-background transition-all duration-200" data-step={step} open={defaultOpen}>
+  <summary class="flex cursor-pointer items-start gap-4 p-4 transition-colors select-none hover:bg-foreground">
+    <div class="step-indicator relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-sm font-semibold text-primary transition-colors">
+      <span class="step-number">{step}</span>
+      <span class="step-check hidden">
+        <Icon name="Check" size={16} />
+      </span>
+    </div>
+    <div class="min-w-0 flex-1">
+      <h3 class="text-base font-semibold text-heading">{title}</h3>
+      <p class="mt-1 text-sm text-subheading">{description}</p>
+    </div>
+    <Icon name="ChevronDown" size={18} class="mt-1 shrink-0 text-subheading transition-transform duration-200 group-open:rotate-180" />
+  </summary>
+  <div class="border-t border-border p-4 sm:pl-16">
+    <slot />
+  </div>
+</details>
+
+<style>
+  .accordion-step[data-completed='true'] .step-number {
+    display: none;
+  }
+  .accordion-step[data-completed='true'] .step-check {
+    display: flex;
+  }
+</style>

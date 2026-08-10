@@ -6,27 +6,34 @@ import Button from '../ui/Button.astro'
 import Icon from '../ui/Icon.astro'
 import { MARGIN_PRESETS, ORIENTATION, PAPER_SIZES, PAPER_SIZE_LABELS, MARGIN_PRESET_LABELS } from '@/constants/file-settings'
 
-const workspaces = (await Astro.session?.get('workspaces')) || []
+const workspaces = await Astro.session?.get('workspaces')
+
+const mapperWorkspaces = workspaces?.map((workspace) => ({ value: workspace.uuid, label: workspace.name })) || []
+const showWarningFromServer = workspaces !== undefined && workspaces.length === 0
 ---
 
 <Modal modalId="save-template" title="Crear documento">
   <form class="space-y-4" id="save-template-form">
     <div>
+      <p class:list={['text-sm text-warning', { hidden: !showWarningFromServer }]} id="no-workspaces-warning">No tienes espacios de trabajo disponibles</p>
       <Select
+        id="select-workspace"
+        disabled={mapperWorkspaces.length === 0}
         label="Espacio de trabajo"
         name="uuid_workspace"
         placeholder="Seleccione un espacio de trabajo"
-        options={workspaces.map((workspace) => ({ value: workspace.uuid, label: workspace.name }))}
+        options={mapperWorkspaces}
         required
+        data-error-required="Seleccione un espacio de trabajo"
       />
     </div>
 
     <div>
-      <Input label="Nombre" name="title" placeholder="Ingrese el nombre del documento" required />
+      <Input label="Nombre" name="title" placeholder="Carta de presentación" required data-error-required="Ingrese un nombre para el documento" />
     </div>
 
     <div>
-      <Input label="Descripción" name="description" placeholder="Ingrese la descripción del documento" required />
+      <Input label="Descripción" name="description" placeholder="Una descripción breve del documento" required />
     </div>
 
     <button
@@ -97,11 +104,43 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
       </div>
     </div>
 
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
-      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-      <Button type="submit" size="sm" id="btn-save-template" loadingText="Creando documento...">Crear documento</Button>
+            <div>
+              <Select
+                label="Margen"
+                name="marginType"
+                placeholder="Seleccione un margen"
+                options={MARGIN_PRESETS.map((margin) => ({ value: margin, label: margin }))}
+                value={MARGIN_PRESETS[1]}
+                required
+              />
+            </div>
+
+            <div class="md:col-span-2">
+              <span class="mb-1 block text-sm font-medium text-heading">Orientación</span>
+              <div class="grid grid-cols-2 gap-4">
+                {
+                  ORIENTATION.map((orientation) => (
+                    <SelectionCard
+                      name="orientation"
+                      value={orientation}
+                      label={orientation === 'PORTRAIT' ? 'Vertical' : 'Horizontal'}
+                      icon={orientation === 'PORTRAIT' ? 'File' : 'StickyNote'}
+                      checked={orientation === 'PORTRAIT'}
+                    />
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" form="save-template-form" id="btn-save-template" icon="Plus" loadingText="Creando documento...">Crear documento</Button>
+  </div>
 </Modal>
 
 <script>
@@ -165,7 +204,11 @@ const workspaces = (await Astro.session?.get('workspaces')) || []
         }
 
         toast.success(data.message)
-        navigate(`/editor/${data.data.template.uuid}?build_number=${data.data.version.build_number}&id_workspace=${data.data.template.id_workspace}&name_document=${data.data.template.title}`)
+        const editorUrl = new URL(`/editor/${data.data.template.uuid}`, window.location.origin)
+        editorUrl.searchParams.set('build_number', String(data.data.lastVersion?.buildNumber))
+        editorUrl.searchParams.set('id_workspace', data.data.template.uuidWorkspace)
+        editorUrl.searchParams.set('name_document', data.data.template.title)
+        navigate(editorUrl.pathname + editorUrl.search)
         modalSaveTemplate.close()
       } catch (error: unknown) {
         if (error instanceof Error) {

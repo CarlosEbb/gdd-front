@@ -1,0 +1,22 @@
+---
+import Accordion from '../Accordion.astro'
+import Radio from '../Radio.astro'
+
+interface Props {
+  clients: any[]
+  selectedClientUuid: string
+}
+
+const { clients, selectedClientUuid } = Astro.props as Props
+---
+
+<Accordion title="Cliente a Auditar" queryKeys="clientUuid">
+  <div class="divide-y divide-border overflow-hidden rounded-main border border-border">
+    {
+      clients.map((c: any) => {
+        const isSelected = c.uuid === selectedClientUuid
+        return <Radio name="clientUuid" value={c.uuid} label={c.name} checked={isSelected} />
+      })
+    }
+  </div>
+</Accordion>

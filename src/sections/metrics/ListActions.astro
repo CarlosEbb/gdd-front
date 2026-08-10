@@ -1,0 +1,57 @@
+---
+import EmptyState from '@/components/ui/EmptyState.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import { actions } from 'astro:actions'
+import type { Metrics } from '@/types/metrics'
+import MetricCard from './MetricCard.astro'
+import ClientsTable from './ClientsTable.astro'
+
+const { data, error } = await Astro.callAction(actions.metrics.getGeneral, {})
+const metrics = data?.data ?? ({} as Metrics)
+const hasMetrics = data !== null
+
+const metricsInfoCard = [
+  {
+    title: 'Clientes',
+    value: metrics?.total_clients.toString() ?? '0',
+    href: '/clients',
+  },
+  {
+    title: 'Espacios de trabajo',
+    value: metrics?.total_workspaces.toString() ?? '0',
+    href: '/workspaces',
+  },
+  {
+    title: 'Documentos',
+    value: metrics?.total_documents.toString() ?? '0',
+    href: '/documents',
+  },
+]
+---
+
+<section class="mb-10">
+  <header class="mb-5 flex items-center justify-between">
+    <div>
+      <h2 class="text-lg font-semibold text-heading">Resumen</h2>
+      <p class="text-sm text-subheading">Datos actualizados</p>
+    </div>
+  </header>
+
+  <StateSwitch hasError={!!error} isEmpty={!hasMetrics}>
+    <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {hasMetrics && metricsInfoCard.map((metric, index) => <MetricCard title={metric.title} value={metric.value} index={index} href={metric.href} />)}
+    </div>
+
+    <div>
+      <ClientsTable clients={metrics?.clients ?? []} />
+    </div>
+
+    <div slot="empty">
+      <EmptyState state="info" title="Aún no tienes métricas" hiddenAction description="Aún no tienes métricas" />
+    </div>
+
+    <div slot="error">
+      <EmptyState state="error" title="Error al cargar las métricas" description="Error al cargar las métricas" />
+    </div>
+  </StateSwitch>
+</section>

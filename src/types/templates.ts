@@ -1,15 +1,30 @@
 export interface Templates {
-  categories: Category[]
-}
-
-export interface Category {
   id: number
   uuid: string
   title: null
   category: string
-  path_thumbnails: string
-  path_json: string
+  pathThumbnails: string
+  pathJson: string
   status: string
-  created_at: Date
-  updated_at: Date
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface DeleteTemplate {
+  success: boolean
+  message: string
+  redirect: string
+}
+
+export interface CreateTemplate {
+  id: number
+  uuid: string
+  category: string
+  pathThumbnails: null
+  pathJson: string
+  status: string
+  title: string
+  idUser: number
+  createdAt: Date
+  updatedAt: Date
 }

@@ -1,0 +1,542 @@
+---
+import { actions } from 'astro:actions'
+import { formatExtendedDate } from '@/scripts/utils'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Modal from '@/components/modal/Modal.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import Layout from '../_components/Layout.astro'
+import type { Stats, Pagination } from '@/types/documents'
+import Accordion from '@/components/ui/Accordion.astro'
+import { Code } from 'astro:components'
+import Icon from '@/components/ui/Icon.astro'
+import Button from '@/components/ui/Button.astro'
+import Link from '@/components/ui/Link.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Select from '@/components/form/Select.astro'
+import Input from '@/components/form/Input.astro'
+import Radio from '@/pages/audits/_components/Radio.astro'
+
+const PUBLIC_PDF_URL = import.meta.env.PUBLIC_PDF_URL
+const pdfBaseUrl = PUBLIC_PDF_URL || 'http://localhost:8303'
+
+const { uuid } = Astro.params
+const build_number = Astro.url.searchParams.get('build_number') as string
+
+if (!uuid || !build_number) {
+  return Astro.redirect('/home')
+}
+
+const pageParam = Astro.url.searchParams.get('page')
+const currentPage = pageParam ? parseInt(pageParam, 10) : 1
+
+const limitParam = Astro.url.searchParams.get('limit')
+const currentLimit = limitParam ? parseInt(limitParam, 10) : 10
+
+const statusParam = Astro.url.searchParams.get('status')
+const validStatuses = ['validation_error', 'success', 'json_error', 'error'] as const
+type FilterStatus = (typeof validStatuses)[number] | null
+const currentStatus: FilterStatus = statusParam && validStatuses.includes(statusParam as any) ? (statusParam as FilterStatus) : null
+
+const searchFieldParam = Astro.url.searchParams.get('searchField') || ''
+const searchValueParam = Astro.url.searchParams.get('searchValue') || ''
+
+const { data, error } = await Astro.callAction(actions.documents.getListGeneratedDocuments, {
+  uuid_template: uuid,
+  page: currentPage,
+  limit: currentLimit,
+  status: currentStatus,
+  searchField: searchFieldParam || null,
+  searchValue: searchValueParam || null,
+})
+
+const { data: dataVars, error: varsError } = await Astro.callAction(actions.documents.getRequestForDocument, {
+  uuid_template: uuid,
+  build_number: build_number,
+})
+
+const selectedVariables = Object.keys(dataVars?.data.variables || {}).map((key) => ({ value: key, label: key }))
+
+const searchFieldQuery = searchFieldParam ? `&searchField=${encodeURIComponent(searchFieldParam)}` : ''
+const searchValueQuery = searchValueParam ? `&searchValue=${encodeURIComponent(searchValueParam)}` : ''
+
+const documents = data?.documents || []
+const stats: Stats = data?.stats || {
+  total: 0,
+  success: 0,
+  error: 0,
+  validation_error: 0,
+  json_error: 0,
+}
+
+const pagination: Pagination = data?.pagination || {
+  page: currentPage,
+  limit: currentLimit,
+  total: 0,
+  totalPages: 1,
+}
+
+const itemStart = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1
+const itemEnd = Math.min(pagination.page * pagination.limit, pagination.total)
+
+const metricList = [
+  { label: 'Total Logs', value: stats.total, color: 'text-primary', border: 'hover:border-primary/30', status: 'all' },
+  { label: 'Completados (2xx)', value: stats.success, color: 'text-emerald-500', border: 'hover:border-emerald-500/30', status: 'success' },
+  { label: 'Errores Valid.', value: stats.validation_error, color: 'text-amber-500', border: 'hover:border-amber-500/30', status: 'validation_error' },
+  { label: 'Errores JSON', value: stats.json_error, color: 'text-red-500', border: 'hover:border-red-500/30', status: 'json_error' },
+  { label: 'Errores Críticos', value: stats.error, color: 'text-red-600', border: 'hover:border-red-600/30', status: 'error' },
+]
+
+const status = (status: string, code: number) => {
+  const statusMap = {
+    ACTIVO: `INFO [${code}]`,
+    ERROR: `ERROR [${code}]`,
+    ANULADO: `ANULADO [${code}]`,
+    DESHABILITADO: `DESHABILITADO [${code}]`,
+  }
+  return statusMap[status as keyof typeof statusMap] || status
+}
+
+const statusColor: Record<string, string> = {
+  ACTIVO: 'text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-main border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold',
+  ERROR: 'text-red-400 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-main border border-red-200 dark:border-red-800 text-[10px] font-bold',
+  ANULADO: 'text-amber-500 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-main border border-amber-200 dark:border-amber-800 text-[10px] font-bold',
+  DESHABILITADO: 'text-neutral-500 bg-neutral-50 dark:bg-neutral-900/50 px-2 py-0.5 rounded-main border border-neutral-300 dark:border-neutral-700 text-[10px] font-bold',
+}
+
+const currentPath = Astro.url.pathname
+
+const statusLabels: Record<string, string> = {
+  all: 'Todos',
+  success: 'Completados',
+  validation_error: 'Errores Valid.',
+  json_error: 'Errores JSON',
+  error: 'Errores Críticos',
+}
+
+const statusIcons: Record<string, string> = {
+  all: 'ListFilter',
+  success: 'CircleCheck',
+  validation_error: 'TriangleAlert',
+  json_error: 'Braces',
+  error: 'CircleX',
+}
+
+const canAnnulDocument = (status: string) => {
+  const nonAnnulableStatuses = ['ANULADO', 'DESHABILITADO', 'ERROR']
+  return !nonAnnulableStatuses.includes(status)
+}
+---
+
+<Layout title="Documentos generados">
+  <div class="mb-6 grid grid-cols-2 gap-4 rounded-main border border-border p-2 md:grid-cols-5">
+    {
+      metricList.map((item) => {
+        const isActive = (item.status === 'all' && !currentStatus) || currentStatus === item.status
+        const activeBorderClass = isActive
+          ? item.status === 'all'
+            ? 'border-primary ring-1 ring-primary'
+            : item.status === 'success'
+              ? 'border-emerald-500 ring-1 ring-emerald-500'
+              : item.status === 'validation_error'
+                ? 'border-amber-500 ring-1 ring-amber-500'
+                : 'border-red-500 ring-1 ring-red-500'
+          : 'border-border'
+
+        return (
+          <a
+            href={`?page=1&status=${item.status}&build_number=${build_number}`}
+            class={`rounded-main border bg-background p-3 pt-2.5 pb-2 shadow-base ${activeBorderClass} ${item.border} flex cursor-pointer flex-col justify-between transition-all duration-300`}
+          >
+            <p class="mb-0 text-xs text-subheading">{item.label}</p>
+            <p class={`font-mono text-sm font-extrabold ${item.color}`}>{item.value}</p>
+          </a>
+        )
+      })
+    }
+  </div>
+  <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center md:justify-end">
+      <div class="w-full shrink-0 sm:w-56">
+        <Dropdown
+          buttonLabel={statusLabels[currentStatus || 'all']}
+          icon={statusIcons[currentStatus || 'all'] as any}
+          position="right"
+          mobileIcon={statusIcons[currentStatus || 'all'] as any}
+          menuClass="min-w-[180px] md:min-w-[200px]"
+          shadow="none"
+        >
+          <a href={`?page=1&status=all&build_number=${build_number}`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
+            <Icon name="List" size={16} />
+            Todos
+          </a>
+          <a href={`?page=1&status=success&build_number=${build_number}`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
+            <Icon name="CircleCheck" class="text-emerald-500" size={16} />
+            Completados (2xx)
+          </a>
+          <a
+            href={`?page=1&status=validation_error&build_number=${build_number}`}
+            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted"
+          >
+            <Icon name="TriangleAlert" class="text-amber-500" size={16} />
+            Errores Valid.
+          </a>
+          <a
+            href={`?page=1&status=json_error&build_number=${build_number}`}
+            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted"
+          >
+            <Icon name="Braces" class="text-red-500" size={16} />
+            Errores JSON
+          </a>
+          <a href={`?page=1&status=error&build_number=${build_number}`} class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm whitespace-nowrap text-heading select-none hover:bg-muted">
+            <Icon name="CircleX" class="text-red-600" size={16} />
+            Errores Críticos
+          </a>
+        </Dropdown>
+      </div>
+      <div class="w-full shrink-0 sm:w-56">
+        <Select name="vars" id="vars-select" value={searchFieldParam} placeholder="Filtrar por campos disponibles" options={selectedVariables} />
+      </div>
+      <div id="search-input-container" class={searchFieldParam ? 'flex items-center gap-2' : 'hidden'}>
+        <div class="w-full shrink-0 sm:w-56">
+          <Input name="search" id="search-input" value={searchValueParam} placeholder="Buscar por valor de los campos" />
+        </div>
+        {searchValueParam && <Button id="search-clear-btn" class="h-10 shrink-0" variant="secondary" size="sm" icon="X" title="Limpiar filtro" />}
+        <Button id="search-apply-btn" class="h-10 shrink-0" variant="secondary" size="sm" icon="Search" title="Aplicar búsqueda" />
+      </div>
+    </div>
+  </div>
+  <div class="mb-4">
+    <div class="overflow-hidden rounded-main bg-background">
+      <StateSwitch hasError={!!error} isEmpty={documents.length === 0}>
+        {
+          documents.map((document) => (
+            <Accordion title={document.response_data.message || 'Sin mensaje'} titleClass="font-mono text-sm font-normal text-heading">
+              <div slot="header" class="flex items-center gap-2" data-accordion-header>
+                <span slot="actions" class={`${statusColor[document.status] || statusColor['ACTIVO']} me-2 inline-flex items-center rounded px-2.5 py-0.5 text-xs font-medium`}>
+                  {status(document.status, document.response_data.code)}
+                </span>
+
+                <div class="shrink-0 text-[10px] text-subheading select-none">{formatExtendedDate(document.created_at)}</div>
+              </div>
+
+              <div>
+                <div class="mb-2 flex flex-wrap items-center gap-4 border-b border-border pb-3 font-mono text-[11px] text-subheading">
+                  <div>
+                    UUID: <span class="font-bold text-heading">{document.uuid}</span>
+                  </div>
+                  <div>
+                    Build: <span class="font-bold text-heading">{document.build_number}</span>
+                  </div>
+                  <div>
+                    Creado: <span class="font-bold text-heading">{formatExtendedDate(document.created_at)}</span>
+                  </div>
+                  {document.encrypt && (
+                    <a
+                      href={`${pdfBaseUrl}/documents/viewPDF/${document.encrypt}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="flex max-w-xs cursor-pointer items-center gap-3 rounded-main border border-border px-2 py-1 hover:bg-foreground hover:text-subheading"
+                    >
+                      Ver documento
+                      <Icon name="ExternalLink" size={13} />
+                    </a>
+                  )}
+                  {canAnnulDocument(document.status) && (
+                    <button
+                      type="button"
+                      class="flex max-w-xs cursor-pointer items-center gap-3 rounded-main border border-red-200 bg-red-50 px-2 py-1 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400 dark:hover:bg-red-900/50"
+                      data-open-modal="modal-annul"
+                      data-uuid-template={uuid}
+                      data-uuid-document={document.uuid}
+                    >
+                      Anular documento
+                      <Icon name="Ban" size={13} />
+                    </button>
+                  )}
+                </div>
+
+                <span class="font-mono text-[11px] font-bold text-heading">Body:</span>
+                <div class="mb-4 overflow-x-auto rounded-main border border-border bg-foreground p-2 font-mono text-[11px] leading-relaxed">
+                  <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(document.payload, null, 2)} />
+                </div>
+
+                <span class="font-mono text-[11px] font-bold text-heading">Response Data:</span>
+                <div class="mb-4 overflow-x-auto rounded-main border border-border bg-foreground p-2 font-mono text-[11px] leading-relaxed">
+                  <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={JSON.stringify(document.response_data, null, 2)} />
+                </div>
+
+                {document.status === 'ERROR' && document.response_data.data?.errors && (
+                  <div class="rounded-md border border-destructive bg-destructive/10 p-3 text-[11px]">
+                    <p class="mb-1 font-bold text-destructive">Detalle del Error de Validación:</p>
+                    <ul class="list-inside list-disc space-y-1 text-destructive">
+                      {document.response_data.data.errors.map((err: string) => (
+                        <li>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </Accordion>
+          ))
+        }
+
+        <EmptyState
+          slot="error"
+          title="Error al cargar la lista"
+          description="Ah ocurrido un error al cargar la lista de documentos."
+          href={currentPath}
+          hrefText="Recargar"
+          state="error"
+          action="refresh"
+        />
+
+        <EmptyState
+          href={`/config/generated/${uuid}?page=1&status=all&build_number=${build_number}`}
+          hrefText="Limpiar filtros"
+          slot="empty"
+          title="No se encontraron documentos"
+          description="No se encontraron documentos con los filtros aplicados."
+          action="refresh"
+        />
+      </StateSwitch>
+    </div>
+  </div>
+
+  <div class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 font-mono text-sm text-subheading sm:flex-row">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div>
+        Mostrando <span class="font-bold text-heading">{itemStart} - {itemEnd}</span> de <span class="font-bold text-heading">{pagination.total}</span> registros
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="shrink-0">Mostrar:</span>
+        <div class="w-20">
+          <Select
+            name="limit"
+            id="page-limit"
+            value={currentLimit.toString()}
+            class="h-8 rounded-main py-0.5 text-xs"
+            options={[
+              { value: '10', label: '10' },
+              { value: '20', label: '20' },
+              { value: '50', label: '50' },
+              { value: '100', label: '100' },
+            ]}
+          />
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2">
+      <div class="inline-flex items-center gap-x-2">
+        {
+          pagination.page > 1 ? (
+            <Link
+              href={`?page=${pagination.page - 1}&build_number=${build_number}${currentLimit !== 10 ? `&limit=${currentLimit}` : ''}${currentStatus ? `&status=${currentStatus}` : ''}${searchFieldQuery}${searchValueQuery}`}
+              variant="secondary"
+              icon="ChevronLeft"
+              size="sm"
+            >
+              Anterior
+            </Link>
+          ) : (
+            <Button variant="secondary" icon="ChevronLeft" size="sm" disabled>
+              Anterior
+            </Button>
+          )
+        }
+        <span class="text-xs">Página <span id="current-page">{pagination.page}</span> de <span id="total-pages">{pagination.totalPages}</span></span>
+        {
+          pagination.page < pagination.totalPages ? (
+            <Link
+              href={`?page=${pagination.page + 1}&build_number=${build_number}${currentLimit !== 10 ? `&limit=${currentLimit}` : ''}${currentStatus ? `&status=${currentStatus}` : ''}${searchFieldQuery}${searchValueQuery}`}
+              variant="secondary"
+              icon="ChevronRight"
+              size="sm"
+              iconPosition="right"
+            >
+              Siguiente
+            </Link>
+          ) : (
+            <Button variant="secondary" icon="ChevronRight" size="sm" iconPosition="right" disabled>
+              Siguiente
+            </Button>
+          )
+        }
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<Modal modalId="modal-annul" title="Anular documento">
+  <form class="space-y-6" id="annul-document-form">
+    <div class="flex flex-col py-2">
+      <p class="mb-4 text-sm text-subheading">Elige cómo quieres anular este documento:</p>
+
+      <div class="space-y-4">
+        <Radio
+          name="annul_type"
+          value="WATERMARK"
+          label="Anular con Marca de Agua"
+          description='El documento seguirá siendo accesible, pero con una marca de "ANULADO" visible sobre el contenido.'
+          checked
+        />
+
+        <Radio name="annul_type" value="DISABLE" label="Deshabilitar acceso" description="El documento dejará de estar disponible mediante su URL (borrado lógico, error 403)." />
+      </div>
+
+      <input type="hidden" name="uuid_template" id="annul-uuid-template" value="" />
+      <input type="hidden" name="uuid_document" id="annul-uuid-document" value="" />
+    </div>
+  </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" form="annul-document-form" id="btn-annul-document" loadingText="Anulando...">Anular documento</Button>
+  </div>
+</Modal>
+
+<script>
+  import { actions } from 'astro:actions'
+
+  document.addEventListener('astro:page-load', () => {
+    // Handling open modal to set values
+    const annulButtons = document.querySelectorAll('[data-open-modal="modal-annul"]')
+    const inputTemplate = document.getElementById('annul-uuid-template') as HTMLInputElement
+    const inputDocument = document.getElementById('annul-uuid-document') as HTMLInputElement
+
+    annulButtons.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLElement
+        if (inputTemplate && inputDocument) {
+          inputTemplate.value = target.dataset.uuidTemplate || ''
+          inputDocument.value = target.dataset.uuidDocument || ''
+        }
+      })
+    })
+
+    // Form submission
+    const form = document.getElementById('annul-document-form') as HTMLFormElement
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        const formData = new FormData(form)
+        const uuid_template = formData.get('uuid_template') as string
+        const uuid_document = formData.get('uuid_document') as string
+        const type = formData.get('annul_type') as 'WATERMARK' | 'DISABLE'
+
+        const btn = document.getElementById('btn-annul-document') as HTMLButtonElement
+        if (btn) btn.disabled = true
+
+        try {
+          const { data, error } = await actions.documents.annulDocument({ uuid_template, uuid_document, type })
+          if (!error) {
+            window.location.reload()
+          } else {
+            console.error('Error:', error)
+            alert('No se pudo anular el documento. Verifique sus permisos o intente de nuevo.')
+          }
+        } finally {
+          if (btn) btn.disabled = false
+        }
+      })
+    }
+  })
+</script>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    // Manejo de la cantidad de registros por página
+    const limitSelect = document.getElementById('page-limit') as HTMLSelectElement | null
+    if (limitSelect) {
+      limitSelect.addEventListener('change', (event) => {
+        const target = event.target as HTMLSelectElement
+        const newLimit = target.value
+        const url = new URL(window.location.href)
+        url.searchParams.set('limit', newLimit)
+        // Reiniciamos a la primera página al cambiar el límite
+        url.searchParams.set('page', '1')
+        window.location.href = url.toString()
+      })
+    }
+
+    // Manejo de los filtros de búsqueda por variables
+    const varsSelect = document.getElementById('vars-select') as HTMLSelectElement | null
+    const searchContainer = document.getElementById('search-input-container')
+    const searchInput = document.getElementById('search-input') as HTMLInputElement | null
+    const applyBtn = document.getElementById('search-apply-btn') as HTMLButtonElement | null
+    const clearBtn = document.getElementById('search-clear-btn') as HTMLButtonElement | null
+
+    if (!varsSelect || !searchContainer || !searchInput) return
+
+    const executeSearch = () => {
+      const selectedField = varsSelect.value
+      if (!selectedField) return
+
+      const url = new URL(window.location.href)
+      url.searchParams.set('searchField', selectedField)
+
+      const searchValue = searchInput.value.trim()
+      if (searchValue) {
+        url.searchParams.set('searchValue', searchValue)
+      } else {
+        url.searchParams.delete('searchValue')
+      }
+
+      url.searchParams.set('page', '1')
+      window.location.href = url.toString()
+    }
+
+    const resetFilters = () => {
+      varsSelect.value = ''
+      searchContainer.classList.add('hidden')
+      searchContainer.classList.remove('flex', 'items-center', 'gap-2')
+      searchInput.value = ''
+
+      const url = new URL(window.location.href)
+      const hasField = url.searchParams.has('searchField')
+      const hasValue = url.searchParams.has('searchValue')
+      if (!hasField && !hasValue) return
+
+      url.searchParams.delete('searchField')
+      url.searchParams.delete('searchValue')
+      url.searchParams.set('page', '1')
+      window.location.href = url.toString()
+    }
+
+    varsSelect.addEventListener('change', (event) => {
+      const target = event.target as HTMLSelectElement
+      const selectedValue = target.value
+
+      if (!selectedValue) {
+        resetFilters()
+        return
+      }
+
+      searchContainer.classList.remove('hidden')
+      searchContainer.classList.add('flex', 'items-center', 'gap-2')
+      searchInput.focus()
+    })
+
+    searchInput.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return
+      event.preventDefault()
+      executeSearch()
+    })
+
+    applyBtn?.addEventListener('click', (event) => {
+      event.preventDefault()
+      executeSearch()
+    })
+
+    clearBtn?.addEventListener('click', (event) => {
+      event.preventDefault()
+      resetFilters()
+    })
+  })
+</script>
+
+<style>
+  .code-container,
+  pre {
+    background-color: transparent !important;
+  }
+</style>

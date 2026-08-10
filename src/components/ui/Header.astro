@@ -1,0 +1,23 @@
+---
+import TitleForPage from './TitleForPage.astro'
+import Breadcrumb from './Breadcrumb.astro'
+import type { BreadcrumbItem } from './Breadcrumb.astro'
+
+interface Props {
+  title: string
+  subtitle?: string
+  backHref?: string
+  showBreadcrumb?: boolean
+  breadcrumbItems?: BreadcrumbItem[]
+}
+
+const { title, subtitle, backHref = undefined, showBreadcrumb = true, breadcrumbItems } = Astro.props
+---
+
+<div class="mb-10">
+  {showBreadcrumb && <Breadcrumb items={breadcrumbItems} />}
+  <div class="flex items-center justify-between">
+    <TitleForPage title={title} subtitle={subtitle} backHref={backHref} showBackButton={!showBreadcrumb} />
+    <slot name="actions" />
+  </div>
+</div>

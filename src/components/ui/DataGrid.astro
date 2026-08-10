@@ -1,0 +1,37 @@
+---
+import type { ActionError } from 'astro:actions'
+
+interface Props {
+  hasData: boolean
+  isError: ActionError<never> | undefined
+  grid?: 'x1' | 'x2' | 'x3' | 'x4' | 'x5' | 'x6'
+}
+
+const { hasData, isError, grid = 'x2' } = Astro.props
+
+const optionsGrid = {
+  x1: 'sm:grid-cols-1 lg:grid-cols-1',
+  x2: 'sm:grid-cols-2 lg:grid-cols-3',
+  x3: 'sm:grid-cols-2 lg:grid-cols-4',
+  x4: 'sm:grid-cols-3 lg:grid-cols-5',
+  x5: 'sm:grid-cols-2 lg:grid-cols-6',
+  x6: 'sm:grid-cols-3 lg:grid-cols-7',
+}
+---
+
+<div>
+  {
+    isError ? (
+      <slot name="error-state" />
+    ) : !hasData ? (
+      <slot name="empty-state" />
+    ) : (
+      <>
+        <slot name="header" />
+        <div class={`mb-6 grid gap-4 ${optionsGrid[grid]}`}>
+          <slot />
+        </div>
+      </>
+    )
+  }
+</div>

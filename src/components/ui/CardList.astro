@@ -1,0 +1,78 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import { icons } from '@lucide/astro'
+import Icon from './Icon.astro'
+
+interface Props extends HTMLAttributes<'div'> {
+  icon?: keyof typeof icons
+  title: string
+  description?: string
+  secondaryText?: string | Date
+  img?: string | null
+}
+
+const { icon, title, description, secondaryText, img, class: className, ...rest } = Astro.props
+
+const hasIcon = !!icon
+const hasImage = !!img
+const hasDescription = !!description
+const hasSecondaryText = !!secondaryText
+const hasActionsSlot = Astro.slots.has('actions')
+const hasAvatarSlot = Astro.slots.has('avatar')
+
+const baseUrl = import.meta.env.API_URL
+const urlImage = hasImage ? `${baseUrl}${img}` : undefined
+---
+
+<div class={`group flex items-center justify-between border-b border-border py-3 px-4 transition-all last:border-b-0 ${className || ''}`} {...rest}>
+  <div class="flex min-w-0 flex-1 items-center gap-4">
+    {
+      hasAvatarSlot ? (
+        <slot name="avatar" />
+      ) : hasImage ? (
+        <div class="relative size-10 shrink-0 overflow-hidden rounded-main">
+          <img
+            src={urlImage}
+            alt={title ? `Imagen de ${title}` : 'Imagen'}
+            class="h-full w-full object-cover"
+            loading="lazy"
+            onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden')"
+          />
+          {hasIcon && (
+            <div class="hidden size-10 items-center justify-center bg-muted text-heading">
+              <Icon name={icon} stroke-width={1.6} size={20} />
+            </div>
+          )}
+        </div>
+      ) : (
+        hasIcon && (
+          <div class="flex size-10 shrink-0 items-center justify-center rounded-main bg-muted text-heading transition-colors">
+            <Icon name={icon} stroke-width={1.6} size={20} />
+          </div>
+        )
+      )
+    }
+    <div class="min-w-0 flex-1 space-y-1">
+      <h3 class="truncate leading-none font-medium tracking-tight text-heading">{title}</h3>
+      {hasDescription && <p class="line-clamp-2 text-sm text-subheading">{description}</p>}
+    </div>
+  </div>
+
+  <div class="ml-4 flex items-center gap-4">
+    {
+      hasSecondaryText && (
+        <div class="hidden flex-col items-end sm:flex">
+          <span class="text-xs font-medium whitespace-nowrap text-subheading">{secondaryText}</span>
+        </div>
+      )
+    }
+
+    {
+      hasActionsSlot && (
+        <div class="flex items-center gap-1">
+          <slot name="actions" />
+        </div>
+      )
+    }
+  </div>
+</div>

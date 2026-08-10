@@ -1,0 +1,67 @@
+---
+import Button from '@/components/ui/Button.astro'
+import Link from '@/components/ui/Link.astro'
+
+interface Props {
+  formId: string
+  submitText: string
+  loadingText?: string
+  cancelHref?: string
+  method?: 'post' | 'get'
+  isEdit?: boolean
+}
+
+const { formId, submitText, loadingText = 'Guardando...', cancelHref = '/', method = 'post', isEdit = false } = Astro.props
+---
+
+<form id={formId} method={method} class="space-y-8" data-is-edit={isEdit.toString()}>
+  <slot />
+
+  <div class="h-40"></div>
+
+  <div class="fixed right-0 bottom-0 left-0 z-10 flex items-center border-t border-border bg-background py-4 lg:ml-14 xl:ml-20">
+    <div class="mx-auto flex w-full max-w-6xl justify-end gap-4">
+      <Link href={cancelHref} size="sm" variant="secondary">Cancelar</Link>
+      <Button type="submit" size="sm" id={`${formId}-submit`} data-loading-text={loadingText} icon="Save">
+        {submitText}
+      </Button>
+    </div>
+  </div>
+</form>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const form = document.querySelector('form')
+    if (!form) return
+
+    let firstInvalidEl: Element | null = null
+    let scrollScheduled = false
+
+    form.addEventListener(
+      'invalid',
+      (e) => {
+        if (!firstInvalidEl && e.target instanceof Element) {
+          firstInvalidEl = e.target
+        }
+
+        if (!scrollScheduled) {
+          scrollScheduled = true
+          requestAnimationFrame(() => {
+            if (firstInvalidEl) {
+              const wrapper = firstInvalidEl.closest('[data-input-wrapper], [data-select-wrapper], [data-inputprefix-wrapper]')
+              const scrollTarget = wrapper || firstInvalidEl
+              scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+              if (firstInvalidEl instanceof HTMLElement) {
+                firstInvalidEl.focus({ preventScroll: true })
+              }
+            }
+            firstInvalidEl = null
+            scrollScheduled = false
+          })
+        }
+      },
+      true
+    )
+  })
+</script>

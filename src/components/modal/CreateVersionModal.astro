@@ -1,0 +1,132 @@
+---
+import Modal from './Modal.astro'
+import Input from '../form/Input.astro'
+import Button from '../ui/Button.astro'
+
+interface Props {
+  uuidTemplate: string
+  modalId?: string
+  formId?: string
+  mode?: 'editor' | 'clone'
+}
+
+const { uuidTemplate, modalId = 'new-version-document', formId = 'new-version-document-form', mode = 'editor' } = Astro.props
+---
+
+<Modal title="Crear versión" modalId={modalId}>
+  <form id={formId} data-mode={mode} data-modal-id={modalId}>
+    <div>
+      <Input label="Versión" name="name_version" placeholder="Ingrese la versión del documento" required />
+      <input type="hidden" name="uuid_template" value={uuidTemplate} />
+      {mode === 'clone' && <input type="hidden" name="build_number" />}
+    </div>
+  </form>
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" id="btn-new-version-document" form={formId} loadingText="Guardando...">Crear versión</Button>
+  </div>
+</Modal>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading, compressJson } from '@/scripts/utils'
+  import { toast } from '@/scripts/toast'
+
+  function initializeCreateVersionModal() {
+    const forms = document.querySelectorAll<HTMLFormElement>('form[data-mode][data-modal-id]')
+
+    forms.forEach((form) => {
+      if (form.dataset.initialized === 'true') return
+      form.dataset.initialized = 'true'
+
+      const mode = form.dataset.mode as 'editor' | 'clone'
+      const modalId = form.dataset.modalId as string
+      const dialog = document.getElementById(modalId) as HTMLDialogElement | null
+      if (!dialog) return
+
+      dialog.addEventListener('close', () => {
+        form.reset()
+      })
+
+      const uuidTemplateInput = form.querySelector<HTMLInputElement>('input[name="uuid_template"]')
+      const buildNumberInput = form.querySelector<HTMLInputElement>('input[name="build_number"]')
+      const nameVersionInput = form.querySelector<HTMLInputElement>('input[name="name_version"]')
+      const btnId = '#btn-new-version-document'
+
+      if (mode === 'clone') {
+        document.addEventListener('click', (event) => {
+          const trigger = (event.target as HTMLElement).closest<HTMLElement>(`[data-open-modal="${modalId}"]`)
+          if (!trigger) return
+          if (buildNumberInput) buildNumberInput.value = trigger.dataset.buildNumber ?? ''
+          if (nameVersionInput) nameVersionInput.value = ''
+        })
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault()
+          const formData = new FormData(form)
+          const uuidTemplate = formData.get('uuid_template') as string
+          const buildNumber = formData.get('build_number') as string
+          const nameVersion = formData.get('name_version') as string
+
+          if (!uuidTemplate || !buildNumber) {
+            toast.error('Falta información para crear la version')
+            return
+          }
+
+          try {
+            setButtonLoading(btnId, true)
+
+            const { data: documentData, error: getError } = await callAction(actions.documents.getDocument({ uuid_template: uuidTemplate, build_number: buildNumber, compress: false }))
+
+            if (getError || !documentData?.data) {
+              toast.error(getError?.message || 'No se pudo obtener la plantilla de la versión')
+              setButtonLoading(btnId, false)
+              return
+            }
+
+            const compressedBlob = await compressJson(documentData.data)
+            const cloneFormData = new FormData()
+            cloneFormData.append('uuid_template', uuidTemplate)
+            cloneFormData.append('name_version', nameVersion)
+            cloneFormData.append('template_data', compressedBlob, 'template.json.gz')
+
+            const { data: createData, error: createError } = await callAction(actions.documents.createNewVersion(cloneFormData))
+
+            if (createError) {
+              toast.error(createError.message)
+              setButtonLoading(btnId, false)
+              return
+            }
+
+            toast.success(createData!.message)
+            dialog.close()
+            navigate(window.location.href)
+          } catch (err) {
+            toast.error('Ha ocurrido un error al crear la versión. Por favor, intente nuevamente.')
+          } finally {
+            setButtonLoading(btnId, false)
+          }
+        })
+      } else {
+        // mode === 'editor'
+        form.addEventListener('submit', (e) => {
+          e.preventDefault()
+          const formData = new FormData(form)
+          const uuidTemplate = formData.get('uuid_template') as string
+          const nameVersion = formData.get('name_version') as string
+
+          document.dispatchEvent(
+            new CustomEvent('create-version:submit', {
+              detail: { uuidTemplate, nameVersion, modalId, formId: form.id, btnId },
+            })
+          )
+        })
+      }
+    })
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    initializeCreateVersionModal()
+  })
+</script>

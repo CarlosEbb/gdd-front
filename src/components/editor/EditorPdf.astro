@@ -1,5 +1,6 @@
 ---
 import Modal from '@/components/modal/Modal.astro'
+import CreateVersionModal from '@/components/modal/CreateVersionModal.astro'
 import { actions } from 'astro:actions'
 import Button from '../ui/Button.astro'
 import Input from '../form/Input.astro'
@@ -18,7 +19,6 @@ const { uuid } = Astro.props
 const urlParams = Astro.url.searchParams
 const buildNumber = urlParams.get('build_number') as string
 const hasBuildNumber = urlParams.has('build_number')
-const idWorkspace = urlParams.get('id_workspace') as string
 const nameDocument = urlParams.get('name_document') as string
 let schemaFile: SchemaFile | null = null
 
@@ -223,7 +223,7 @@ const SHOW_PAGE_FOR_VIEW = false
             <h3 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Documento</h3>
             <ul class="space-y-1">
               <li class="md:hidden">
-                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100" data-mobile-action="new-version">
+                <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" data-mobile-action="new-version">
                   <Icon name="GitBranch" class="size-4" stroke-width={1.5} />
                   Crear versión
                 </button>
@@ -255,10 +255,10 @@ const SHOW_PAGE_FOR_VIEW = false
             </ul>
           </div>
           <div class="mx-2 p-2.5">
-            <h3 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase lg:hidden">Configuración</h3>
+            <h3 class="mb-2 text-xs font-semibold tracking-wide text-subheading uppercase lg:hidden">Configuración</h3>
             <ul class="space-y-1">
               <li>
-                <a href={`/config/documentation/${uuid}?build_number=${buildNumber}`} class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
+                <a href={`/config/documentation/${uuid}?build_number=${buildNumber}`} class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted">
                   <Icon name="FileInput" class="size-4" stroke-width={1.5} />
                   Documentación
                 </a>
@@ -280,20 +280,9 @@ const SHOW_PAGE_FOR_VIEW = false
   </div>
 </nav>
 
-<div id="container" class="h-[calc(100vh-120px)] w-full"></div>
+<div id="container" class="h-[calc(100vh-56px)] w-full"></div>
 
-<Modal title="Crear versión" modalId="new-version-document">
-  <form id="new-version-document-form">
-    <div>
-      <Input label="Versión" name="name_version" placeholder="Ingrese la versión del documento" required />
-      <input type="hidden" name="uuid_template" value={uuid} />
-    </div>
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
-      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-      <Button type="submit" size="sm" id="btn-new-version-document" loadingText="Guardando...">Crear versión</Button>
-    </div>
-  </form>
-</Modal>
+<CreateVersionModal uuidTemplate={uuid} mode="editor" />
 
 <Modal title="Eliminar documento" modalId="delete-document">
   <form class="space-y-6" id="delete-document-form">
@@ -304,7 +293,7 @@ const SHOW_PAGE_FOR_VIEW = false
       <input type="hidden" name="uuid_template" value={uuid} />
       <input type="hidden" name="name_version" value={buildNumber} />
     </div>
-    <div class="flex justify-end space-x-4 border-t border-gray-200 pt-4">
+    <div class="flex justify-end space-x-4 border-t border-border pt-4">
       <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
       <Button type="submit" size="sm" id="btn-delete-document" loadingText="Eliminando...">Eliminar documento</Button>
     </div>
@@ -340,12 +329,14 @@ const SHOW_PAGE_FOR_VIEW = false
 <script type="application/json" id="schema-file-data" set:html={JSON.stringify(schemaFile)} />
 <script>
   import { callAction, setButtonLoading, compressJson } from '@/scripts/utils.js'
+  import { getComputedColorInHex } from '@/scripts/color-utils.js'
   import { toast } from '@/scripts/toast'
   import { actions } from 'astro:actions'
   import { navigate } from 'astro:transitions/client'
   import { downloadJsonFile, readJsonFile, toggleFullscreen, handleBasePdfChange, handleGeneratePdf, initializeFonts } from '@/pdfme/utils.js'
   import { text, multiVariableText, table, line, rectangle, ellipse, image, svg } from '@pdfme/schemas'
   import { signature } from '@/pdfme/plugins/signature'
+  import { richText } from '@/pdfme/plugins/richText'
   import { Designer } from '@pdfme/ui'
   import { BLANK_A4_PDF, getInputFromTemplate } from '@pdfme/common'
   import { PaginationManager } from '@/pdfme/pagination.js'
@@ -791,6 +782,7 @@ const SHOW_PAGE_FOR_VIEW = false
           ellipse,
           image,
           signature,
+          richText,
           svg,
         }
 
@@ -806,6 +798,18 @@ const SHOW_PAGE_FOR_VIEW = false
           options: {
             lang: 'es',
             font: fonts,
+            theme: {
+              token: {
+                colorPrimary: primaryColor,
+                colorBgBase: colorBgBase,
+                colorTextBase: colorTextBase,
+                colorBorder: colorBorder,
+                colorBgLayout: colorBgLayout,
+                colorBgElevated: isDark ? '#262626' : '#ffffff',
+                colorBgSpotlight: isDark ? '#262626' : '#ffffff',
+                colorFillSecondary: isDark ? '#333333' : '#f3f4f6',
+              },
+            },
           },
         })
         domContainer.addEventListener('wheel', handleEditorWheel, { passive: false })
@@ -1115,7 +1119,7 @@ const SHOW_PAGE_FOR_VIEW = false
       await handleSave(uuidTemplate, '', '#btn-save-document')
     }
 
-    formNewVersionDocument.addEventListener('submit', handleNewVersion)
+    document.addEventListener('create-version:submit', handleNewVersion)
     formDeleteDocument.addEventListener('submit', handleDeleteDocument)
     saveDocumentButton.addEventListener('click', handleSaveNewDocument)
     initializeEditor()
@@ -1125,3 +1129,30 @@ const SHOW_PAGE_FOR_VIEW = false
     initializePage()
   })
 </script>
+
+<style is:global>
+  /* Estos estilos se aplicarán al contenedor del editor (que contiene iframes y divs internos de pdfme)
+     Especialmente útiles para forzar fondos oscuros en áreas donde la API theme.token no llega. */
+  .dark #container {
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+  }
+
+  .dark #container * {
+    scrollbar-color: var(--border) var(--background);
+  }
+
+  /* Ajuste para los modales de antd que usa internamente pdfme si llegaran a salir del div principal */
+  .dark .ant-modal-content,
+  .dark .ant-popover-inner,
+  .dark .ant-select-dropdown {
+    background-color: var(--background) !important;
+    color: var(--heading) !important;
+    border: 1px solid var(--border) !important;
+  }
+
+  .dark .ant-menu-sub {
+    background-color: var(--background) !important;
+    color: var(--heading) !important;
+  }
+</style>

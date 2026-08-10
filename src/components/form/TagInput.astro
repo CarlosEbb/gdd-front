@@ -1,0 +1,307 @@
+---
+import Icon from '../ui/Icon.astro'
+
+interface Props {
+  label?: string
+  name: string
+  values?: string[]
+  placeholder?: string
+  hint?: string
+  separator?: string
+  validateEmail?: boolean
+  serverError?: string
+}
+
+const {
+  label,
+  name,
+  values = [],
+  placeholder = 'Escribe y separa con coma',
+  hint,
+  separator = ',',
+  validateEmail = false,
+  serverError,
+} = Astro.props
+
+const inputId = `tag-input-${name}`
+const errorId = `error-${name}`
+const hintId = `hint-${name}`
+const helperText = hint ?? (validateEmail ? 'Separa los correos por coma (,). Ejemplo: correo1@ejemplo.com, correo2@ejemplo.com' : '')
+const stateClasses = serverError
+  ? 'border-destructive focus-within:border-destructive focus-within:ring-destructive'
+  : 'border-border focus-within:border-primary focus-within:ring-ring'
+---
+
+<div class="w-full" data-tag-input data-separator={separator} data-validate-email={String(validateEmail)}>
+  {
+    label && (
+      <label class="mb-1 block text-sm font-medium text-heading" for={inputId}>
+        {label}
+      </label>
+    )
+  }
+
+  <div
+    class:list={[
+      'flex min-h-10 w-full cursor-text flex-wrap items-center gap-1.5 rounded-main border bg-background p-1.5 transition duration-200 focus-within:border-transparent focus-within:ring-2',
+      stateClasses,
+    ]}
+    data-tag-input-control
+  >
+    <div class="flex flex-wrap items-center gap-1.5" data-tag-list>
+      {
+        values.map((value) => (
+          <span
+            class="inline-flex max-w-full items-center gap-1 rounded-main bg-primary-foreground px-2 py-0.5 text-xs font-medium text-primary"
+            data-tag-item
+            data-value={value}
+          >
+            <span class="truncate" data-tag-label>
+              {value}
+            </span>
+            <button
+              type="button"
+              class="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10"
+              data-tag-remove
+              aria-label={`Eliminar ${value}`}
+            >
+              <Icon name="X" size={12} stroke-width={2} />
+            </button>
+          </span>
+        ))
+      }
+    </div>
+
+    <input
+      id={inputId}
+      type="text"
+      autocomplete="off"
+      placeholder={values.length === 0 ? placeholder : ''}
+      aria-describedby={`${helperText ? hintId : ''} ${errorId}`.trim()}
+      aria-invalid={!!serverError}
+      class="min-w-32 flex-1 border-0 bg-transparent px-1 py-1 text-sm text-heading outline-none placeholder:text-subheading"
+      data-tag-input-field
+    />
+  </div>
+
+  <input type="hidden" name={name} value={JSON.stringify(values)} data-tag-input-value data-form-field={name} data-original-type="array" />
+
+  {
+    helperText && (
+      <p id={hintId} class="mt-1 text-xs text-subheading">
+        {helperText}
+      </p>
+    )
+  }
+
+  {
+    serverError && (
+      <span id={errorId} class="error-message server-error mt-1 text-sm text-destructive" role="alert">
+        {serverError}
+      </span>
+    )
+  }
+
+  {!serverError && <span id={errorId} class="error-message client-error mt-1 hidden text-sm text-destructive" data-client-error />}
+
+  <template data-tag-template>
+    <span
+      class="inline-flex max-w-full items-center gap-1 rounded-main bg-primary-foreground px-2 py-0.5 text-xs font-medium text-primary"
+      data-tag-item
+      data-value=""
+    >
+      <span class="truncate" data-tag-label></span>
+      <button
+        type="button"
+        class="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10"
+        data-tag-remove
+        aria-label="Eliminar"
+      >
+        <Icon name="X" size={12} stroke-width={2} />
+      </button>
+    </span>
+  </template>
+</div>
+
+<script>
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+  function getTags(root: HTMLElement): string[] {
+    return Array.from(root.querySelectorAll('[data-tag-item]'))
+      .map((item) => (item as HTMLElement).dataset.value || '')
+      .filter(Boolean)
+  }
+
+  function syncHiddenValue(root: HTMLElement) {
+    const hidden = root.querySelector('[data-tag-input-value]') as HTMLInputElement | null
+    const field = root.querySelector('[data-tag-input-field]') as HTMLInputElement | null
+    const tags = getTags(root)
+
+    if (hidden) {
+      hidden.value = JSON.stringify(tags)
+    }
+
+    if (field) {
+      field.placeholder = tags.length === 0 ? field.dataset.emptyPlaceholder || 'Escribe y separa con coma' : ''
+    }
+  }
+
+  function showError(root: HTMLElement, message: string) {
+    const errorEl = root.querySelector('[data-client-error]') as HTMLElement | null
+    const field = root.querySelector('[data-tag-input-field]') as HTMLInputElement | null
+    if (!errorEl || !field) return
+
+    errorEl.textContent = message
+    errorEl.classList.remove('hidden')
+    field.setAttribute('aria-invalid', 'true')
+  }
+
+  function clearError(root: HTMLElement) {
+    const errorEl = root.querySelector('[data-client-error]') as HTMLElement | null
+    const field = root.querySelector('[data-tag-input-field]') as HTMLInputElement | null
+    if (!errorEl || !field) return
+
+    errorEl.textContent = ''
+    errorEl.classList.add('hidden')
+    field.setAttribute('aria-invalid', 'false')
+  }
+
+  function createTagElement(root: HTMLElement, value: string): HTMLElement | null {
+    const template = root.querySelector('[data-tag-template]') as HTMLTemplateElement | null
+    if (!template) return null
+
+    const node = template.content.firstElementChild?.cloneNode(true) as HTMLElement | null
+    if (!node) return null
+
+    node.dataset.value = value
+    const label = node.querySelector('[data-tag-label]')
+    const removeBtn = node.querySelector('[data-tag-remove]') as HTMLButtonElement | null
+
+    if (label) label.textContent = value
+    if (removeBtn) removeBtn.setAttribute('aria-label', `Eliminar ${value}`)
+
+    return node
+  }
+
+  function addTags(root: HTMLElement, rawValues: string[]) {
+    const list = root.querySelector('[data-tag-list]') as HTMLElement | null
+    const validateEmail = root.dataset.validateEmail === 'true'
+    if (!list) return
+
+    const existing = new Set(getTags(root).map((tag) => tag.toLowerCase()))
+
+    rawValues.forEach((raw) => {
+      const value = raw.trim()
+      if (!value) return
+
+      if (validateEmail && !EMAIL_PATTERN.test(value)) {
+        showError(root, `"${value}" no es un correo válido.`)
+        return
+      }
+
+      if (existing.has(value.toLowerCase())) return
+
+      const tag = createTagElement(root, value)
+      if (!tag) return
+
+      list.appendChild(tag)
+      existing.add(value.toLowerCase())
+      clearError(root)
+    })
+
+    syncHiddenValue(root)
+  }
+
+  function removeTag(root: HTMLElement, tagItem: HTMLElement) {
+    tagItem.remove()
+    syncHiddenValue(root)
+    clearError(root)
+  }
+
+  function commitPendingValue(root: HTMLElement) {
+    const field = root.querySelector('[data-tag-input-field]') as HTMLInputElement | null
+    if (!field) return
+
+    const separator = root.dataset.separator || ','
+    const chunks = field.value
+      .split(separator)
+      .map((part) => part.trim())
+      .filter(Boolean)
+
+    if (chunks.length === 0) return
+
+    addTags(root, chunks)
+    field.value = ''
+  }
+
+  function initTagInput(root: HTMLElement) {
+    if (root.dataset.initialized === 'true') return
+    root.dataset.initialized = 'true'
+
+    const control = root.querySelector('[data-tag-input-control]') as HTMLElement | null
+    const field = root.querySelector('[data-tag-input-field]') as HTMLInputElement | null
+    const separator = root.dataset.separator || ','
+
+    if (!control || !field) return
+
+    field.dataset.emptyPlaceholder = field.placeholder
+    syncHiddenValue(root)
+
+    control.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement
+      if (target.closest('[data-tag-remove]')) return
+      field.focus()
+    })
+
+    root.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement
+      const removeBtn = target.closest('[data-tag-remove]') as HTMLElement | null
+      if (!removeBtn) return
+
+      const tagItem = removeBtn.closest('[data-tag-item]') as HTMLElement | null
+      if (tagItem) removeTag(root, tagItem)
+    })
+
+    field.addEventListener('keydown', (event) => {
+      if (event.key === separator || event.key === 'Enter') {
+        event.preventDefault()
+        commitPendingValue(root)
+        return
+      }
+
+      if (event.key === 'Backspace' && field.value === '') {
+        const tags = root.querySelectorAll('[data-tag-item]')
+        const lastTag = tags[tags.length - 1] as HTMLElement | undefined
+        if (lastTag) removeTag(root, lastTag)
+      }
+    })
+
+    field.addEventListener('input', () => {
+      clearError(root)
+
+      if (field.value.includes(separator)) {
+        commitPendingValue(root)
+      }
+    })
+
+    field.addEventListener('blur', () => {
+      commitPendingValue(root)
+    })
+
+    field.addEventListener('paste', (event) => {
+      const text = event.clipboardData?.getData('text')
+      if (!text || !text.includes(separator)) return
+
+      event.preventDefault()
+      addTags(root, text.split(separator))
+      field.value = ''
+    })
+  }
+
+  function initAllTagInputs() {
+    document.querySelectorAll<HTMLElement>('[data-tag-input]').forEach(initTagInput)
+  }
+
+  initAllTagInputs()
+  document.addEventListener('astro:page-load', initAllTagInputs)
+</script>

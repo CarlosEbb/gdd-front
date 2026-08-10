@@ -1,0 +1,62 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import { actions } from 'astro:actions'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import List from '@/components/ui/List.astro'
+import type { DetailsServer } from '@/types/servers'
+import Container from '@/components/ui/Container.astro'
+import Link from '@/components/ui/Link.astro'
+import DataGrid from '@/components/ui/DataGrid.astro'
+import SearchFilter from '@/components/form/SearchFilter.astro'
+import Header from '@/components/ui/Header.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Icon from '@/components/ui/Icon.astro'
+
+const currentPath = Astro.url.pathname
+const { data, error } = await Astro.callAction(actions.servers.list, {})
+
+const servers = data?.data || []
+const hasServers = servers.length > 0
+---
+
+<MainLayout title="Servidores">
+  <Container>
+    <Header title="Gestión de servidores" subtitle={`Total: ${servers.length} servidores`}>
+      <PermissionGuard slot="actions" permission="servers.create">
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Link href="/servers/new" size="sm" icon="Plus"> Crear servidor </Link>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <a href="/servers/new" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear servidor
+              </a>
+            </Dropdown>
+          </div>
+        </div>
+      </PermissionGuard>
+    </Header>
+
+    <DataGrid hasData={hasServers} isError={error}>
+      <EmptyState slot="error-state" title="Error al cargar los servidores" description="Intenta nuevamente." href={currentPath} state="error" />
+
+      <EmptyState slot="empty-state" title="No hay servidores disponibles" description="No tienes ningún servidor registrado." href={currentPath} state="notFound" />
+
+      <div slot="header" class="mb-4">
+        <SearchFilter placeholder="Buscar servidor..." target=".server-item" keys={['ip', 'puerto']} />
+      </div>
+      {
+        servers.map((server: DetailsServer) => (
+          <List class="server-item" data-ip={server.ip} data-puerto={String(server.puerto)} icon="Server" title={`Puerto: ${server.puerto}`} subtitle={`IP: ${server.ip}`}>
+            <div slot="actions">
+              <Link href={`/servers/${server.uuid}`} variant="transparent" size="sm" iconOnly icon="ChevronRight" />
+            </div>
+          </List>
+        ))
+      }
+    </DataGrid>
+  </Container>
+</MainLayout>

@@ -1,6 +1,8 @@
 ---
+import Button from './Button.astro'
 import Icon from './Icon.astro'
 import { icons } from '@lucide/astro'
+import Link from './Link.astro'
 
 interface Props {
   title?: string
@@ -12,6 +14,7 @@ interface Props {
   action?: keyof typeof IconForAction
   modalId?: string
   hiddenAction?: boolean
+  showBorder?: boolean
 }
 
 const {
@@ -23,14 +26,15 @@ const {
   action = 'back',
   modalId,
   hiddenAction = false,
+  showBorder = true,
 } = Astro.props
 
 const StateIconColor = {
-  info: 'text-yellow-300',
-  error: 'text-red-300',
-  success: 'text-green-300',
-  warning: 'text-orange-300',
-  notFound: 'text-neutral-700',
+  info: 'text-neutral-400',
+  error: 'text-neutral-400',
+  success: 'text-neutral-400',
+  warning: 'text-neutral-400',
+  notFound: 'text-neutral-400',
 }
 
 const selectedIconForState = {
@@ -55,29 +59,30 @@ const IconForAction = {
 }
 
 const selectedIcon = selectedIconForState[state] as keyof typeof icons
-const iconColorClass = StateIconColor[state]
 const iconAction = IconForAction[action] as keyof typeof icons
 ---
 
-<div class="flex flex-col items-center justify-center py-5">
-  <Icon name={selectedIcon} size={56} stroke-width={1.5} class={`mb-3 ${iconColorClass}`} />
-  <p class="mb-2 text-lg font-semibold text-gray-900">{title}</p>
-  <p class="mb-7 text-center">{description}</p>
+<div class:list={['flex flex-col items-center justify-center rounded-main bg-background py-8', showBorder ? 'border-2 border-dashed border-border' : 'border-0']}>
+  <div class="mb-4 rounded-main border border-border p-2.5">
+    <Icon name={selectedIcon} size={24} class={`text-subheading`} />
+  </div>
+  <p class="text-lg font-semibold text-heading">{title}</p>
+  <p class="mb-4 text-center text-heading">{description}</p>
 
   {
     modalId && !hiddenAction ? (
-      <button data-open-modal={modalId} class="flex items-center gap-x-2 rounded-lg bg-custom-blue-light/10 px-4 py-2 text-sm text-custom-blue-light hover:text-custom-blue-dark">
-        {action === 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
+      <Button data-open-modal={modalId} size="sm">
+        {action === 'back' && <Icon name={iconAction} size={18} />}
         <span>{hrefText}</span>
-        {action !== 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
-      </button>
+        {action !== 'back' && <Icon name={iconAction} size={18} />}
+      </Button>
     ) : (
       !hiddenAction && (
-        <a href={href} class="flex items-center gap-x-2 rounded-lg bg-custom-blue-light/10 px-4 py-2 text-sm text-custom-blue-light hover:text-custom-blue-dark">
-          {action === 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
+        <Link href={href} size="sm" variant="secondary" class="gap-2">
+          {action === 'back' && <Icon name={iconAction} size={18} />}
           <span>{hrefText}</span>
-          {action !== 'back' && <Icon name={iconAction} size={18} stroke-width={1.5} />}
-        </a>
+          {action !== 'back' && <Icon name={iconAction} size={18} />}
+        </Link>
       )
     )
   }

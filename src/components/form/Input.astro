@@ -1,6 +1,7 @@
 ---
 import { Eye, EyeOff } from '@lucide/astro'
 import type { HTMLAttributes } from 'astro/types'
+import Icon from '../ui/Icon.astro'
 
 interface Props extends HTMLAttributes<'input'> {
   label?: string
@@ -14,14 +15,14 @@ const { label, placeholder = 'Escribe aquí', name, value = '', serverError, ...
 
 const errorId = `error-${name}`
 const stateClasses = serverError
-  ? 'border-red-600 focus:border-red-600 focus:ring-red-500'
-  : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500 aria-invalid:border-red-600 aria-invalid:focus:border-red-600 aria-invalid:focus:ring-red-500'
+  ? 'border-destructive focus:border-destructive focus:ring-destructive'
+  : 'border-border focus:border-primary focus:ring-ring aria-invalid:border-destructive aria-invalid:focus:border-destructive aria-invalid:focus:ring-destructive'
 ---
 
 <>
   {
     label && (
-      <label class="mb-1 block text-sm font-medium text-gray-700" for={rest.id ?? name}>
+      <label class="mb-1 block text-sm font-medium text-heading" for={rest.id ?? name}>
         {label}
       </label>
     )
@@ -37,7 +38,8 @@ const stateClasses = serverError
         aria-describedby={errorId}
         aria-invalid={!!serverError}
         class:list={[
-          'w-full rounded-lg border bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 read-only:cursor-not-allowed read-only:bg-gray-100 read-only:opacity-50 focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+          'h-10 w-full rounded-main border border-border bg-background p-2 text-heading backdrop-blur-sm transition duration-200 placeholder:text-subheading read-only:cursor-not-allowed read-only:bg-muted read-only:opacity-50 focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50',
+          rest.type === 'search' && 'pl-10',
           stateClasses,
           rest.class,
         ]}
@@ -45,13 +47,16 @@ const stateClasses = serverError
       />
 
       {
+        rest.type === 'search' && (
+          <div class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-subheading">
+            <Icon name="Search" size={20} />
+          </div>
+        )
+      }
+
+      {
         rest.type === 'password' && (
-          <button
-            type="button"
-            class="absolute -top-3 right-0 bottom-0 flex w-10 items-center justify-center text-custom-lucky-gray-light"
-            data-action="toggle-password"
-            aria-label="Mostrar contraseña"
-          >
+          <button type="button" class="absolute -top-3 right-0 bottom-0 flex w-10 items-center justify-center text-heading" data-action="toggle-password" aria-label="Mostrar contraseña">
             <Eye data-icon="show" class="absolute top-6 right-3 cursor-pointer text-xl" />
             <EyeOff data-icon="hide" class="absolute top-6 right-3 hidden cursor-pointer text-xl" />
           </button>
@@ -61,21 +66,21 @@ const stateClasses = serverError
 
     {
       serverError && (
-        <span id={errorId} class="error-message server-error mt-1 text-sm text-red-600" role="alert">
+        <span id={errorId} class="error-message server-error mt-1 text-sm text-destructive" role="alert">
           {serverError}
         </span>
       )
     }
 
-    {!serverError && <span id={errorId} class="error-message client-error mt-1 hidden text-sm text-red-600" data-client-error />}
+    {!serverError && <span id={errorId} class="error-message client-error mt-1 hidden text-sm text-destructive" data-client-error />}
   </div>
 </>
 
 <style>
-  input::-webkit-datetime-edit {
-    line-height: 1;
+  input[type='date']::-webkit-datetime-edit {
+    line-height: inherit;
     padding: 0;
-    margin-bottom: -2px;
+    margin-bottom: 0;
   }
 
   .hidden {

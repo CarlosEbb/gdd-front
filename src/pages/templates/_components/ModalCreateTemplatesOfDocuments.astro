@@ -1,0 +1,130 @@
+---
+import Input from '@/components/form/Input.astro'
+import Select from '@/components/form/Select.astro'
+import Modal from '@/components/modal/Modal.astro'
+import Button from '@/components/ui/Button.astro'
+---
+
+<Modal modalId="create-template-of-document" title="Crear plantilla desde un documento">
+  <form id="form-create-template-of-document" class="space-y-6">
+    <Select label="Documento" name="documentUuid" placeholder="Seleccione un documento" options={[]} required />
+    <div>
+      <Input label="Nombre" name="title" placeholder="Ingrese el nombre de la plantilla" required />
+    </div>
+  </form>
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" id="btn-create-template-of-document" form="form-create-template-of-document" loadingText="Creando plantilla...">Crear</Button>
+  </div>
+</Modal>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import { toast } from '@/scripts/toast'
+  import type { Document } from '@/types/documents'
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('form-create-template-of-document') as HTMLFormElement
+    const modalCreateTemplateOfDocument = document.getElementById('create-template-of-document') as HTMLDialogElement
+    const documentSelect = form?.querySelector('select[name="documentUuid"]') as HTMLSelectElement
+    const titleInput = form?.querySelector('input[name="title"]') as HTMLInputElement
+
+    if (!form || !modalCreateTemplateOfDocument || !documentSelect || !titleInput) return
+
+    let documentsList: Document[] = []
+
+    const loadDocuments = async () => {
+      form.reset()
+
+      // Clear previous non-empty options
+      Array.from(documentSelect.options).forEach((opt) => {
+        if (opt.value !== '') {
+          opt.remove()
+        }
+      })
+
+      const placeholderOption = documentSelect.querySelector('option[value=""]') as HTMLOptionElement
+      if (placeholderOption) {
+        placeholderOption.textContent = 'Cargando documentos...'
+        placeholderOption.selected = true
+      }
+      documentSelect.disabled = true
+
+      const { data, error } = await callAction(actions.documents.getByUser({ limit: null }))
+
+      if (error) {
+        if (placeholderOption) {
+          placeholderOption.textContent = 'No se pudieron cargar los documentos'
+        }
+        toast.error('Error al cargar los documentos')
+        return
+      }
+
+      documentsList = data?.data ?? []
+
+      if (placeholderOption) {
+        placeholderOption.textContent = 'Seleccione un documento'
+      }
+      documentSelect.disabled = false
+
+      documentsList.forEach((doc) => {
+        const lastVersionUuid = doc.lastVersion?.uuid
+        if (lastVersionUuid) {
+          const option = document.createElement('option')
+          option.value = lastVersionUuid
+          option.textContent = doc.title || doc.name
+          documentSelect.appendChild(option)
+        }
+      })
+    }
+
+    // Observe open state of the dialog to trigger loading when opened
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'open' && modalCreateTemplateOfDocument.open) {
+          loadDocuments()
+        }
+      })
+    })
+
+    observer.observe(modalCreateTemplateOfDocument, { attributes: true })
+
+    // Auto-fill template name based on selected document
+    documentSelect.addEventListener('change', () => {
+      const selectedValue = documentSelect.value
+      const selectedDoc = documentsList.find((doc) => doc.lastVersion?.uuid === selectedValue)
+      if (selectedDoc) {
+        titleInput.value = selectedDoc.title || selectedDoc.name
+      } else {
+        titleInput.value = ''
+      }
+    })
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      setButtonLoading('#btn-create-template-of-document', true)
+      const formData = new FormData(form)
+      const { data, error } = await callAction(
+        actions.templates.create({
+          title: formData.get('title') as string,
+          uuidDocument: formData.get('documentUuid') as string,
+        })
+      )
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-create-template-of-document', false)
+        return
+      }
+
+      toast.success('Plantilla creada correctamente')
+      form.reset()
+      modalCreateTemplateOfDocument.close()
+      navigate(data.data.redirect)
+      setButtonLoading('#btn-create-template-of-document', false)
+    })
+  })
+</script>

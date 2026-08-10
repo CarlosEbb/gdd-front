@@ -1,0 +1,83 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import { icons } from '@lucide/astro'
+import Icon from './Icon.astro'
+
+interface Props extends HTMLAttributes<'div'> {
+  icon: keyof typeof icons
+  title?: string
+  img?: string
+  subtitle?: string
+  status?: 'online' | 'offline' | string
+  showStatus?: boolean
+}
+
+const { icon, title, subtitle, img, status, showStatus = false, class: className, ...rest } = Astro.props
+
+const hasIcon = !!icon
+const hasImage = !!img
+const hasTitle = !!title
+const hasSubtitle = !!subtitle
+const hasActionsSlot = Astro.slots.has('actions')
+
+const baseUrl = import.meta.env.API_URL
+const urlImage = hasImage ? `${baseUrl}${img}` : undefined
+---
+
+<div class={`group flex items-center justify-between rounded-main border border-border bg-background py-3 px-4 transition-all ${className || ''}`} {...rest}>
+  <div class="flex items-center gap-4">
+    {
+      hasImage ? (
+        <div class="relative size-8 overflow-hidden rounded-2xl">
+          <img
+            src={urlImage}
+            alt={title ? `Logo de ${title}` : 'Logo'}
+            class="h-full w-full object-cover"
+            loading="lazy"
+            onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden')"
+          />
+          {hasIcon && (
+            <div class="flex hidden size-8 items-center justify-center text-heading">
+              <Icon name={icon} stroke-width={1.6} size={18} />
+            </div>
+          )}
+        </div>
+      ) : (
+        hasIcon && (
+          <div class={`flex size-8 items-center justify-center rounded-2xl transition-colors ${status === 'online' ? 'bg-primary-foreground text-primary' : 'text-heading'}`}>
+            <Icon name={icon} stroke-width={1.6} size={18} />
+          </div>
+        )
+      )
+    }
+    {
+      (hasTitle || hasSubtitle) && (
+        <div class="space-y-1">
+          {hasTitle && <h3 class="leading-none font-medium tracking-tight text-heading">{title}</h3>}
+          {hasSubtitle && <p class="font-mono text-xs text-subheading">{subtitle}</p>}
+        </div>
+      )
+    }
+  </div>
+
+  <div class="flex items-center gap-8">
+    {
+      status && (
+        <div class="hidden flex-col items-end sm:flex">
+          <span class={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${status === 'online' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+            <span class={`h-1.5 w-1.5 rounded-full ${status === 'online' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+            {status.toUpperCase()}
+          </span>
+        </div>
+      )
+    }
+
+    {
+      hasActionsSlot && (
+        <div class="flex items-center gap-1">
+          <slot name="actions" />
+        </div>
+      )
+    }
+  </div>
+</div>

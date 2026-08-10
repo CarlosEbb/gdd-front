@@ -1,20 +1,40 @@
 ---
 import Input from '@/components/form/Input.astro'
 import Select from '@/components/form/Select.astro'
+import SearchFilter from '@/components/form/SearchFilter.astro'
 import Button from '@/components/ui/Button.astro'
 import MainLayout from '@/layouts/MainLayout.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import ListDocuments from '@/sections/documents/List.astro'
+import Container from '@/components/ui/Container.astro'
+import Header from '@/components/ui/Header.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
 import Icon from '@/components/ui/Icon.astro'
-import TitleForPage from '@/components/ui/TitleForPage.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 const workspaces = await Astro.session?.get('workspaces')
-const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id, label: workspace.name })) ?? []
+const workspacesOptions = [{ value: '', label: 'Mostrar todos' }, ...(workspaces?.map((workspace) => ({ value: workspace.uuid, label: workspace.name })) ?? [])]
 ---
 
 <MainLayout title="Mis documentos">
-  <div class="mx-auto max-w-7xl">
-    <TitleForPage title="Mis documentos" />
+  <Container>
+    <Header title="Mis documentos" subtitle="Gestiona tus documentos">
+      <PermissionGuard slot="actions" permission="templates.create">
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Button size="sm" icon="Plus" data-open-modal="save-template">Crear documento</Button>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <button class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted" data-open-modal="save-template">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear documento
+              </button>
+            </Dropdown>
+          </div>
+        </div>
+      </PermissionGuard>
+    </Header>
 
     <section class="">
       <div class="relative rounded-lg border border-gray-200 bg-linear-to-r from-custom-cyan/10 to-custom-blue2/10 p-4 shadow-sm shadow-blue-100">
@@ -32,33 +52,23 @@ const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id,
             </div>
           </div>
 
-          <div class="flex items-end gap-2">
+          <div class="hidden items-center gap-2 lg:flex">
+            <Button id="sort-button" variant="secondary" size="lg" aria-label="Ordenar" data-order="desc" icon="ArrowUpDown"> Ordenar </Button>
             <span id="reset-filters" class="hidden">
-              <Button variant="secondary" size="lg" aria-label="Restablecer filtros">
-                <span class="flex items-center gap-2">
-                  <Icon name="X" stroke-width={1.5} size={18} />
-                  Restablecer
-                </span>
-              </Button>
+              <Button variant="secondary" size="lg" iconOnly aria-label="Restablecer filtros" icon="RefreshCw" />
             </span>
-            <Button id="sort-button" variant="secondary" size="lg" aria-label="Ordenar" data-order="desc">
-              <span class="flex items-center gap-2">
-                <Icon name="ArrowUpDown" stroke-width={1.5} size={18} />
-                Ordenar
-              </span>
-            </Button>
           </div>
         </div>
-      </div>
-
-      <div class="mt-10">
-        <ListDocuments limit={null} />
-        <div id="no-results-message" class="hidden">
-          <EmptyState title="Sin resultados" description="No se encontraron documentos que coincidan con los filtros aplicados." hrefText="Limpiar filtros" action="close" state="notFound" href="#" />
-        </div>
+      </ListDocuments>
+      <div id="no-results-message" class="hidden">
+        <EmptyState title="Sin resultados" description="No se encontraron documentos que coincidan con los filtros aplicados." hrefText="Limpiar filtros" action="close" state="notFound" href="#" />
       </div>
     </section>
-  </div>
+  </Container>
+</MainLayout>
+<script>
+  const ITEM_SELECTOR = '.document-card, .document-list-item'
+  const SECONDARY_HIDDEN_FLAG = 'filterSecondaryHidden'
 
   <script>
     function initDocumentFilter() {
@@ -70,138 +80,133 @@ const workspacesOptions = workspaces?.map((workspace) => ({ value: workspace.id,
       const noResultsMessage = document.getElementById('no-results-message') as HTMLElement
       const emptyStateButton = noResultsMessage?.querySelector('a')
 
-      let cards = document.querySelectorAll('.document-card') as NodeListOf<HTMLElement>
+    const titleInput = section.querySelector<HTMLInputElement>('input[name="filter-title"]')
+    const dateInput = section.querySelector<HTMLInputElement>('input[name="filter-date"]')
+    const workspaceSelect = section.querySelector<HTMLSelectElement>('select[name="workspace"]')
+    const resetButton = section.querySelector<HTMLElement>('#reset-filters')
+    const sortButton = section.querySelector<HTMLButtonElement>('#sort-button')
+    const noResultsMessage = section.querySelector<HTMLElement>('#no-results-message')
+    const emptyStateButton = noResultsMessage?.querySelector('a')
 
-      const reselectElements = () => {
-        cards = document.querySelectorAll('.document-card')
-        return cards.length > 0
-      }
+    const getItems = () => Array.from(document.querySelectorAll<HTMLElement>(ITEM_SELECTOR))
 
-      function filterDocuments() {
-        const titleValue = titleInput?.value.toLowerCase().trim() || ''
-        const dateValue = dateInput?.value || ''
-        const workspaceValue = workspaceSelect?.value || ''
-
-        if (resetButton) {
-          if (titleValue || dateValue || workspaceValue) {
-            resetButton.classList.remove('hidden')
-          } else {
-            resetButton.classList.add('hidden')
-          }
-        }
-
-        let hasVisibleCards = false
-
-        reselectElements()
-
-        cards.forEach((card) => {
-          const cardTitle = (card.dataset.title || '').toLowerCase()
-          const cardDateRaw = card.dataset.createdAt || ''
-          const cardWorkspaceId = card.dataset.workspaceId || ''
-
-          const cardDate = cardDateRaw ? cardDateRaw.split('T')[0] : ''
-
-          const matchesTitle = !titleValue || cardTitle.includes(titleValue)
-          const matchesDate = !dateValue || cardDate === dateValue
-          const matchesWorkspace = !workspaceValue || cardWorkspaceId === workspaceValue
-
-          if (matchesTitle && matchesDate && matchesWorkspace) {
-            card.style.display = ''
-            hasVisibleCards = true
-          } else {
-            card.style.display = 'none'
-          }
-        })
-
-        if (noResultsMessage) {
-          if (hasVisibleCards) {
-            noResultsMessage.classList.add('hidden')
-          } else {
-            noResultsMessage.classList.remove('hidden')
-          }
-        }
-      }
-
-      function debounce(func: Function, wait: number) {
-        let timeout: ReturnType<typeof setTimeout>
-        return function executedFunction(...args: any[]) {
-          const later = () => {
-            clearTimeout(timeout)
-            func(...args)
-          }
-          clearTimeout(timeout)
-          timeout = setTimeout(later, wait)
-        }
-      }
-
-      const observer = new MutationObserver((mutations, obs) => {
-        if (reselectElements()) {
-          filterDocuments()
-        }
-      })
-
-      const targetNode = document.querySelector('main') || document.body
-      observer.observe(targetNode, { childList: true, subtree: true })
-
-      if (titleInput) {
-        titleInput.addEventListener('input', debounce(filterDocuments, 300))
-      }
-
-      if (dateInput) {
-        dateInput.addEventListener('change', filterDocuments)
-      }
-
-      if (workspaceSelect) {
-        workspaceSelect.addEventListener('change', filterDocuments)
-      }
-
-      const clearFilters = () => {
-        if (titleInput) titleInput.value = ''
-        if (dateInput) dateInput.value = ''
-        if (workspaceSelect) workspaceSelect.value = ''
-        filterDocuments()
-      }
-
-      const toggleSort = () => {
-        const currentOrder = sortButton.dataset.order
-        const newOrder = currentOrder === 'desc' ? 'asc' : 'desc'
-        sortButton.dataset.order = newOrder
-
-        const cardsContainerRef = document.querySelector('[data-documents-container]') as HTMLElement
-
-        if (!cardsContainerRef) return
-
-        reselectElements()
-        const cardsArray = Array.from(cards) as HTMLElement[]
-
-        cardsArray.sort((a, b) => {
-          const dateA = new Date(a.dataset.createdAt || '').getTime()
-          const dateB = new Date(b.dataset.createdAt || '').getTime()
-
-          return newOrder === 'asc' ? dateA - dateB : dateB - dateA
-        })
-
-        cardsArray.forEach((card) => {
-          cardsContainerRef.appendChild(card)
-        })
-      }
-
-      if (resetButton) {
-        resetButton.addEventListener('click', clearFilters)
-      }
-
-      if (sortButton) {
-        sortButton.addEventListener('click', toggleSort)
-      }
-
-      if (emptyStateButton) {
-        emptyStateButton.addEventListener('click', (e) => {
-          e.preventDefault()
-          clearFilters()
-        })
-      }
+    const hasAnyFilter = () => {
+      const title = titleInput?.value.trim() || ''
+      const date = dateInput?.value || ''
+      const workspace = workspaceSelect?.value || ''
+      return Boolean(title || date || workspace)
     }
 
-    document.addEventListener('astro:page-load', initDocumentFilter)
-  </script>
-</MainLayout>
+    const applySecondaryFilter = () => {
+      const dateValue = dateInput?.value || ''
+      const workspaceValue = workspaceSelect?.value || ''
+
+      getItems().forEach((item) => {
+        const itemDateRaw = item.dataset.createdAt || ''
+        const itemDate = itemDateRaw ? itemDateRaw.split('T')[0] : ''
+        const itemWorkspace = item.dataset.workspaceId || ''
+
+        const matchesDate = !dateValue || itemDate === dateValue
+        const matchesWorkspace = !workspaceValue || itemWorkspace === workspaceValue
+
+        if (matchesDate && matchesWorkspace) {
+          item.style.display = ''
+          delete item.dataset[SECONDARY_HIDDEN_FLAG]
+        } else {
+          item.style.display = 'none'
+          item.dataset[SECONDARY_HIDDEN_FLAG] = 'true'
+        }
+      })
+    }
+
+    const updateUiState = () => {
+      if (resetButton) {
+        resetButton.classList.toggle('hidden', !hasAnyFilter())
+      }
+
+      if (!noResultsMessage) return
+
+      const items = getItems()
+      const hasVisible = items.some((item) => !item.hidden && item.dataset[SECONDARY_HIDDEN_FLAG] !== 'true')
+
+      noResultsMessage.classList.toggle('hidden', hasVisible)
+    }
+
+    const runAll = () => {
+      applySecondaryFilter()
+      updateUiState()
+    }
+
+    dateInput?.addEventListener('change', runAll)
+    workspaceSelect?.addEventListener('change', runAll)
+    // SearchFilter se encarga del título via atributo `hidden`; solo actualizamos el estado.
+    titleInput?.addEventListener('input', () => {
+      // Diferimos para que el debounce interno de SearchFilter aplique primero.
+      window.setTimeout(updateUiState, 250)
+    })
+
+    const clearFilters = () => {
+      if (titleInput) {
+        titleInput.value = ''
+        titleInput.dispatchEvent(new Event('input', { bubbles: true }))
+      }
+      if (dateInput) dateInput.value = ''
+      if (workspaceSelect) workspaceSelect.value = ''
+      runAll()
+      // Forzamos una reevaluación tras el debounce del SearchFilter.
+      window.setTimeout(updateUiState, 260)
+    }
+
+    const toggleSort = () => {
+      if (!sortButton) return
+      const currentOrder = sortButton.dataset.order
+      const newOrder = currentOrder === 'desc' ? 'asc' : 'desc'
+      sortButton.dataset.order = newOrder
+
+      document.querySelectorAll<HTMLElement>('[data-documents-container]').forEach((container) => {
+        const items = Array.from(container.children) as HTMLElement[]
+        items.sort((a, b) => {
+          const dateA = new Date(a.dataset.createdAt || '').getTime()
+          const dateB = new Date(b.dataset.createdAt || '').getTime()
+          return newOrder === 'asc' ? dateA - dateB : dateB - dateA
+        })
+        items.forEach((item) => container.appendChild(item))
+      })
+    }
+
+    resetButton?.addEventListener('click', clearFilters)
+    sortButton?.addEventListener('click', toggleSort)
+
+    emptyStateButton?.addEventListener('click', (e) => {
+      e.preventDefault()
+      clearFilters()
+    })
+
+    // Reaplica filtros y recalcula estado cuando se insertan las cards (server:defer)
+    // o cuando SearchFilter cambia el atributo `hidden` de los items.
+    const observer = new MutationObserver((mutations) => {
+      let shouldReapplySecondary = false
+      let shouldRecalc = false
+
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+          shouldReapplySecondary = true
+          shouldRecalc = true
+        }
+        if (mutation.type === 'attributes' && mutation.attributeName === 'hidden') {
+          shouldRecalc = true
+        }
+      }
+
+      if (shouldReapplySecondary) applySecondaryFilter()
+      if (shouldRecalc) updateUiState()
+    })
+
+    const targetNode = document.querySelector('main') || document.body
+    observer.observe(targetNode, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] })
+
+    runAll()
+  }
+
+  document.addEventListener('astro:page-load', initDocumentFilter)
+</script>

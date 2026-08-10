@@ -1,8 +1,9 @@
-import { defineAction } from 'astro:actions'
+import { ActionError, defineAction } from 'astro:actions'
 import { z } from 'astro:schema'
 import type { ApiResponse } from '@/types/response'
-import type { User } from '@/types/user'
+import type { AuthResponse } from '@/types/users'
 import { handleApiError, http } from './http'
+import { requireAuth } from '@/lib/permissions'
 
 export const auth = {
   login: defineAction({
@@ -13,9 +14,10 @@ export const auth = {
     }),
     handler: async (input, request) => {
       try {
-        const info: ApiResponse<User> = await http.post<User>(
-          `/auth/login`,
+        const info: ApiResponse<AuthResponse> = await http.post<AuthResponse>(
+          `/users/login`,
           '',
+          request,
           {
             email: input.email,
             password: input.password,
@@ -23,11 +25,11 @@ export const auth = {
           true
         )
 
-        const { user, token, workspaces } = info.data
+        const { user, token, permissions } = info.data
 
         await request.session?.set('token', token)
         await request.session?.set('user', user)
-        await request.session?.set('workspaces', workspaces)
+        await request.session?.set('permissions', permissions)
 
         return {
           code: info.code,
@@ -42,52 +44,27 @@ export const auth = {
     },
   }),
 
-  register: defineAction({
-    accept: 'form',
-    input: z
-      .object({
-        name: z.string().min(1, 'El nombre es obligatorio'),
-        last_name: z.string().min(1, 'El apellido es obligatorio'),
-        email: z.string().email('Correo inválido'),
-        password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-        confirm_password: z.string(),
-        country: z.string().min(1, 'El país es obligatorio'),
-        zip_code: z.string().min(1, 'El código postal es obligatorio'),
-        // phoneCode: z.string().min(1, 'Código de país requerido'),
-        // numberPhone: z.string().min(1, 'Número de teléfono requerido'),
-      })
-      .refine((data) => data.password === data.confirm_password, {
-        message: 'Las contraseñas no coinciden',
-        path: ['confirm_password'],
-      }),
+  logout: defineAction({
     handler: async (input, request) => {
-      const myHeaders = new Headers()
-      myHeaders.append('Content-Type', 'application/json')
+      const hasToken = await request.session?.has('token')
 
+      if (!hasToken) {
+        throw new ActionError({
+          code: 'UNAUTHORIZED',
+          message: 'No autorizado. Inicia sesión de nuevo.',
+        })
+      }
+
+      const token = (await request.session?.get('token')) as string
       try {
-        const register = await http.post<User>(`/auth/register`, '', input, true)
+        const response = await http.post(`/users/logout`, token, request, {})
 
-        const { user, token, workspaces } = register.data
-
-        if (register.code === 201) {
-          await request.session?.set('user', user)
-          await request.session?.set('workspaces', workspaces)
-          await request.session?.set('token', token)
-
-          return {
-            code: register.code,
-            message: register.message,
-            data: {
-              redirect: '/home',
-            },
-          }
-        }
-
+        await request.session?.destroy()
         return {
-          code: register.code,
-          message: register.message,
+          code: 200,
+          message: 'Sesión cerrada correctamente',
           data: {
-            redirect: '/register',
+            redirect: '/',
           },
         }
       } catch (error) {
@@ -103,9 +80,9 @@ export const auth = {
     }),
     handler: async (input, request) => {
       try {
-        const resetPassword = await http.post(`/auth/resetPassword`, '', input, true)
+        const response = await http.post(`/users/reset-password-request`, '', request, input, true)
 
-        return resetPassword
+        return response
       } catch (error) {
         handleApiError(error, request)
       }
@@ -119,26 +96,9 @@ export const auth = {
     }),
     handler: async (input, request) => {
       try {
-        const resetPassword = await http.post(`/auth/changePassword`, '', input, true)
+        const response = await http.post(`/users/change-password`, '', request, input, true)
 
-        return resetPassword
-      } catch (error) {
-        handleApiError(error, request)
-      }
-    },
-  }),
-
-  logout: defineAction({
-    handler: async (input, request) => {
-      try {
-        await request.session?.destroy()
-        return {
-          code: 200,
-          message: 'Sesión cerrada correctamente',
-          data: {
-            redirect: '/',
-          },
-        }
+        return response
       } catch (error) {
         handleApiError(error, request)
       }

@@ -5,7 +5,7 @@ interface Props extends HTMLAttributes<'select'> {
   label?: string
   name: string
   placeholder?: string
-  options: Array<{ value: string; label?: string }>
+  options: Array<{ value: string; label?: string; selected?: boolean }>
   serverError?: string
 }
 
@@ -13,14 +13,16 @@ const { label, name, placeholder, options = [], serverError, ...rest }: Props = 
 
 const errorId = `error-${name}`
 const stateClasses = serverError
-  ? 'border-red-600 focus:border-red-600 focus:ring-red-500'
-  : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500 aria-invalid:border-red-600 aria-invalid:focus:border-red-600 aria-invalid:focus:ring-red-500'
+  ? 'border-destructive focus:border-destructive focus:ring-destructive'
+  : 'border-border focus:border-primary focus:ring-ring aria-invalid:border-destructive aria-invalid:focus:border-destructive aria-invalid:focus:ring-destructive'
+
+const hasSelectedOption = options.some((option) => option.selected)
 ---
 
 <>
   {
     label && (
-      <label for={rest.id ?? name} class="mb-1 block text-sm font-medium text-gray-700">
+      <label for={rest.id ?? name} class="mb-1 block text-sm font-medium text-heading">
         {label}
       </label>
     )
@@ -33,22 +35,22 @@ const stateClasses = serverError
       aria-describedby={errorId}
       aria-invalid={!!serverError}
       class:list={[
-        'w-full rounded-lg border bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
+        'h-10 w-full rounded-main border border-border bg-background px-3 py-2 text-heading backdrop-blur-sm transition duration-200 placeholder:text-subheading focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50',
         stateClasses,
         rest.class,
       ]}
       {...rest}
     >
       {
-        placeholder && !rest.value && (
-          <option class="block font-sans text-base font-medium text-neutral-400 disabled:text-neutral-400" disabled selected value="">
+        placeholder && (
+          <option class="block font-sans text-base font-medium text-heading disabled:text-subheading" disabled selected={!rest.value && !hasSelectedOption} value="">
             {placeholder}
           </option>
         )
       }
       {
         options.map((option) => (
-          <option value={option.value} selected={option.value === rest.value}>
+          <option value={option.value} selected={rest.value !== undefined ? option.value === rest.value : !!option.selected}>
             {option.label || option.value}
           </option>
         ))
@@ -57,13 +59,13 @@ const stateClasses = serverError
 
     {
       serverError && (
-        <span id={errorId} class="error-message server-error mt-1 text-sm text-red-600" role="alert">
+        <span id={errorId} class="error-message server-error mt-1 text-sm text-destructive" role="alert">
           {serverError}
         </span>
       )
     }
 
-    {!serverError && <span id={errorId} class="error-message client-error mt-1 hidden text-sm text-red-600" data-client-error />}
+    {!serverError && <span id={errorId} class="error-message client-error mt-1 hidden text-sm text-destructive" data-client-error />}
   </div>
 </>
 

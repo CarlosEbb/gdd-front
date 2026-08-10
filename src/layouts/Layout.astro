@@ -1,32 +1,49 @@
+---
+import '@/styles/global.css'
+import { ClientRouter } from 'astro:transitions'
+
+const PUBLIC_NAME_PROJECT = import.meta.env.PUBLIC_NAME_PROJECT
+
+interface Props {
+  title?: string | null
+}
+
+const { title = null } = Astro.props as Props
+
+const optionalTitle = title === null ? PUBLIC_NAME_PROJECT : `${title} | ${PUBLIC_NAME_PROJECT}`
+---
+
 <!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>PDFCreatorCB</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href={'@/assets/images/favicon.ico'} />
+    <title>{optionalTitle}</title>
+    <script is:inline>
+      ;(function () {
+        const STORAGE_KEY = 'gdd-theme'
+
+        function applyTheme() {
+          const stored = localStorage.getItem(STORAGE_KEY)
+          const theme = stored === 'light' || stored === 'dark' ? stored : 'system'
+          const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+          document.documentElement.classList.toggle('dark', isDark)
+          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
+        }
+
+        window.__applyTheme = applyTheme
+        applyTheme()
+
+        document.addEventListener('astro:after-swap', applyTheme)
+      })()
+    </script>
+    <script src="@/scripts/modal.ts"></script>
+    <ClientRouter />
+  </head>
+
+  <body>
+    <slot />
+  </body>
 </html>
-
-<style>
-	html,
-	body {
-		margin: 0;
-		padding: 0;
-	}
-</style>
-
-<script>
-	import tippy from 'tippy.js';
-	import 'tippy.js/dist/tippy.css'; // optional for styling
-
-	function init() {
-		tippy('[data-tippy-content]');
-	}
-
-	// Inicializar en la primera carga
-	init();
-</script>

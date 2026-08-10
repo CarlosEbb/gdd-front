@@ -1,16 +1,382 @@
 ---
-import ConfigLayout from '@/layouts/ConfigLayout.astro'
+import CardList from '@/components/ui/CardList.astro'
+import Layout from '../_components/Layout.astro'
+import { actions } from 'astro:actions'
+import Button from '@/components/ui/Button.astro'
+import Link from '@/components/ui/Link.astro'
+import { formatISODateWithIntl } from '@/scripts/utils'
+import Modal from '@/components/modal/Modal.astro'
+import CreateVersionModal from '@/components/modal/CreateVersionModal.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Card from '@/components/ui/Card.astro'
+import Avatar from '@/components/ui/Avatar.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Input from '@/components/form/Input.astro'
 
 const { uuid } = Astro.params
-const build_number = Astro.url.searchParams.get('build_number') as string
 
-if (!uuid || !build_number) {
-  return Astro.redirect('/home')
-}
+if (!uuid) return Astro.redirect('/home')
+
+const API_URL = import.meta.env.API_URL
+
+const { data, error } = await Astro.callAction(actions.documents.getVersions, { uuid_template: uuid })
+const versions = data?.data.versions || []
+const nameTemplate = data?.data.template.name || ''
+const descriptionTemplate = data?.data.template.description || ''
+const getCurrentVersionPublished = versions.find((version) => version.isPublished)
+const thumbnail = getCurrentVersionPublished?.pathThumbnails ? `${API_URL}/${getCurrentVersionPublished.pathThumbnails}` : null
+const publishedBy = getCurrentVersionPublished?.publishedBy
+const filteredVersionsUnpublished = versions.filter((version) => !version.isPublished)
 ---
 
-<ConfigLayout title="Versión">
-  <div class="relative">
-    text {uuid}
-  </div>
-</ConfigLayout>
+<Layout title="Versión">
+  <StateSwitch isEmpty={!versions.length} hasError={!!error}>
+    {
+      getCurrentVersionPublished && (
+        <Card class="mb-6 rounded-xl shadow-base">
+          <div slot="header">
+            <div class="items-center justify-between md:flex">
+              <p class="font-semibold text-heading">Version Publicada</p>
+              <div class="mt-2 flex items-center gap-2 md:mt-0">
+                <Button size="sm" icon="Reply" variant="destructive" data-open-modal="unpublish-version" data-version-uuid-template={getCurrentVersionPublished.uuidTemplate}>
+                  Despublicar
+                </Button>
+                <Link href={`/documents/history/${uuid}`} variant="outline" icon="Clock" size="sm" title="Ver historial">
+                  Historial
+                </Link>
+                <Link
+                  href={`/editor/${getCurrentVersionPublished.uuidTemplate}?build_number=${getCurrentVersionPublished.buildNumber}&name_document=${nameTemplate}`}
+                  variant="outline"
+                  icon="AppWindow"
+                  size="sm"
+                  title="Ver en el editor"
+                >
+                  Editar
+                </Link>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col gap-4 md:flex-row md:items-start">
+            {thumbnail && (
+              <div class="h-full w-full overflow-hidden rounded-main border border-border bg-background md:w-2/5 lg:w-3xs">
+                <img src={thumbnail} alt="Imagen de la versión" class="h-full w-full object-cover" />
+              </div>
+            )}
+            <div class="flex flex-1 flex-col gap-4">
+              <div class="flex flex-col gap-1 space-y-4">
+                <div>
+                  <span class="text-xs font-medium text-subheading">Nombre del documento</span>
+                  <p class="text-base font-semibold text-heading">{nameTemplate}</p>
+                </div>
+                <div>
+                  <span class="text-xs font-medium text-subheading">Descripción</span>
+                  <p class="text-base font-semibold text-heading">{descriptionTemplate}</p>
+                </div>
+                <div class="flex items-center gap-7">
+                  <div>
+                    <span class="text-xs font-medium text-subheading">Versión</span>
+                    <p class="text-base font-semibold text-heading">{getCurrentVersionPublished.nameVersion || ''}</p>
+                  </div>
+                  <div>
+                    <span class="text-xs font-medium text-subheading">Numero de versión</span>
+                    <p class="text-base font-semibold text-heading">{getCurrentVersionPublished.buildNumber}</p>
+                  </div>
+                </div>
+                {publishedBy && (
+                  <div class="mt-2 flex flex-col gap-2">
+                    <span class="text-xs font-medium text-subheading">Publicado por</span>
+                    <div class="flex items-center gap-3">
+                      <Avatar size="md" name={publishedBy.name} lastName={publishedBy.lastName} photo={publishedBy.photo} />
+                      <div class="flex min-w-0 flex-col">
+                        <a href={`/users/${publishedBy.uuid}`} class="truncate text-sm font-semibold text-heading hover:text-primary hover:underline">
+                          {publishedBy.name}
+                        </a>
+                        <span class="truncate text-xs text-subheading">IP: {getCurrentVersionPublished.ipAddress}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div slot="footer" class="items-center justify-between md:flex">
+            <p class="text-sm text-subheading">Fecha de publicación: {formatISODateWithIntl(getCurrentVersionPublished.createdAt)}</p>
+
+            <a
+              href="http://"
+              id="viewDocument"
+              target="_blank"
+              class="mt-2 flex items-center gap-2 text-primary hover:underline md:mt-0"
+              rel="noopener noreferrer"
+              data-uuid={getCurrentVersionPublished.uuidTemplate}
+              data-build-number={getCurrentVersionPublished.buildNumber}
+            >
+              Ver documento
+              <Icon name="ExternalLink" size={16} />
+            </a>
+          </div>
+        </Card>
+      )
+    }
+
+    <div class="mb-12">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-heading">Versiones del documento</h2>
+        <Link href={`/documents/history/${uuid}`} variant="outline" icon="Clock" size="sm" title="Ver historial"> Historial </Link>
+      </div>
+      <div class="overflow-hidden rounded-main border border-border bg-background">
+        <StateSwitch isEmpty={filteredVersionsUnpublished.length === 0}>
+          {
+            filteredVersionsUnpublished.map((version) => (
+              <CardList title={version.nameVersion || ''} description={version.buildNumber.toString()} secondaryText={formatISODateWithIntl(version.createdAt)}>
+                <div slot="actions" class="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    icon="GitBranch"
+                    data-open-modal="new-version-document"
+                    data-build-number={version.buildNumber.toString()}
+                    title="Crear versión a partir de esta"
+                  />
+
+                  <Button
+                    size="sm"
+                    data-open-modal="publish-version"
+                    data-version-uuid-template={version.uuidTemplate}
+                    data-version-uuid={version.uuid}
+                    data-version-name={version.nameVersion || ''}
+                    data-version-build-number={version.buildNumber.toString()}
+                  >
+                    Publicar
+                  </Button>
+                </div>
+              </CardList>
+            ))
+          }
+
+          <EmptyState slot="empty" showBorder={false} title="No hay versiones disponibles" description="No hay registros de versiones distintas a la publicada" state="notFound" />
+        </StateSwitch>
+      </div>
+    </div>
+
+    <EmptyState slot="error" title="Error al cargar las versiones" description="Intenta nuevamente." state="error" />
+
+    <EmptyState slot="empty" title="No hay versiones disponibles" description="Sin versiones registradas" state="notFound" />
+  </StateSwitch>
+
+  <Modal modalId="publish-version" title="Publicar versión">
+    <form id="publish-version-form">
+      <div class="flex flex-col items-center justify-center pt-5">
+        <Icon name="Info" stroke-width="1.5" size={48} class="text-heading" />
+        <p class="mt-4 mb-2 text-lg font-normal text-heading">¿Estás seguro de que deseas publicar esta versión?</p>
+        <input type="hidden" name="uuid_template" required readonly />
+        <input type="hidden" name="uuid_version" required readonly />
+        <input type="hidden" name="build_number" />
+      </div>
+      <div id="publish-version-name-section" class="hidden">
+        <div class="mb-5">
+          <p class="text-center text-sm text-warning">Para publicar esta versión debes asignarle un nombre</p>
+        </div>
+        <Input label="Nombre de la versión" name="name_version" placeholder="Ingrese el nombre de la versión" required />
+      </div>
+    </form>
+
+    <div slot="footer">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" form="publish-version-form" id="btn-publish-version"> Publicar </Button>
+    </div>
+  </Modal>
+
+  <CreateVersionModal uuidTemplate={uuid} mode="clone" />
+
+  <Modal modalId="unpublish-version" title="Despublicar versión">
+    <form class="space-y-6" id="unpublish-version-form">
+      <div class="flex flex-col items-center justify-center py-5">
+        <Icon name="Info" stroke-width="1.5" size={48} class="text-heading" />
+        <p class="mt-4 mb-2 text-lg font-semibold text-heading">¿Estás seguro de que deseas despublicar esta versión?</p>
+        <input type="hidden" name="uuid_template" required readonly />
+      </div>
+    </form>
+
+    <div slot="footer">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" form="unpublish-version-form" variant="destructive" id="btn-unpublish-version" loadingText="Despublicando..."> Despublicar </Button>
+    </div>
+  </Modal>
+</Layout>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading, compressJson } from '@/scripts/utils'
+  import { initDocumentModals } from '@/scripts/document-modals'
+
+  document.addEventListener('astro:page-load', () => {
+    // --- Lógica para Publicar ---
+    const publishForm = document.getElementById('publish-version-form') as HTMLFormElement
+    const publishModal = document.getElementById('publish-version') as HTMLDialogElement
+
+    if (publishForm && publishModal) {
+      const publishUuidTemplateInput = publishForm.querySelector<HTMLInputElement>('input[name="uuid_template"]')
+      const publishUuidVersionInput = publishForm.querySelector<HTMLInputElement>('input[name="uuid_version"]')
+      const publishBuildNumberInput = publishForm.querySelector<HTMLInputElement>('input[name="build_number"]')
+      const publishNameSection = document.getElementById('publish-version-name-section')
+      const publishNameInput = publishForm.querySelector<HTMLInputElement>('input[name="name_version"]')
+
+      document.addEventListener('click', (event) => {
+        const trigger = (event.target as HTMLElement).closest<HTMLElement>('[data-open-modal="publish-version"]')
+        if (!trigger) return
+
+        const versionName = trigger.dataset.versionName ?? ''
+
+        if (publishUuidTemplateInput) publishUuidTemplateInput.value = trigger.dataset.versionUuidTemplate ?? ''
+        if (publishUuidVersionInput) publishUuidVersionInput.value = trigger.dataset.versionUuid ?? ''
+        if (publishBuildNumberInput) publishBuildNumberInput.value = trigger.dataset.versionBuildNumber ?? ''
+
+        if (!versionName && publishNameSection) {
+          publishNameSection.classList.remove('hidden')
+          if (publishNameInput) {
+            publishNameInput.value = ''
+            publishNameInput.required = true
+          }
+        } else if (publishNameSection) {
+          publishNameSection.classList.add('hidden')
+          if (publishNameInput) {
+            publishNameInput.value = ''
+            publishNameInput.required = false
+          }
+        }
+      })
+
+      if (!publishForm.dataset.initialized) {
+        publishForm.dataset.initialized = 'true'
+
+        async function publishVersion(e: Event) {
+          e.preventDefault()
+          const dataForm = new FormData(publishForm)
+          const uuidTemplate = dataForm.get('uuid_template') as string
+          const needsCreateVersion = publishNameSection && !publishNameSection.classList.contains('hidden')
+
+          try {
+            let uuidVersionToPublish = dataForm.get('uuid_version') as string
+
+            if (needsCreateVersion) {
+              const nameVersion = dataForm.get('name_version') as string
+              const buildNumber = dataForm.get('build_number') as string
+
+              setButtonLoading('#btn-publish-version', true, { loadingText: 'Creando versión...' })
+
+              const { data: documentData, error: getError } = await callAction(actions.documents.getDocument({ uuid_template: uuidTemplate, build_number: buildNumber, compress: false }))
+
+              if (getError || !documentData?.data) {
+                toast.error(getError?.message || 'No se pudo obtener la plantilla de la versión')
+                setButtonLoading('#btn-publish-version', false)
+                return
+              }
+
+              const compressedBlob = await compressJson(documentData.data)
+              const cloneFormData = new FormData()
+              cloneFormData.append('uuid_template', uuidTemplate)
+              cloneFormData.append('name_version', nameVersion)
+              cloneFormData.append('template_data', compressedBlob, 'template.json.gz')
+
+              const { data: createData, error: createError } = await callAction(actions.documents.createNewVersion(cloneFormData))
+
+              if (createError) {
+                toast.error(createError.message)
+                setButtonLoading('#btn-publish-version', false)
+                return
+              }
+
+              uuidVersionToPublish = createData!.data.lastVersion.uuid
+            }
+
+            setButtonLoading('#btn-publish-version', true, { loadingText: 'Publicando...' })
+
+            const { data, error } = await callAction(actions.publications.publish({ uuid_template: uuidTemplate, uuid_version: uuidVersionToPublish }))
+
+            if (error) {
+              toast.error(error.message)
+              setButtonLoading('#btn-publish-version', false)
+              publishModal.close()
+              return
+            }
+
+            toast.success(data!.message)
+            navigate(data!.data.redirect)
+            publishModal.close()
+          } catch {
+            toast.error('Ha ocurrido un error. Por favor, intente nuevamente.')
+          } finally {
+            setButtonLoading('#btn-publish-version', false)
+          }
+        }
+
+        publishForm.addEventListener('submit', publishVersion)
+      }
+    }
+
+    // --- Lógica para Despublicar ---
+    const unpublishForm = document.getElementById('unpublish-version-form') as HTMLFormElement
+    const unpublishModal = document.getElementById('unpublish-version') as HTMLDialogElement
+
+    if (unpublishForm && unpublishModal) {
+      const unpublishUuidTemplateInput = unpublishForm.querySelector<HTMLInputElement>('input[name="uuid_template"]')
+
+      document.addEventListener('click', (event) => {
+        const trigger = (event.target as HTMLElement).closest<HTMLElement>('[data-open-modal="unpublish-version"]')
+        if (!trigger) return
+
+        if (unpublishUuidTemplateInput) unpublishUuidTemplateInput.value = trigger.dataset.versionUuidTemplate ?? ''
+      })
+
+      if (!unpublishForm.dataset.initialized) {
+        unpublishForm.dataset.initialized = 'true'
+
+        async function unpublishVersion(e: Event) {
+          e.preventDefault()
+          const dataForm = new FormData(unpublishForm)
+
+          setButtonLoading('#btn-unpublish-version', true)
+
+          const { data, error } = await callAction(actions.publications.unpublish({ uuid_template: dataForm.get('uuid_template') as string }))
+
+          if (error) {
+            toast.error(error.message)
+            setButtonLoading('#btn-unpublish-version', false)
+            unpublishModal.close()
+            return
+          }
+
+          toast.success(data!.message)
+          navigate(window.location.href)
+          unpublishModal.close()
+        }
+
+        unpublishForm.addEventListener('submit', unpublishVersion)
+      }
+    }
+
+    initDocumentModals()
+
+    // Lógica para disparar el evento viewDocument
+    const btnViewDocument = document.getElementById('viewDocument')
+    if (btnViewDocument) {
+      btnViewDocument.addEventListener('click', (e) => {
+        e.preventDefault()
+        const uuid = btnViewDocument.dataset.uuid
+        const buildNumber = btnViewDocument.dataset.buildNumber
+
+        if (uuid && buildNumber) {
+          document.dispatchEvent(
+            new CustomEvent('document:view', {
+              detail: { uuid, buildNumber },
+            })
+          )
+        }
+      })
+    }
+  })
+</script>

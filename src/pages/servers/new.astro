@@ -1,0 +1,13 @@
+---
+import Container from '@/components/ui/Container.astro'
+import MainLayout from '@/layouts/MainLayout.astro'
+import Header from '@/components/ui/Header.astro'
+import ServerForm from './_components/ServerForm.astro'
+---
+
+<MainLayout title="Crear servidor">
+  <Container>
+    <Header title="Crear servidor" />
+    <ServerForm isEdit={false} />
+  </Container>
+</MainLayout>

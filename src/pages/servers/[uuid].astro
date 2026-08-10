@@ -1,0 +1,185 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import Container from '@/components/ui/Container.astro'
+import Header from '@/components/ui/Header.astro'
+import { actions } from 'astro:actions'
+import type { Database } from '@/types/servers'
+import Table from '@/components/ui/Table.astro'
+import type { TableColumn, TableRow } from '@/components/ui/Table.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Button from '@/components/ui/Button.astro'
+import Modal from '@/components/modal/Modal.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Link from '@/components/ui/Link.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+
+const { uuid } = Astro.params
+
+const { data, error } = await Astro.callAction(actions.servers.getByUuid, { uuid: uuid! })
+
+const server = data?.data || null
+const dataBases = server?.databases || []
+
+const dbColumns: TableColumn[] = [
+  { key: 'nameBd', label: 'Nombre' },
+  { key: 'username', label: 'Usuario' },
+]
+
+const dbRows: TableRow[] = dataBases.map((db: Database) => ({
+  nameBd: db.nameBd,
+  username: db.username,
+}))
+const hasDatabases = dataBases.length > 0
+const selectedServer = {
+  name: server?.name || 'Servidor no encontrado',
+  ip: server?.ip || '0.0.0.0',
+  puerto: server?.puerto || 0,
+  status: 'online',
+}
+---
+
+<MainLayout title={`Detalles del servidor ${server?.name || ''}`}>
+  <Container>
+    <Header title="Detalles del servidor" backHref="/servers" />
+    <StateSwitch hasError={!!error}>
+      <>
+        <div class="overflow-hidden rounded-main border border-border bg-background shadow-base">
+          <div class="flex h-14 flex-row items-center justify-between border-b border-border py-3 pr-3 pl-4">
+            <h1 class="text-base font-medium text-heading">Detalles server</h1>
+
+            <div class="hidden items-center gap-3 sm:flex">
+              <PermissionGuard permission="servers.view">
+                <Button size="sm" variant="outline" id="refresh-server" icon="RefreshCcw"> Status </Button>
+              </PermissionGuard>
+              <PermissionGuard permission="servers.update">
+                <Link size="sm" href={`/servers/${uuid}/edit`} icon="Pencil"> Editar </Link>
+              </PermissionGuard>
+              <PermissionGuard permission="servers.delete">
+                <Button size="sm" variant="destructive" data-open-modal="delete-server" icon="Trash2"> Eliminar </Button>
+              </PermissionGuard>
+            </div>
+
+            <div class="block sm:hidden">
+              <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones" size="sm">
+                <PermissionGuard permission="servers.update">
+                  <a href={`/servers/${uuid}/edit`} class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted">
+                    <Icon name="Pencil" class="h-4 w-4" />
+                    Editar
+                  </a>
+                </PermissionGuard>
+                <PermissionGuard permission="servers.delete">
+                  <button type="button" data-open-modal="delete-server" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-red-600 hover:bg-muted">
+                    <Icon name="Trash2" class="h-4 w-4" />
+                    Eliminar
+                  </button>
+                </PermissionGuard>
+              </Dropdown>
+            </div>
+          </div>
+          <div class="flex flex-col items-start justify-between gap-6 p-6 sm:flex-row sm:items-center">
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
+              <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl text-heading shadow-inner">
+                <div class="bg-primary-foreground p-4 text-primary">
+                  <Icon name="Server" size={28} stroke-width={1.5} />
+                </div>
+              </div>
+              <div>
+                <div class="grid">
+                  <h2 class="mb-2 text-xl font-semibold tracking-tight text-heading">{selectedServer.name}</h2>
+
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs font-semibold tracking-wide text-subheading">Ip:</span>
+                      <span class="text-sm font-medium text-heading">{selectedServer.ip}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs font-semibold tracking-wide text-subheading">Puerto:</span>
+                      <span class="text-sm font-medium text-heading">{selectedServer.puerto}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="my-6">
+          <h2 class="mb-4 text-xl font-semibold text-heading">Bases de datos</h2>
+          <Table columns={dbColumns} rows={dbRows} showPagination={false} />
+        </div>
+      </>
+      <div slot="error">
+        <EmptyState title="Ah ocurrido un error" state="error" description={error?.message ?? 'Ocurrió un error inesperado'} />
+      </div>
+    </StateSwitch>
+  </Container>
+</MainLayout>
+
+<Modal modalId="delete-server" title="Eliminar servidor">
+  <form class="space-y-6" id="delete-server-form">
+    <div class="flex flex-col items-center justify-center py-5">
+      <Icon name="Trash" size={48} stroke-width={1.5} class="text-red-300" />
+      <p class="mt-4 mb-1 text-lg font-semibold text-gray-900">{selectedServer.ip}</p>
+      <p class="mb-4 text-center">¿Estás seguro de querer eliminar este servidor?</p>
+      <input type="hidden" name="uuid" value={server?.uuid} required readonly />
+    </div>
+  </form>
+
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="submit" size="sm" form="delete-server-form" id="btn-delete-server" loadingText="Eliminando servidor...">Eliminar servidor</Button>
+  </div>
+</Modal>
+
+<script type="application/json" id="server-data" set:html={JSON.stringify(server)} />
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { navigate } from 'astro:transitions/client'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('delete-server-form') as HTMLFormElement
+    const modal = document.getElementById('delete-server') as HTMLDialogElement
+    const btnCheckServer = document.getElementById('refresh-server') as HTMLButtonElement
+
+    const serverData = JSON.parse(document.getElementById('server-data')!.textContent!)
+
+    if (form.dataset.initialized) return
+    form.dataset.initialized = 'true'
+
+    async function deleteServer(e: Event) {
+      e.preventDefault()
+      const dataForm = new FormData(form)
+      setButtonLoading('#btn-delete-server', true)
+      const { data, error } = await callAction(actions.servers.delete(dataForm))
+
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#btn-delete-server', false)
+        modal.close()
+        return
+      }
+
+      toast.success(data!.message)
+      navigate(data!.data.redirect)
+      modal.close()
+    }
+
+    const checkServer = async () => {
+      setButtonLoading('#refresh-server', true)
+      const { data, error } = await callAction(actions.servers.check({ uuid: serverData.uuid }))
+      if (error) {
+        toast.error(error.message)
+        setButtonLoading('#refresh-server', false)
+        return
+      }
+      toast.success(data!.message)
+      setButtonLoading('#refresh-server', false)
+    }
+
+    btnCheckServer.addEventListener('click', checkServer)
+    form.addEventListener('submit', deleteServer)
+  })
+</script>

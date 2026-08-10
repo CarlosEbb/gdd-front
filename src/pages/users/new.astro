@@ -1,0 +1,22 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import Container from '@/components/ui/Container.astro'
+import Header from '@/components/ui/Header.astro'
+import UserForm from './_components/UserForm.astro'
+import { actions } from 'astro:actions'
+
+const { data: clientsData, error: clientsError } = await Astro.callAction(actions.clients.list, {})
+const clients = clientsData?.data || []
+const hasClients = clients.length > 0
+
+const { data: permissionsData, error: permissionsError } = await Astro.callAction(actions.permissions.get, {})
+const permissions = permissionsData?.data || []
+const hasPermissions = permissions.length > 0
+---
+
+<MainLayout title="Crear usuario">
+  <Container>
+    <Header title="Crear usuario" />
+    <UserForm isEdit={false} clients={clients} clientsError={clientsError} hasClients={hasClients} permissions={permissions} permissionsError={permissionsError} hasPermissions={hasPermissions} />
+  </Container>
+</MainLayout>

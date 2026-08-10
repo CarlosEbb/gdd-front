@@ -3,10 +3,11 @@ import { icons, Info, type IconProps } from '@lucide/astro'
 
 interface Props extends IconProps {
   name: keyof typeof icons
+  strokeWidth?: number
 }
 
-const { name, ...restProps } = Astro.props
-const Icon = icons[name] || (Info as any)
+const { name, strokeWidth = 2, ...restProps } = Astro.props
+const IconComponent = icons[name] || (Info as any)
 ---
 
-<Icon {...restProps} />
+<IconComponent {...restProps} stroke-width={strokeWidth} />

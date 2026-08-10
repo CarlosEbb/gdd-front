@@ -10,49 +10,71 @@ import DateFormatSelector from './DateFormatSelector.astro'
 ---
 
 <div class="col-span-2 space-y-4" id="container-card-validation">
-  <div class="rounded-lg border border-dashed border-gray-300 bg-gray-50" id="empty-card-state">
+  <div id="empty-card-state" role="region" aria-label="Estado vacío de validación">
     <EmptyState title="Sin campo seleccionado" description="Selecciona un campo del panel izquierdo para configurar sus validaciones" state="info" hiddenAction={true} />
   </div>
-  <div class="card-validation hidden rounded-lg border border-gray-200 bg-white p-4" data-card-field="" id="validation-card">
-    <div class="mb-4 flex items-center justify-between border-b border-gray-200 pb-4">
-      <h3 class="text-lg font-medium text-gray-700" data-card-title>Nombre</h3>
+  <div class="card-validation hidden rounded-main border border-border bg-background p-4" data-card-field="" id="validation-card" role="region" aria-label="Configuración de validación del campo">
+    <div class="mb-4 flex items-center justify-between border-b border-border pb-4">
+      <h3 class="text-lg font-medium text-heading" data-card-title>Nombre</h3>
       <div>
-        <Button variant="ghost" size="icon" data-btn-delete-card>
-          <Icon name="X" class="size-4" />
-        </Button>
+        <Button variant="ghost" size="sm" iconOnly data-btn-delete-card icon="X" aria-label="Eliminar validación" />
+      </div>
+    </div>
+
+    <div class="mb-4 grid grid-cols-2 gap-4">
+      <div>
+        <h4 class="mb-2 text-base text-heading">Requerido</h4>
+        <label
+          class="flex cursor-pointer justify-between rounded-main border border-border p-2.5 text-sm text-heading transition-all duration-200 hover:border-primary hover:bg-primary-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-2 focus-visible:outline-ring has-checked:bg-primary-foreground has-checked:text-primary has-checked:ring-primary"
+        >
+          <span class="flex items-center gap-2">
+            <span class="flex items-center justify-center rounded-main bg-primary-foreground p-1" aria-hidden="true">
+              <Icon name="BadgeCheck" class="size-4" />
+            </span>
+            Requerido
+          </span>
+          <input type="checkbox" data-required-checkbox class="block accent-primary checked:border-primary focus-visible:outline-2 focus-visible:outline-ring" aria-label="Marcar campo como requerido" />
+        </label>
+      </div>
+
+      <div>
+        <h4 class="mb-2 text-base text-heading">Valor Único</h4>
+        <label
+          class="flex cursor-pointer justify-between rounded-main border border-border p-2.5 text-sm text-heading transition-all duration-200 hover:border-primary hover:bg-primary-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-2 focus-visible:outline-ring has-checked:bg-primary-foreground has-checked:text-primary has-checked:ring-primary"
+        >
+          <span class="flex items-center gap-2">
+            <span class="flex items-center justify-center rounded-main bg-primary-foreground p-1" aria-hidden="true">
+              <Icon name="Fingerprint" class="size-4" />
+            </span>
+            Único
+          </span>
+          <input type="checkbox" data-unique-checkbox class="block accent-primary checked:border-primary focus-visible:outline-2 focus-visible:outline-ring" aria-label="Marcar campo como único" />
+        </label>
       </div>
     </div>
 
     <div class="mb-4">
-      <h4 class="mb-2 text-lg font-medium text-gray-700">Requerido</h4>
-
-      <label
-        class="flex cursor-pointer justify-between rounded-lg border border-gray-200 p-4 transition-all duration-200 hover:border-custom-blue3 hover:bg-custom-blue3/10 hover:text-custom-blue3 has-checked:bg-custom-blue3/10 has-checked:text-custom-blue3 has-checked:ring-custom-blue3"
-      >
-        <span class="flex items-center gap-2">
-          <span class="flex items-center justify-center rounded-lg bg-custom-blue3/10 p-1">
-            <Icon name="BadgeCheck" class="size-4" />
-          </span>
-          Requerido
-        </span>
-        <input type="checkbox" data-required-checkbox class="block accent-custom-blue3 checked:border-indigo-500" />
-      </label>
-    </div>
-
-    <div class="mb-4">
-      <h4 class="mb-2 text-lg font-medium text-gray-700">Tipo de dato</h4>
+      <h4 class="mb-2 text-base text-heading">Tipo de dato</h4>
       <div class="relative grid grid-cols-3 gap-2" data-types-container>
         {
           TYPES_DATA.map((type) => (
-            <label class="flex cursor-pointer justify-between rounded-lg border border-gray-200 p-4 transition-all duration-200 hover:border-custom-blue3 hover:bg-custom-blue3/10 hover:text-custom-blue3 has-checked:bg-custom-blue3/10 has-checked:text-custom-blue3 has-checked:ring-custom-blue3">
+            <label class="flex cursor-pointer justify-between rounded-main border border-border p-2.5 text-heading transition-all duration-200 hover:border-primary hover:bg-primary-foreground hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-2 focus-visible:outline-ring has-checked:bg-primary-foreground has-checked:text-primary has-checked:ring-primary">
               <span class="flex items-center gap-2">
-                <span class="flex items-center justify-center rounded-lg bg-custom-blue3/10 p-1">
+                <span class="flex items-center justify-center rounded-main bg-primary-foreground p-1" aria-hidden="true">
                   <Icon name={type.icon as keyof typeof icons} class="size-4" />
                 </span>
                 {type.label}
-                {type.value === 'Date' && <span data-date-format-label class="ml-2 hidden cursor-pointer rounded bg-custom-blue3/20 px-2 py-0.5 text-xs text-custom-blue3 hover:bg-custom-blue3/30" />}
+                {type.value === 'Date' && (
+                  <span data-date-format-label class="ml-2 hidden cursor-pointer rounded bg-primary-foreground px-2 py-0.5 text-xs text-primary hover:bg-primary-foreground/80" />
+                )}
               </span>
-              <input type="checkbox" data-type-checkbox={type.value} value={type.value} class="block accent-custom-blue3 checked:border-indigo-500" />
+              <input
+                type="checkbox"
+                data-type-checkbox={type.value}
+                value={type.value}
+                class="block accent-primary checked:border-primary focus-visible:outline-2 focus-visible:outline-ring"
+                aria-label={`Seleccionar tipo de dato: ${type.label}`}
+              />
             </label>
           ))
         }
@@ -61,21 +83,17 @@ import DateFormatSelector from './DateFormatSelector.astro'
     </div>
 
     <div>
-      <h4 class="mb-2 text-lg font-medium text-gray-700">Validaciones personalizadas</h4>
+      <h4 class="mb-2 text-base text-heading">Validaciones personalizadas</h4>
 
-      <div class="mb-4 hidden space-y-3" data-validations-container></div>
-      <Button variant="ghost" class="border border-dashed border-custom-blue3" size="sm" data-btn-add-validation>
-        <span class="flex items-center gap-2 text-custom-blue3">
-          <Icon name="Plus" class="size-4" />
-          Agregar validación
-        </span>
-      </Button>
+      <div class="mb-4 hidden space-y-3" data-validations-container role="list" aria-label="Lista de validaciones personalizadas"></div>
+      <Button variant="secondary" size="sm" icon="Plus" data-btn-add-validation aria-describedby="add-validation-desc"> Agregar validación </Button>
+      <span id="add-validation-desc" class="sr-only">Agregar una nueva validación personalizada al campo</span>
 
-      <div class="mt-4 hidden rounded-lg border border-gray-200 p-4" data-form-validation>
+      <div class="mt-4 hidden rounded-main border border-border p-4" data-form-validation>
         <div class="grid grid-cols-3 items-center gap-2">
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700"> Campo </label>
-            <div class="rounded-lg bg-white/80 px-4 py-3 shadow-sm" data-field-preview></div>
+            <label class="text-sm font-medium text-heading" id="field-preview-label"> Campo </label>
+            <div class="h-10 w-full rounded-main border border-border bg-background p-2 text-heading" data-field-preview role="status" aria-labelledby="field-preview-label"></div>
           </div>
           <div>
             <Select name="operator" options={OPERATORS} label="Operador" data-operator-select />
@@ -86,14 +104,8 @@ import DateFormatSelector from './DateFormatSelector.astro'
         </div>
 
         <div class="mt-2.5 flex items-center justify-end gap-2">
-          <Button variant="secondary" size="sm" data-btn-create-validation>
-            <span class="flex items-center gap-2 text-custom-blue3">
-              <Icon name="Plus" class="size-4" />
-              Crear validación
-            </span>
-          </Button>
-
-          <Button variant="outline" size="sm" class="text-custom-blue3" data-btn-cancel-validation> Cancelar </Button>
+          <Button icon="Plus" size="sm" data-btn-create-validation aria-label="Confirmar creación de validación"> Crear validación </Button>
+          <Button variant="destructive" size="sm" data-btn-cancel-validation aria-label="Cancelar y cerrar formulario"> Cancelar </Button>
         </div>
       </div>
     </div>

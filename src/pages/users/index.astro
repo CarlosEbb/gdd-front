@@ -1,0 +1,82 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import Container from '@/components/ui/Container.astro'
+import CardList from '@/components/ui/CardList.astro'
+import Link from '@/components/ui/Link.astro'
+import SearchFilter from '@/components/form/SearchFilter.astro'
+import Header from '@/components/ui/Header.astro'
+import { actions } from 'astro:actions'
+import type { Details } from '@/types/users'
+import { formatDate } from '@/scripts/utils'
+import Avatar from '@/components/ui/Avatar.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Icon from '@/components/ui/Icon.astro'
+
+const { data, error } = await Astro.callAction(actions.users.list, {})
+
+const users = data?.data || []
+const hasUsers = users.length > 0
+const totalUsers = users.length
+---
+
+<MainLayout title="Usuarios">
+  <Container>
+    <Header title="Gestión de usuarios" subtitle={`Total: ${totalUsers} usuarios`}>
+      <PermissionGuard slot="actions" permission="users.create">
+        <div class="flex items-center gap-2">
+          <div class="hidden md:block">
+            <Link href="/users/new" size="sm" icon="Plus"> Crear usuario </Link>
+          </div>
+          <div class="block md:hidden">
+            <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+              <a href="/users/new" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted">
+                <Icon name="Plus" class="h-4 w-4" />
+                Crear usuario
+              </a>
+            </Dropdown>
+          </div>
+        </div>
+      </PermissionGuard>
+    </Header>
+
+    <StateSwitch isEmpty={!hasUsers} hasError={!!error}>
+      <div class="mb-4">
+        <SearchFilter placeholder="Buscar usuario..." target=".user-item" keys={['name', 'email']} />
+      </div>
+
+      <div class="mb-10 overflow-hidden rounded-main border border-border bg-background">
+        {
+          users.map((user: Details) => (
+            <CardList
+              class="user-item"
+              data-name={`${user.name} ${user.lastName ?? ''}`}
+              data-email={user.email}
+              title={user.name}
+              description={user.email}
+              secondaryText={user.lastConnection ? `Última conexión: ${formatDate(user.lastConnection)}` : ''}
+            >
+              <Avatar slot="avatar" size="lg" name={user.name} lastName={user.lastName} photo={user.photo} />
+              <div slot="actions" class="flex gap-1">
+                <PermissionGuard permission="users.update">
+                  <Link href={`/users/${user.uuid}/edit`} variant="outline" size="sm" iconOnly icon="Pencil" />
+                </PermissionGuard>
+                <Link href={`/users/${user.uuid}`} variant="outline" size="sm" iconOnly icon="ChevronRight" />
+              </div>
+            </CardList>
+          ))
+        }
+      </div>
+
+      <div slot="empty">
+        <EmptyState title="No hay usuarios registrados" href="/users/new" hrefText="Crear usuario" state="info" />
+      </div>
+
+      <div slot="error">
+        <EmptyState title="Error al cargar los usuarios" state="error" href="/users" hrefText="Reintentar" />
+      </div>
+    </StateSwitch>
+  </Container>
+</MainLayout>

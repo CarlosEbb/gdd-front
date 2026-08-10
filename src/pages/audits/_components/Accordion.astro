@@ -1,0 +1,44 @@
+---
+import Icon from '@/components/ui/Icon.astro'
+
+interface Props {
+  title: string
+  open?: boolean
+  class?: string
+  queryKeys?: string | string[]
+}
+
+const { title, open = false, class: className = '', queryKeys } = Astro.props
+
+let isOpen = open
+
+if (queryKeys) {
+  const keys = Array.isArray(queryKeys) ? queryKeys : [queryKeys]
+  const hasActiveFilter = keys.some((key) => {
+    const val = Astro.url.searchParams.get(key)
+    return val !== null && val !== ''
+  })
+  if (hasActiveFilter) {
+    isOpen = true
+  }
+}
+---
+
+<details class={`group border-b border-border py-3 last:border-b-0 ${className}`} {...isOpen ? { open: true } : {}}>
+  <summary class="flex cursor-pointer list-none list-image-none items-center justify-between text-sm font-medium text-heading transition-colors hover:text-primary [&::-webkit-details-marker]:hidden">
+    <span>{title}</span>
+    <span class="text-subheading transition-transform duration-200 group-open:rotate-180 group-open:text-primary">
+      <Icon name="ChevronDown" size={16} />
+    </span>
+  </summary>
+  <div class="mt-2 pt-1">
+    <slot />
+  </div>
+</details>
+
+<style>
+  /* Ocultar el marcador nativo en navegadores que no lo quitan con list-none */
+  summary::-webkit-details-marker {
+    display: none;
+  }
+</style>

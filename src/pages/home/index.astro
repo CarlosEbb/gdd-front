@@ -1,18 +1,37 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro'
-import ListLatestOpenid from '@/sections/workspaces/List.astro'
+import ListWorkspaces from '@/sections/workspaces/List.astro'
 import ListDocuments from '@/sections/documents/List.astro'
 import TitleForPage from '@/components/ui/TitleForPage.astro'
+import Container from '@/components/ui/Container.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import { isSuperAdmin } from '@/lib/permissions/policy'
+import type { PermissionData } from '@/lib/permissions/types'
+import ListActions from '@/sections/metrics/ListActions.astro'
 
 const user = await Astro.session?.get('user')
-const name = user.name
+const userPermissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
+const isAdmin = userPermissions ? isSuperAdmin(userPermissions) : false
+
+const name = user?.name
 ---
 
 <MainLayout title="Inicio">
-  <div class="mx-auto max-w-7xl">
-    <TitleForPage title={`¡Bienvenido, ${name}!`} />
+  <Container>
+    <TitleForPage titleStyle="md:text-3xl" class="mb-10" subtitle="Gestiona tus espacios de trabajo y documentos" showBackButton={false} title={`¡Bienvenido, ${name}!`} />
 
-    <ListLatestOpenid />
-    <ListDocuments limit={7} />
-  </div>
+    {
+      isAdmin ? (
+        <ListActions />
+      ) : (
+        <>
+          <PermissionGuard permission="workspaces.view">
+            <ListWorkspaces />
+          </PermissionGuard>
+
+          <ListDocuments title="Últimos documentos" subtitle="Consulta los documentos que has creado recientemente" limit={8} />
+        </>
+      )
+    }
+  </Container>
 </MainLayout>

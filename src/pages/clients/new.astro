@@ -1,0 +1,38 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import Container from '@/components/ui/Container.astro'
+import { actions } from 'astro:actions'
+import type { ActionError } from 'astro:actions'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import Header from '@/components/ui/Header.astro'
+import ClientForm from './_components/ClientForm.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+
+const isEdit = Astro.url.searchParams.get('edit') === 'true'
+
+let serversByClient: any[] = []
+let error: ActionError | null = null
+
+const { data, error: serversError } = await Astro.callAction(actions.servers.list, {})
+const servers =
+  data?.data?.map((server: any) => {
+    return {
+      ...server,
+      selected: isEdit ? serversByClient.some((s: any) => s.server.uuid === server.uuid) : false,
+    }
+  }) ?? []
+
+const hasServers = servers.length > 0
+
+const titleText = isEdit ? 'Actualizar cliente' : 'Crear cliente'
+---
+
+<MainLayout title={titleText}>
+  <Container>
+    <Header title={titleText} />
+    <StateSwitch hasError={error !== null}>
+      <ClientForm isEdit={false} servers={servers} serversError={serversError} hasServers={hasServers} />
+      <EmptyState slot="error" title="Ah ocurrido un error al cargar el cliente" description="Por favor, intenta nuevamente" state="error" />
+    </StateSwitch>
+  </Container>
+</MainLayout>

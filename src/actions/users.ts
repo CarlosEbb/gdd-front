@@ -1,0 +1,172 @@
+import { defineAction } from 'astro:actions'
+import { z } from 'astro:schema'
+import { handleApiError, http } from './http'
+import { Status, type AuthResponse, type Details, type GetUserByUuidResponse } from '@/types/users'
+import { requirePermission, requireAuth } from '@/lib/permissions'
+
+export const users = {
+  list: defineAction({
+    handler: async (_, request) => {
+      await requirePermission(request, ['users.view'])
+      const token = await requireAuth(request)
+
+      try {
+        const users = await http.get<Details[]>(`/users`, token, request)
+
+        return users
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  register: defineAction({
+    accept: 'form',
+    input: z.object({
+      name: z.string(),
+      lastName: z.string(),
+      email: z.string().email(),
+      password: z.string(),
+      country: z.string(),
+      zipCode: z.string(),
+      role: z.string(),
+      'clientUuids[]': z.array(z.string()).optional().default([]),
+      'permissionUuids[]': z.array(z.string()).optional().default([]),
+      img_profile_file: z.any().optional(),
+    }),
+    handler: async (input, request) => {
+      await requirePermission(request, ['users.create'])
+      const token = await requireAuth(request)
+
+      try {
+        const formData = new FormData()
+
+        Object.entries(input).forEach(([key, value]) => {
+          if (key === 'img_profile_file') {
+            if (value && value.size > 0) formData.append(key, value)
+          } else if (Array.isArray(value)) {
+            // Los campos ya vienen con [] en el nombre, así que usamos el key directamente
+            value.forEach((v) => formData.append(key, v))
+          } else {
+            formData.append(key, value)
+          }
+        })
+
+        const userCreated = await http.post<AuthResponse>(`/users/register`, token, request, formData)
+        return {
+          ...userCreated,
+          data: {
+            ...userCreated.data,
+            redirect: `/users/${userCreated.data.user.uuid}`,
+          },
+        }
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  update: defineAction({
+    accept: 'form',
+    input: z.object({
+      uuid: z.string(),
+      name: z.string(),
+      lastName: z.string(),
+      email: z.string().email(),
+      country: z.string().optional(),
+      img_profile_file: z.any().optional(),
+      zipCode: z.string().optional(),
+      role: z.string(),
+      'clientUuids[]': z.array(z.string()).optional().default([]),
+      'permissionUuids[]': z.array(z.string()).optional().default([]),
+    }),
+    handler: async (input, request) => {
+      await requirePermission(request, ['users.update'])
+      const token = await requireAuth(request)
+
+      try {
+        const formData = new FormData()
+        const role = 'client'
+
+        Object.entries({ ...input, role }).forEach(([key, value]) => {
+          if (key === 'img_profile_file') {
+            if (value && value.size > 0) formData.append(key, value)
+          } else if (Array.isArray(value)) {
+            value.forEach((v) => formData.append(key, v))
+          } else {
+            formData.append(key, value)
+          }
+        })
+
+        const userUpdated = await http.put<Details>(`/users/${input.uuid}`, token, request, formData)
+
+        await request.session?.set('user', userUpdated.data)
+
+        return {
+          ...userUpdated,
+          data: {
+            ...userUpdated.data,
+            redirect: `/users/${input.uuid}`,
+          },
+        }
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  delete: defineAction({
+    input: z.object({
+      uuid: z.string(),
+    }),
+    handler: async ({ uuid }, request) => {
+      await requirePermission(request, ['users.delete'])
+      const token = await requireAuth(request)
+
+      try {
+        const response = await http.del(`/users/${uuid}`, token, request)
+        return {
+          code: response.code,
+          message: response.message,
+          data: {
+            redirect: '/users',
+          },
+        }
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  getByUuid: defineAction({
+    input: z.object({
+      uuid: z.string(),
+    }),
+    handler: async ({ uuid }, request) => {
+      await requirePermission(request, ['users.view'])
+      const token = await requireAuth(request)
+
+      try {
+        const user = await http.get<GetUserByUuidResponse>(`/users/${uuid}`, token, request)
+
+        return user
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+  updateStatus: defineAction({
+    accept: 'form',
+    input: z.object({
+      uuid: z.string(),
+      status: z.enum(Object.values(Status) as [string, ...string[]]),
+    }),
+    handler: async ({ uuid, status }, request) => {
+      await requirePermission(request, ['users.update'])
+      const token = await requireAuth(request)
+
+      try {
+        const user = await http.patch<Details>(`/users/${uuid}/status`, token, request, { status })
+        return user
+      } catch (error) {
+        handleApiError(error, request)
+      }
+    },
+  }),
+}

@@ -1,5 +1,5 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro'
+import EditorLayout from '@/layouts/EditorLayout.astro'
 import Editor from '@/components/editor/EditorPdf.astro'
 
 const { uuid } = Astro.params
@@ -7,8 +7,8 @@ const { uuid } = Astro.params
 if (!uuid) return Astro.redirect('/home')
 ---
 
-<MainLayout class="px-0 pt-14" title="Editor de documentos">
+<EditorLayout class="px-0 pt-14" title="Editor de documentos">
   <div class="">
     <Editor uuid={uuid} />
   </div>
-</MainLayout>
+</EditorLayout>

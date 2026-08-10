@@ -1,5 +1,5 @@
 ---
-import ConfigLayout from '@/layouts/ConfigLayout.astro'
+import Layout from '../_components/Layout.astro'
 import Tabs from '@/components/tabs/Tabs.astro'
 import TabsList from '@/components/tabs/TabsList.astro'
 import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
@@ -16,6 +16,8 @@ import DebugPanel from './_components/DebugPanel.astro'
 import ValidationItemTemplate from './_components/ValidationItemTemplate.astro'
 import ConditionItemTemplate from './_components/ConditionItemTemplate.astro'
 import Button from '@/components/ui/Button.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
 
 const { uuid } = Astro.params
 const build_number = Astro.url.searchParams.get('build_number') as string
@@ -24,50 +26,59 @@ if (!uuid || !build_number) {
   return Astro.redirect('/home')
 }
 
-const { data } = await Astro.callAction(actions.documents.getRequestForDocument, {
+const { data, error } = await Astro.callAction(actions.documents.getRequestForDocument, {
   uuid_template: uuid,
   build_number: build_number,
 })
 
-const request = data?.data.variables || {}
+const request = data?.data?.variables || {}
 const fields = Object.keys(request) as Array<string>
-const elements = data?.data.elementos || []
+const elements = data?.data?.elementos || []
+const uuidVersion = data?.data?.uuid_version || ''
+const validations = (data?.data as any)?.validation || null
+
+const isEmpty = !validations && elements.length === 0 && fields.length === 0
 ---
 
-<ConfigLayout title="Validaciones">
-  <Tabs defaultValue="json">
-    <div class="flex items-center justify-between">
-      <TabsList>
-        <TabsTrigger value="json">JSON</TabsTrigger>
-        <TabsTrigger value="documento">Documento</TabsTrigger>
-      </TabsList>
+<Layout title="Validaciones">
+  <StateSwitch hasError={!!error} isEmpty={isEmpty}>
+    <Tabs defaultValue="json">
+      <div class="flex items-center justify-between">
+        <TabsList>
+          <TabsTrigger value="json">JSON</TabsTrigger>
+          <TabsTrigger value="documento">Documento</TabsTrigger>
+        </TabsList>
 
-      <Button id="btn-save-validation" loadingText="Guardando..." data-uuid-template={uuid} data-build-number={build_number}>Guardar</Button>
-    </div>
-
-    <TabsContent value="json">
-      <div class="grid grid-cols-3 gap-x-3">
-        <FieldsSidebar fields={fields} />
-        <ValidationCard />
+        <Button id="btn-save-validation" size="sm" loadingText="Guardando..." data-uuid-version={uuidVersion}>Guardar</Button>
       </div>
-    </TabsContent>
 
-    <TabsContent value="documento">
-      <div class="grid grid-cols-3 gap-x-3">
-        <FieldsToHide elements={elements} />
-        <ConditionForm />
-        <ConditionsList />
-      </div>
-    </TabsContent>
-  </Tabs>
+      <TabsContent value="json">
+        <div class="grid grid-cols-3 gap-x-3">
+          <FieldsSidebar fields={fields} />
+          <ValidationCard />
+        </div>
+      </TabsContent>
 
-  <DebugPanel show />
+      <TabsContent value="documento">
+        <div class="grid grid-cols-3 gap-x-3">
+          <FieldsToHide elements={elements} />
+          <ConditionForm variables={fields} />
+          <ConditionsList />
+        </div>
+      </TabsContent>
+    </Tabs>
 
-  <ValidationItemTemplate />
-  <ConditionItemTemplate />
-</ConfigLayout>
+    <EmptyState slot="empty" title="No hay datos" description="No se encontraron datos para mostrar" />
+    <EmptyState slot="error" title="Error" description="Ocurrió un error al cargar los datos" />
+    <DebugPanel />
+
+    <ValidationItemTemplate />
+    <ConditionItemTemplate />
+  </StateSwitch>
+</Layout>
 
 <script type="application/json" id="json-input-data" set:html={JSON.stringify(request)} />
+<script type="application/json" id="json-validations-data" set:html={JSON.stringify(validations)} />
 
 <script>
   import { initValidationSystem } from './_scripts/json-validation'
@@ -76,6 +87,12 @@ const elements = data?.data.elementos || []
   import { setButtonLoading, callAction } from '@/scripts/utils'
   import { toast } from '@/scripts/toast'
   import { actions } from 'astro:actions'
+
+  const updateUrlWithNewVersion = (buildNumber: string) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('build_number', buildNumber)
+    window.history.replaceState({}, '', url.toString())
+  }
 
   function setupSaveValidation() {
     const saveButton = document.getElementById('btn-save-validation') as HTMLButtonElement | null
@@ -86,10 +103,9 @@ const elements = data?.data.elementos || []
 
     saveButton.addEventListener('click', async (event) => {
       event.preventDefault()
-      const uuidTemplate = saveButton.dataset.uuidTemplate
-      const buildNumber = saveButton.dataset.buildNumber
+      const uuidVersion = saveButton.dataset.uuidVersion
 
-      if (!uuidTemplate || !buildNumber) {
+      if (!uuidVersion) {
         toast.error('No se pudo obtener la información del documento.')
         return
       }
@@ -101,8 +117,7 @@ const elements = data?.data.elementos || []
 
         const { data, error } = await callAction(
           actions.documents.createValidationRules({
-            uuid_template: uuidTemplate,
-            build_number: buildNumber,
+            uuid_version: uuidVersion,
             validation_rules: validationPayload,
           })
         )
@@ -113,6 +128,12 @@ const elements = data?.data.elementos || []
         }
 
         toast.success(data?.message ?? 'Validaciones guardadas correctamente.')
+
+        const newVersion = (data as any)?.data?.version;
+        if (newVersion) {
+          updateUrlWithNewVersion(newVersion.buildNumber)
+          saveButton.dataset.uuidVersion = newVersion.uuid;
+        }
       } catch (error) {
         toast.error('Ah ocurrido un error al guardar las validaciones. Por favor, intente nuevamente.')
       } finally {
@@ -123,8 +144,38 @@ const elements = data?.data.elementos || []
 
   document.addEventListener('astro:page-load', () => {
     resetDocumentValidation()
-    initValidationSystem()
-    initDocumentValidation()
+
+    let initialRules: Record<string, any> | undefined = undefined
+    let initialConditions: any[] | undefined = undefined
+
+    const validationsEl = document.getElementById('json-validations-data')
+    if (validationsEl && validationsEl.textContent) {
+      try {
+        const parsed = JSON.parse(validationsEl.textContent)
+        if (parsed) {
+          // Filtrar reglas huérfanas
+          const validFields = Object.keys(JSON.parse(document.getElementById('json-input-data')?.textContent || '{}'))
+          
+          if (parsed.validationRules) {
+            initialRules = {}
+            for (const key in parsed.validationRules) {
+              if (validFields.includes(key)) {
+                initialRules[key] = parsed.validationRules[key]
+              }
+            }
+          }
+          
+          if (parsed.hiddenConditions) {
+            initialConditions = parsed.hiddenConditions.filter((c: any) => validFields.includes(c.field))
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing initial validations data:', e)
+      }
+    }
+
+    initValidationSystem(initialRules)
+    initDocumentValidation(initialConditions)
     setupSaveValidation()
   })
 </script>

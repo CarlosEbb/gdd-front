@@ -1,0 +1,182 @@
+---
+import Card from '@/components/ui/Card.astro'
+import Layout from '../_components/Layout.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Button from '@/components/ui/Button.astro'
+
+const { uuid } = Astro.params
+const build_number = Astro.url.searchParams.get('build_number') as string
+
+if (!uuid || !build_number) return Astro.redirect('/home')
+---
+
+<Layout title="Métricas">
+  <Card id="chart-card">
+    <div slot="header" class="flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-semibold text-heading">Cantidad de peticiones</h2>
+        <p class="text-sm text-subheading">Gráfica para consultar la cantidad de peticiones</p>
+      </div>
+      <div>
+        <div class="flex gap-2 rounded-main border border-border bg-foreground p-1">
+          <Button size="sm" variant="ghost" data-days="7" class="days-filter">7 días</Button>
+          <Button size="sm" variant="ghost" data-days="15" class="days-filter">15 días</Button>
+          <Button size="sm" variant="ghost" data-days="30" class="days-filter">30 días</Button>
+        </div>
+      </div>
+    </div>
+    <div id="chart"></div>
+  </Card>
+
+  <div id="error-message" class="hidden">
+    <EmptyState title="Ah ocurrido un error" description="No se pudieron cargar las métricas" />
+  </div>
+
+  <div id="empty-message" class="hidden">
+    <EmptyState title="No hay métricas" description="No se encontraron métricas para este documento" />
+  </div>
+</Layout>
+
+<script type="application/json" id="metrics-data" set:html={JSON.stringify({ uuid })} />
+<script>
+  import { callAction, formatShortDate } from '@/scripts/utils'
+  import ApexCharts, { type ApexOptions } from 'apexcharts'
+  import { actions } from 'astro:actions'
+
+  let chartInstance: ApexCharts | null = null
+
+  async function loadMetrics(uuid: string, days: number) {
+    const errorMessage = document.getElementById('error-message')
+    const emptyMessage = document.getElementById('empty-message')
+    const chartCard = document.getElementById('chart-card')
+
+    const { data, error } = await callAction(actions.metrics.getMetricsByDocument({ uuid_template: uuid, days }))
+
+    if (error) {
+      errorMessage?.classList.remove('hidden')
+      emptyMessage?.classList.add('hidden')
+      chartCard?.classList.add('hidden')
+      return null
+    }
+
+    if (!data?.data?.metrics?.length) {
+      emptyMessage?.classList.remove('hidden')
+      errorMessage?.classList.add('hidden')
+      chartCard?.classList.add('hidden')
+      return null
+    }
+
+    errorMessage?.classList.add('hidden')
+    emptyMessage?.classList.add('hidden')
+    chartCard?.classList.remove('hidden')
+
+    return data
+  }
+
+  function updateChart(data: any) {
+    const options: ApexOptions = {
+      tooltip: {
+        enabled: true,
+        theme: 'light',
+        cssClass: 'text-heading',
+        x: {
+          show: false,
+        },
+      },
+      chart: {
+        height: 310,
+        type: 'area',
+        toolbar: {
+          show: false,
+        },
+      },
+      stroke: {
+        curve: 'smooth',
+        width: 2,
+        colors: ['oklch(0.452 0.3132 264.05)'],
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      markers: {
+        size: 0,
+        strokeWidth: 2,
+        hover: {
+          size: 7,
+        },
+      },
+      colors: ['#0410eb'],
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.3,
+          opacityTo: 0.4,
+          stops: [0, 90, 100],
+        },
+      },
+      series: [
+        {
+          name: 'Peticiones',
+          data: data?.data?.metrics?.map((item: any) => item.count) || [],
+        },
+      ],
+      xaxis: {
+        categories: data?.data?.metrics?.map((item: any) => formatShortDate(item.date)) || [],
+        tooltip: {
+          enabled: false,
+        },
+      },
+    }
+
+    if (chartInstance) {
+      chartInstance.updateOptions(options)
+    } else {
+      chartInstance = new ApexCharts(document.querySelector('#chart') as HTMLElement, options)
+      chartInstance.render()
+    }
+  }
+
+  function setActiveButton(days: number) {
+    const buttons = document.querySelectorAll('.days-filter')
+    buttons.forEach((button) => {
+      const buttonElement = button as HTMLButtonElement
+      const buttonDays = parseInt(buttonElement.dataset.days || '0')
+
+      if (buttonDays === days) {
+        buttonElement.classList.remove('variant-ghost')
+        buttonElement.classList.add('variant-secondary')
+      } else {
+        buttonElement.classList.remove('variant-secondary')
+        buttonElement.classList.add('variant-ghost')
+      }
+    })
+  }
+
+  document.addEventListener('astro:page-load', async () => {
+    const dataScript = document.getElementById('metrics-data')
+    const { uuid } = dataScript ? JSON.parse(dataScript.textContent || '{}') : {}
+    const defaultDays = 7
+
+    const initialData = await loadMetrics(uuid, defaultDays)
+    if (initialData) {
+      updateChart(initialData)
+      setActiveButton(defaultDays)
+    }
+
+    // Agregar event listeners a los botones de filtro
+    const filterButtons = document.querySelectorAll('.days-filter')
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', async () => {
+        const buttonElement = button as HTMLButtonElement
+        const days = parseInt(buttonElement.dataset.days || '0')
+
+        setActiveButton(days)
+        const data = await loadMetrics(uuid, days)
+        if (data) {
+          updateChart(data)
+        }
+      })
+    })
+  })
+</script>

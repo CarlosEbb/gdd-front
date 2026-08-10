@@ -1,0 +1,123 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import { actions } from 'astro:actions'
+import { formatISODateWithIntl } from '@/scripts/utils'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Container from '@/components/ui/Container.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import Header from '@/components/ui/Header.astro'
+import Card from '@/components/ui/Card.astro'
+import Avatar from '@/components/ui/Avatar.astro'
+import Button from '@/components/ui/Button.astro'
+
+const { uuid } = Astro.params
+
+if (!uuid) return Astro.redirect('/home')
+
+const { data, error } = await Astro.callAction(actions.documents.getHistory, { uuid_template: uuid })
+
+const history = data?.data ?? []
+const currentPath = Astro.url.pathname
+---
+
+<MainLayout title="Historial de documentos">
+  <Container>
+    <Header title="Historial de documentos" subtitle="Sigue la evolución del documento a través del tiempo." showBreadcrumb={false} backHref={`/config/version/${uuid}`} />
+
+    <StateSwitch isEmpty={!history.length} hasError={!!error}>
+      <Card>
+        <ul class="relative m-0 list-none p-0">
+          {
+            history.map((item, index) => {
+              const isLatest = index === 0
+              const isLast = index === history.length - 1
+              const isPublished = item.publication !== null
+              const dateStr = formatISODateWithIntl(item.createdAt)
+              const userName = item.user?.name
+              const versionName = item.nameVersion
+
+              return (
+                <li class="group relative py-5 pl-8 sm:pl-12">
+                  {!isLast ? <div class="absolute top-[36px] bottom-[-20px] left-[11px] w-px bg-muted-foreground" /> : ''}
+                  <div
+                    class={`${isLatest ? 'bg-primary-foreground ring-primary' : 'bg-muted-foreground ring-muted'} absolute top-[26px] left-[7.5px] flex h-[8px] w-[8px] items-center justify-center rounded-full ring-[3px]`}
+                  />
+
+                  <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                    <div class="flex flex-col gap-2.5">
+                      <div class="flex flex-wrap items-center gap-2.5">
+                        <h3 class="text-base leading-none font-semibold tracking-tight text-heading">{versionName}</h3>$
+                        {isLatest ? <span class="rounded-full border border-border bg-foreground px-1.5 py-0.5 text-[10px] leading-none font-medium tracking-wide text-heading">ACTUAL</span> : ''}
+                        {isPublished ? (
+                          <span class="rounded-full border border-primary bg-primary-foreground px-1.5 py-0.5 text-[10px] leading-none font-medium tracking-wide text-primary">PUBLICADO</span>
+                        ) : (
+                          ''
+                        )}
+                      </div>
+
+                      <div class="flex flex-wrap items-center gap-2 text-sm text-heading sm:gap-3">
+                        <div class="flex items-center gap-1.5">
+                          {userName ? (
+                            <>
+                              <Avatar name={item.user?.name} size="sm" />
+                              <span class="max-w-[120px] truncate font-medium text-subheading sm:max-w-none" title={userName}>
+                                {userName}
+                              </span>
+                            </>
+                          ) : (
+                            ''
+                          )}
+                        </div>
+                        <span class="hidden text-subheading sm:inline">•</span>
+                        <span class="rounded border border-border bg-foreground px-1 py-0.5 font-mono text-xs">Build {item.buildNumber}</span>
+                        <span class="text-subheading">•</span>
+                        <time datetime={item.createdAt} class="text-subheading">
+                          {dateStr}
+                        </time>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <Button size="sm" variant="secondary" data-view-document data-uuid={item.uuidTemplate} data-build-number={item.buildNumber}>
+                        Vista previa
+                      </Button>
+                    </div>
+                  </div>
+                </li>
+              )
+            })
+          }
+        </ul>
+      </Card>
+
+      <EmptyState slot="error" title="Error al cargar el historial" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
+
+      <EmptyState slot="empty" title="No se encontraron versiones" description="No hay versiones disponibles para este documento." />
+    </StateSwitch>
+  </Container>
+</MainLayout>
+
+<script>
+  import { initDocumentModals } from '@/scripts/document-modals'
+
+  document.addEventListener('astro:page-load', () => {
+    initDocumentModals()
+
+    const viewButtons = document.querySelectorAll<HTMLButtonElement>('[data-view-document]')
+
+    viewButtons.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault()
+        const uuid = btn.dataset.uuid
+        const buildNumber = btn.dataset.buildNumber
+
+        if (uuid && buildNumber) {
+          document.dispatchEvent(
+            new CustomEvent('document:view', {
+              detail: { uuid, buildNumber },
+            })
+          )
+        }
+      })
+    })
+  })
+</script>

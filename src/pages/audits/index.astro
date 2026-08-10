@@ -1,0 +1,242 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import Header from '@/components/ui/Header.astro'
+import { actions } from 'astro:actions'
+import { hasPermission } from '@/lib/permissions/policy'
+import type { PermissionData } from '@/lib/permissions/types'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Button from '@/components/ui/Button.astro'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import SidebarFilters from './_components/filters/SidebarFilters.astro'
+import ListLogs from './_components/ListLogs.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Modal from '@/components/modal/Modal.astro'
+
+const permissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
+const isSuperAdmin = permissions ? hasPermission(permissions, 'admin.full') : false
+
+const clientsRes = await Astro.callAction(actions.audits.getClients, {})
+const clients = clientsRes.data?.data || []
+
+const url = new URL(Astro.request.url)
+const selectedClientUuid = url.searchParams.get('clientUuid') || clients[0]?.uuid || ''
+const selectedAction = url.searchParams.get('action') || ''
+const selectedEntity = url.searchParams.get('entity') || ''
+const selectedUserUuid = url.searchParams.get('userUuid') || ''
+const dateFrom = url.searchParams.get('dateFrom') || ''
+const dateTo = url.searchParams.get('dateTo') || ''
+const page = parseInt(url.searchParams.get('page') || '1', 10)
+const limit = 15
+
+const filtersRes = await Astro.callAction(actions.audits.getFilters, { clientUuid: selectedClientUuid })
+const filterCatalog = filtersRes.data?.data || { actions: [], entities: [], users: [] }
+const filterUsers = filterCatalog.users || []
+
+let fetchError = undefined
+let logs: any[] = []
+let pagination: any = { total: 0, totalPages: 1, page: 1 }
+let totalLogs: number = 0
+let response = null
+
+if (selectedClientUuid) {
+  response = await Astro.callAction(actions.audits.getClientLogs, {
+    clientUuid: selectedClientUuid,
+    action: selectedAction,
+    entity: selectedEntity,
+    userUuid: selectedUserUuid,
+    dateFrom,
+    dateTo,
+    page,
+    limit,
+  })
+} else if (isSuperAdmin) {
+  response = await Astro.callAction(actions.audits.getGeneralLogs, {
+    action: selectedAction,
+    entity: selectedEntity,
+    userUuid: selectedUserUuid,
+    dateFrom,
+    dateTo,
+    page,
+    limit,
+  })
+}
+
+if (response) {
+  const { data, error } = response
+  logs = data?.data?.logs || []
+  pagination = data?.data?.pagination || { total: 0, totalPages: 1, page: 1 }
+  totalLogs = pagination.total
+  fetchError = error
+}
+---
+
+<MainLayout title="Auditorías" class="px-0 pt-14">
+  <div class="flex">
+    <SidebarFilters
+      clients={clients}
+      selectedClientUuid={selectedClientUuid}
+      filterCatalog={filterCatalog}
+      selectedAction={selectedAction}
+      selectedEntity={selectedEntity}
+      filterUsers={filterUsers}
+      selectedUserUuid={selectedUserUuid}
+      dateFrom={dateFrom}
+      dateTo={dateTo}
+    />
+
+    <div class="ml-0 min-w-0 flex-1 md:ml-[283px]">
+      <div id="sticky-header-container" class="flow-root bg-foreground px-5 pt-5 md:sticky md:top-14 md:z-20">
+        <Header title="Auditorías del Sistema" subtitle="Registro de auditorías del sistema">
+          <PermissionGuard slot="actions" permission="admin.full">
+            <div class="flex items-center gap-2">
+              <Button variant="secondary" icon={'Filter' as any} size="sm" id="btn-toggle-filters" class="md:hidden"> Filtrar </Button>
+              <div class="hidden md:block">
+                <Button variant="destructive" icon="Trash" size="sm" class="btn-purge-trigger"> Eliminar registro (>180 días) </Button>
+              </div>
+              <div class="block md:hidden">
+                <Dropdown position="right" mobileIcon="EllipsisVertical" hideLabel buttonLabel="Acciones">
+                  <button class="btn-purge-trigger flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-subheading hover:bg-muted">
+                    <Icon name="Trash" class="h-4 w-4" />
+                    Eliminar registro (>180 días)
+                  </button>
+                </Dropdown>
+              </div>
+            </div>
+          </PermissionGuard>
+        </Header>
+      </div>
+      <div class="mb-10">
+        <StateSwitch hasError={fetchError !== undefined} isEmpty={logs.length === 0}>
+          <ListLogs logs={logs as []} />
+          {
+            !fetchError && pagination.totalPages > 1 && (
+              <div class="flex items-center justify-between bg-foreground px-6 py-4">
+                <span class="text-xs text-subheading">
+                  Página <strong class="text-heading">{pagination.page}</strong> de <strong class="text-heading">{pagination.totalPages}</strong> ({totalLogs} registros)
+                </span>
+                <div class="flex gap-2">
+                  <Button size="sm" id="btn-prev" disabled={pagination.page <= 1} variant="secondary">
+                    Anterior
+                  </Button>
+                  <Button size="sm" id="btn-next" disabled={pagination.page >= pagination.totalPages} variant="secondary">
+                    Siguiente
+                  </Button>
+                </div>
+              </div>
+            )
+          }
+
+          <EmptyState
+            slot="error"
+            title="Error al cargar registros"
+            description="Ocurrió un error al cargar los registros de auditoría. Por favor, intente nuevamente."
+            state="error"
+            action="refresh"
+            showBorder={false}
+          />
+
+          <EmptyState
+            slot="empty"
+            title="No se encontraron registros"
+            description="No se encontraron registros de auditoría con los filtros aplicados."
+            state="notFound"
+            action="reload"
+            showBorder={false}
+          />
+        </StateSwitch>
+      </div>
+    </div>
+  </div>
+
+  <Modal modalId="confirm-purge-modal" title="Confirmar eliminación">
+    <p class="text-sm text-subheading">¿Estás seguro de que deseas limpiar de forma permanente todos los registros de auditoría de más de 180 días? Esta acción no se puede deshacer.</p>
+    <div slot="footer" class="flex gap-2">
+      <Button variant="secondary" size="sm" data-close-modal> Cancelar </Button>
+      <Button variant="destructive" size="sm" id="btn-confirm-purge" icon="Trash"> Confirmar </Button>
+    </div>
+  </Modal>
+</MainLayout>
+
+<script type="application/json" id="pagination-data" set:html={JSON.stringify({ page, totalPages: pagination.totalPages })} />
+
+<script>
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import { actions } from 'astro:actions'
+
+  document.addEventListener('astro:page-load', () => {
+    const dataScript = document.getElementById('pagination-data')
+    const { page, totalPages } = dataScript ? JSON.parse(dataScript.textContent || '{}') : { page: 1, totalPages: 1 }
+
+    // 2. Escuchar cambios en los inputs del formulario de filtros y hacer submit dinámico
+    const filtersForm = document.getElementById('filters-form')
+    if (filtersForm) {
+      const inputs = filtersForm.querySelectorAll('input[type="radio"], input[type="date"]')
+      inputs.forEach((input) => {
+        input.addEventListener('change', () => {
+          // Volver a la página 1 cuando cambian los filtros
+          const params = new URLSearchParams(new FormData(filtersForm as HTMLFormElement) as any)
+          params.set('page', '1')
+          window.location.search = params.toString()
+        })
+      })
+    }
+
+    // 3. Manejo de los botones de paginación
+    const btnPrev = document.getElementById('btn-prev')
+    const btnNext = document.getElementById('btn-next')
+
+    if (btnPrev && page > 1) {
+      btnPrev.addEventListener('click', () => {
+        const params = new URLSearchParams(window.location.search)
+        params.set('page', String(page - 1))
+        window.location.search = params.toString()
+      })
+    }
+
+    if (btnNext && page < totalPages) {
+      btnNext.addEventListener('click', () => {
+        const params = new URLSearchParams(window.location.search)
+        params.set('page', String(page + 1))
+        window.location.search = params.toString()
+      })
+    }
+
+    // 4. Manejo del botón de purga (Solo admin)
+    const btnPurge = document.querySelectorAll('.btn-purge-trigger')
+    const purgeModal = document.getElementById('confirm-purge-modal') as HTMLDialogElement
+    const btnConfirmPurge = document.getElementById('btn-confirm-purge') as HTMLButtonElement
+
+    if (btnPurge.length > 0 && purgeModal) {
+      btnPurge.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          purgeModal.showModal()
+        })
+      })
+    }
+
+    btnConfirmPurge.addEventListener('click', async () => {
+      setButtonLoading('#btn-confirm-purge', true)
+
+      try {
+        const { data, error } = await callAction(actions.audits.purgeLogs())
+
+        if (error) {
+          toast.error('Error al limpiar los registros')
+          console.log(error)
+          return
+        }
+
+        toast.success('Registros eliminados: ' + (data?.data?.deletedCount || 0))
+        purgeModal.close()
+        window.location.reload()
+      } catch (err: unknown) {
+        toast.error(`Error inesperado: ${(err as Error).message}`)
+      } finally {
+        setButtonLoading('#btn-confirm-purge', false)
+      }
+    })
+  })
+</script>

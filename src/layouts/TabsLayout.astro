@@ -1,0 +1,86 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro'
+import Header from '@/components/ui/Header.astro'
+import Container from '@/components/ui/Container.astro'
+import type { BreadcrumbItem } from '@/components/ui/Breadcrumb.astro'
+
+interface Props {
+  title: string
+  navigation: { href: string; label: string }[]
+  titleForPage: string
+  subtitle?: string
+}
+
+const { title, navigation, titleForPage, subtitle } = Astro.props
+
+const pathname = Astro.url.pathname
+const search = Astro.url.search
+const currentPath = pathname + search
+const hasActions = Astro.slots.has('actions')
+
+const activeTab = navigation.find((item) => item.href === currentPath) ?? navigation.find((item) => pathname.startsWith(item.href.split('?')[0]))
+
+const breadcrumbItems: BreadcrumbItem[] = [{ label: 'Inicio', href: '/home' }, ...(activeTab ? [{ label: activeTab.label }] : [])]
+---
+
+<MainLayout title={title}>
+  <Container>
+    <Header title={titleForPage} subtitle={subtitle || 'Consulta y gestiona la API de los documentos'} breadcrumbItems={breadcrumbItems}>
+      {
+        hasActions && (
+          <Fragment slot="actions">
+            <slot name="actions" />
+          </Fragment>
+        )
+      }
+    </Header>
+
+    <section class="mb-10 border-b border-border">
+      <ul data-tabs-container class="flex gap-x-8 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {
+          navigation.map((item) => {
+            const isActive = activeTab?.href === item.href
+            return (
+              <li>
+                <a
+                  href={item.href}
+                  data-active-tab={isActive ? 'true' : undefined}
+                  class:list={[
+                    'inline-block px-4 py-3 text-sm font-medium transition-colors',
+                    {
+                      'border-b-2 border-primary text-primary': isActive,
+                      'text-subheading hover:text-heading': !isActive,
+                    },
+                  ]}
+                >
+                  {item.label}
+                </a>
+              </li>
+            )
+          })
+        }
+      </ul>
+    </section>
+
+    <section class="mb-16">
+      <slot />
+    </section>
+  </Container>
+</MainLayout>
+
+<script>
+  const setupActiveTabScroll = () => {
+    const container = document.querySelector('[data-tabs-container]')
+    const activeTab = container?.querySelector('[data-active-tab="true"]')
+    if (container && activeTab) {
+      activeTab.scrollIntoView({
+        behavior: 'auto',
+        block: 'nearest',
+        inline: 'center',
+      })
+    }
+  }
+
+  setupActiveTabScroll()
+  document.addEventListener('astro:page-load', setupActiveTabScroll)
+</script>

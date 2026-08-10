@@ -6,6 +6,8 @@ interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   token: string
   body?: unknown
   isPublic?: boolean
+  ctx?: ActionAPIContext
+  useCargaUrl?: boolean
 }
 
 export class ApiError extends Error {
@@ -36,18 +38,40 @@ function isApiError(error: unknown): error is ApiError {
   return typeof error === 'object' && error !== null && '_isApiError' in error
 }
 
-async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic: boolean = false): Promise<ApiResponse<T>> {
-  const API_PROJECT_URL = import.meta.env.API_URL ?? (globalThis as any).process?.env?.API_URL
+function getEnvValue(name: 'API_URL' | 'PUBLIC_CARGA_URL'): string | undefined {
+  return import.meta.env[name] ?? (globalThis as any).process?.env?.[name]
+}
 
-  if (!API_PROJECT_URL) {
-    throw new Error('La variable de entorno API_URL no está configurada. Configúrala en tu entorno.')
+/** Bulk usa PUBLIC_CARGA_URL; el resto de la API usa API_URL */
+function resolveBaseUrl(useCargaUrl = false): string {
+  const envName = useCargaUrl ? 'PUBLIC_CARGA_URL' : 'API_URL'
+  const baseUrl = getEnvValue(envName)
+
+  if (!baseUrl) {
+    throw new Error(`La variable de entorno ${envName} no está configurada. Configúrala en tu entorno.`)
   }
 
-  const url = `${API_PROJECT_URL}${endpoint}`
+  return baseUrl
+}
+
+async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic: boolean = false): Promise<ApiResponse<T>> {
+  const baseUrl = resolveBaseUrl(options.useCargaUrl)
+  const url = `${baseUrl}${endpoint}`
 
   const headers = new Headers()
   const authorization = isPublic ? '' : `Bearer ${options.token}`
   headers.set('Authorization', authorization)
+
+  if (!isPublic && options.ctx) {
+    try {
+      const clientIp = options.ctx.clientAddress
+      if (clientIp) {
+        headers.set('x-client-ip', clientIp)
+      }
+    } catch {
+      // clientAddress no está disponible en páginas prerenderizadas, se ignora
+    }
+  }
 
   const isFormData = options.body instanceof FormData
   let requestBody: BodyInit | undefined
@@ -112,17 +136,23 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions, isPublic:
   return result
 }
 
-async function apiFetchBlob(endpoint: string, token: string, method: 'GET' | 'POST' = 'GET'): Promise<Blob> {
-  const API_PROJECT_URL = import.meta.env.API_URL ?? (globalThis as any).process?.env?.API_URL
-
-  if (!API_PROJECT_URL) {
-    throw new Error('La variable de entorno API_URL no está configurada. Configúrala en tu entorno.')
-  }
-
-  const url = `${API_PROJECT_URL}${endpoint}`
+async function apiFetchBlob(endpoint: string, token: string, ctx?: ActionAPIContext, method: 'GET' | 'POST' = 'GET'): Promise<Blob> {
+  const baseUrl = resolveBaseUrl(true)
+  const url = `${baseUrl}${endpoint}`
 
   const headers = new Headers()
   headers.set('Authorization', `Bearer ${token}`)
+
+  if (ctx) {
+    try {
+      const clientIp = ctx.clientAddress
+      if (clientIp) {
+        headers.set('x-client-ip', clientIp)
+      }
+    } catch {
+      // clientAddress no disponible en páginas prerenderizadas
+    }
+  }
 
   const config: RequestInit = {
     method,
@@ -142,31 +172,54 @@ async function apiFetchBlob(endpoint: string, token: string, method: 'GET' | 'PO
     if (response.status === 401) {
       throw new UnauthorizedError('No autorizado')
     }
-    throw new ApiError('Error al descargar el archivo', response.status)
+    
+    let errorMessage = 'Error al descargar el archivo'
+    try {
+      // Intentar leer la respuesta como JSON para extraer el mensaje de la API
+      const errorData = await response.clone().json()
+      if (errorData && errorData.message) {
+        errorMessage = errorData.message
+      }
+    } catch (e) {
+      // Si no es JSON o falla, mantener el mensaje genérico
+    }
+    
+    throw new ApiError(errorMessage, response.status)
   }
 
   return await response.blob()
 }
 
 export const http = {
-  get: <T>(endpoint: string, token: string, isPublic: boolean = false): Promise<ApiResponse<T>> => {
-    return apiFetch<T>(endpoint, { method: 'GET', token }, isPublic)
+  get: <T>(endpoint: string, token: string, ctx: ActionAPIContext, isPublic: boolean = false): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'GET', token, ctx }, isPublic)
   },
 
-  post: <T>(endpoint: string, token: string, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
-    return apiFetch<T>(endpoint, { method: 'POST', token, body }, isPublic)
+  post: <T>(
+    endpoint: string,
+    token: string,
+    ctx: ActionAPIContext,
+    body: unknown,
+    isPublic: boolean = false,
+    useCargaUrl: boolean = false,
+  ): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'POST', token, ctx, body, useCargaUrl }, isPublic)
   },
 
-  put: <T>(endpoint: string, token: string, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
-    return apiFetch<T>(endpoint, { method: 'PUT', token, body }, isPublic)
+  put: <T>(endpoint: string, token: string, ctx: ActionAPIContext, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'PUT', token, ctx, body }, isPublic)
   },
 
-  del: <T>(endpoint: string, token: string, body?: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
-    return apiFetch<T>(endpoint, { method: 'DELETE', token, body }, isPublic)
+  del: <T>(endpoint: string, token: string, ctx: ActionAPIContext, body?: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'DELETE', token, ctx, body }, isPublic)
   },
 
-  download: (endpoint: string, token: string, method: 'GET' | 'POST' = 'GET'): Promise<Blob> => {
-    return apiFetchBlob(endpoint, token, method)
+  download: (endpoint: string, token: string, ctx: ActionAPIContext, method: 'GET' | 'POST' = 'GET'): Promise<Blob> => {
+    return apiFetchBlob(endpoint, token, ctx, method)
+  },
+
+  patch: <T>(endpoint: string, token: string, ctx: ActionAPIContext, body: unknown, isPublic: boolean = false): Promise<ApiResponse<T>> => {
+    return apiFetch<T>(endpoint, { method: 'PATCH', token, ctx, body }, isPublic)
   },
 }
 

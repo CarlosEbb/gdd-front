@@ -1,13 +1,19 @@
 ---
 interface Props {
   defaultValue: string
+  variant?: 'default' | 'line'
   class?: string
 }
 
-const { defaultValue, class: className } = Astro.props
+const { defaultValue, variant = 'default', class: className } = Astro.props
 ---
 
-<div class:list={['w-full', className]} data-tabs-container data-tabs-value={defaultValue}>
+<div
+  class:list={['w-full', className]}
+  data-tabs-container
+  data-tabs-value={defaultValue}
+  data-tabs-variant={variant}
+>
   <slot />
 </div>
 

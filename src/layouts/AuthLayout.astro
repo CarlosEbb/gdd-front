@@ -4,11 +4,14 @@ import '@/styles/global.css'
 import gddLogin from '@/assets/images/img-login.jpg'
 import gddLogo from '@/assets/images/creadocs.png'
 
-import { ClientRouter } from 'astro:transitions'
+import bgTest2 from '@/assets/images/bg-1.avif'
+import bgTest from '@/assets/images/bg-2.avif'
+import bgTest4 from '@/assets/images/bg-4.avif'
 
 interface Props {
   titleTabBrowser?: string
   titleCardAuth: string
+  descriptionCardAuth: string
 }
 
 const { titleTabBrowser = null, titleCardAuth } = Astro.props
@@ -58,5 +61,60 @@ const optionalTitle = titleTabBrowser === null ? 'GDD' : `${titleTabBrowser} | G
         </footer>
       </div>
     </div>
-  </body>
-</html>
+  </div>
+</Layout>
+
+<style>
+  @keyframes auth-promo-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(1.25rem);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes auth-promo-image-reveal {
+    from {
+      opacity: 0.35;
+      transform: scale(1.06);
+      filter: blur(24px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+    }
+  }
+
+  .auth-promo__image {
+    animation: auth-promo-image-reveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .auth-promo__item {
+    opacity: 0;
+    animation: auth-promo-reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .auth-promo__item--title {
+    animation-delay: 0.35s;
+  }
+
+  .auth-promo__item--description {
+    animation-delay: 0.55s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auth-promo__image,
+    .auth-promo__item {
+      opacity: 1;
+      animation: none;
+      filter: none;
+      transform: none;
+    }
+  }
+</style>

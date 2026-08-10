@@ -7,8 +7,8 @@ import Search from './Search.astro'
 const { PUBLIC_IS_SANDBOX } = import.meta.env
 ---
 
-<nav class="fixed top-0 z-20 flex w-full items-center justify-between bg-[#e8eafa] px-2 py-2">
-  <div id="progress-bar" class="pointer-events-none fixed top-0 left-0 z-50 h-[3px] w-0 bg-custom-blue3 opacity-0 transition-all duration-200 ease-out"></div>
+<nav class="fixed top-0 z-50 flex w-full items-center justify-between border-b border-border bg-background px-2 py-2">
+  <div id="progress-bar" class="pointer-events-none fixed top-0 left-0 z-50 h-[3px] w-0 bg-primary opacity-0 transition-all duration-200 ease-out"></div>
   <div class="flex h-full items-center justify-center">
     <a href="/home" class="relative flex items-center justify-center gap-1">
       <img src={gddLogo.src} alt="logo gdd" class="aspect-auto h-10 max-w-24 object-contain md:max-w-32" />
@@ -25,31 +25,114 @@ const { PUBLIC_IS_SANDBOX } = import.meta.env
   </div>
 
   <div class="flex h-full items-center justify-center">
-    <Button id="btn-logout" variant="ghost" class="items-center gap-2" size="sm" loadingText="Saliendo...">
-      <span class="flex items-center justify-center gap-2">
-        <span class="hidden text-sm font-normal md:block">Salir</span>
-        <Icon name="LogOut" stroke-width={1.5} size={14} />
-      </span>
-    </Button>
+    <div class="w-auto">
+      <Dropdown position="right" border="none" shadow="none" menuClass="w-72 p-2">
+        <span slot="trigger" class="flex items-center justify-center rounded-full p-0.5 hover:bg-muted">
+          <Avatar size="md" />
+        </span>
+
+        <div class="flex flex-col gap-0.5 border-b border-border px-3 pt-2 pb-3">
+          <span class="truncate text-sm font-semibold text-heading">{user?.name || 'Usuario'}</span>
+          <span class="truncate text-xs text-subheading">{email}</span>
+        </div>
+
+        <div class="flex flex-col py-1">
+          <a href="/profile" class="flex items-center justify-between gap-3 rounded-main px-3 py-2 text-sm text-heading hover:bg-muted">
+            <span class="font-medium">Perfil</span>
+            <Icon name="User" class="size-4 text-subheading" />
+          </a>
+
+          <div class="flex items-center justify-between gap-3 px-3 py-2 text-sm text-heading" data-no-close>
+            <span class="font-medium">Tema</span>
+            <div class="inline-flex items-center rounded-full border border-border p-0.5" role="group" aria-label="Seleccionar tema">
+              <button type="button" class="flex size-7 items-center justify-center rounded-full text-subheading hover:bg-muted hover:text-heading" data-theme="system" aria-label="Tema del sistema">
+                <Icon name="Monitor" class="size-4" />
+              </button>
+              <button type="button" class="flex size-7 items-center justify-center rounded-full text-subheading hover:bg-muted hover:text-heading" data-theme="light" aria-label="Tema claro">
+                <Icon name="Sun" class="size-4" />
+              </button>
+              <button type="button" class="flex size-7 items-center justify-center rounded-full text-subheading hover:bg-muted hover:text-heading" data-theme="dark" aria-label="Tema oscuro">
+                <Icon name="Moon" class="size-4" />
+              </button>
+            </div>
+          </div>
+
+          <button type="button" id="btn-logout" class="flex cursor-pointer items-center justify-between gap-3 rounded-main px-3 py-2 text-left text-sm text-heading hover:bg-muted">
+            <span class="font-medium">Salir</span>
+            <Icon name="LogOut" class="size-4 text-subheading" />
+          </button>
+        </div>
+      </Dropdown>
+    </div>
   </div>
 </nav>
 
 <script>
   import { actions } from 'astro:actions'
   import { navigate } from 'astro:transitions/client'
-  import { setButtonLoading } from '@/scripts/utils'
 
   document.addEventListener('astro:page-load', () => {
     const btnLogout = document.getElementById('btn-logout') as HTMLButtonElement
 
     const logout = async () => {
-      setButtonLoading('#btn-logout', true)
-      const { data, error } = await actions.auth.logout()
+      const { data } = await actions.auth.logout()
+      const theme = localStorage.getItem('gdd-theme')
       localStorage.clear()
+      if (theme) localStorage.setItem('gdd-theme', theme)
       navigate(data?.data?.redirect ?? '/')
     }
 
     btnLogout?.addEventListener('click', logout)
+
+    document.querySelectorAll<HTMLElement>('[data-no-close]').forEach((el) => {
+      el.addEventListener('click', (e) => e.stopPropagation())
+    })
+  })
+</script>
+
+<script>
+  type Theme = 'system' | 'light' | 'dark'
+
+  const STORAGE_KEY = 'gdd-theme'
+  const ACTIVE_CLASSES = ['bg-muted', 'text-heading']
+
+  const getTheme = (): Theme => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
+  }
+
+  const updateActiveButton = (theme: Theme) => {
+    document.querySelectorAll<HTMLButtonElement>('button[data-theme]').forEach((btn) => {
+      const isActive = btn.dataset.theme === theme
+      btn.classList.toggle('text-subheading', !isActive)
+      ACTIVE_CLASSES.forEach((cls) => btn.classList.toggle(cls, isActive))
+    })
+  }
+
+  let mediaQuery: MediaQueryList | null = null
+  const handleSystemChange = () => {
+    if (getTheme() === 'system') window.__applyTheme?.()
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    updateActiveButton(getTheme())
+
+    document.querySelectorAll<HTMLButtonElement>('button[data-theme]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const theme = (btn.dataset.theme as Theme) ?? 'system'
+        localStorage.setItem(STORAGE_KEY, theme)
+        window.__applyTheme?.()
+        updateActiveButton(theme)
+      })
+    })
+
+    mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    mediaQuery.addEventListener('change', handleSystemChange)
+  })
+
+  document.addEventListener('astro:before-swap', () => {
+    mediaQuery?.removeEventListener('change', handleSystemChange)
+    mediaQuery = null
   })
 </script>
 

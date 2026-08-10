@@ -245,8 +245,6 @@ export function handleBasePdfChange(e, designer) {
 
         // Actualizar el template en el diseñador
         designer.updateTemplate(updatedTemplate)
-
-        console.log('Base PDF actualizado correctamente.')
       } else {
         alert('No se encontró el diseñador.')
       }
@@ -297,8 +295,6 @@ export async function GeneratePdf(designer, uuid_template, build_number, jsonCon
       // Crear URL y abrir en nueva pestaña
       const url = URL.createObjectURL(blob)
       window.open(url, '_blank')
-
-      console.log('PDF generado exitosamente')
     } else {
       const errorData = await response.json()
       console.error('Error del servidor:', errorData)
