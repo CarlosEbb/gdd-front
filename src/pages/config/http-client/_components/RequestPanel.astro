@@ -1,0 +1,279 @@
+---
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Input from '@/components/form/Input.astro'
+import TagInput from '@/components/form/TagInput.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Tabs from '@/components/tabs/Tabs.astro'
+import TabsList from '@/components/tabs/TabsList.astro'
+import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
+import TabsContent from '@/components/tabs/TabsContent.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Radio from '@/pages/audits/_components/Radio.astro'
+
+interface VariableEntry {
+  key: string
+  isArray: boolean
+  displayValue: string
+  arrayValues: string[]
+  originalType: string
+  isEmailList: boolean
+}
+
+interface Props {
+  bearerToken: string
+  variableEntries: VariableEntry[]
+  requestJson: string
+  requestXml: string
+}
+
+const BODY_FORMAT_OPTIONS = [
+  { value: 'form', label: 'Formulario' },
+  { value: 'json', label: 'JSON' },
+  { value: 'xml', label: 'XML' },
+] as const
+
+const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
+---
+
+<Card class="flex h-full min-h-112 flex-col overflow-visible!">
+  <Tabs defaultValue="body" variant="line" class="flex h-full min-h-0 flex-1 flex-col">
+    <div class="flex w-full shrink-0 flex-nowrap items-center justify-between gap-3">
+      <TabsList class="w-auto! min-w-0 shrink">
+        <TabsTrigger value="headers">Headers</TabsTrigger>
+        <TabsTrigger value="body">Body</TabsTrigger>
+      </TabsList>
+
+      <div class="ml-auto w-36 shrink-0" data-body-format-select data-body-format="form">
+        <Dropdown buttonLabel="Formulario" size="sm" shadow="none" position="right" menuClass="min-w-[140px] md:min-w-[160px]" mobileIcon="Braces">
+          {
+            BODY_FORMAT_OPTIONS.map((option) => (
+              <button
+                type="button"
+                data-body-format-option={option.value}
+                class="flex w-full cursor-pointer items-center px-4 py-2 text-left text-sm whitespace-nowrap text-heading hover:bg-muted"
+              >
+                {option.label}
+              </button>
+            ))
+          }
+        </Dropdown>
+      </div>
+    </div>
+
+    <TabsContent value="headers" class="mt-4 min-h-0 flex-1">
+      <div class="space-y-3 rounded-main border border-border bg-muted/40 p-3">
+        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <span class="font-mono text-xs text-muted-foreground">Authorization</span>
+          <span class="font-mono text-xs break-all text-heading" data-header-authorization>
+            Bearer {bearerToken}
+          </span>
+        </div>
+        <div class="flex flex-col gap-1 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
+          <span class="font-mono text-xs text-muted-foreground">Content-Type</span>
+          <span class="font-mono text-xs text-heading" data-header-content-type>application/json</span>
+        </div>
+      </div>
+    </TabsContent>
+
+    <TabsContent value="body" class="mt-4 min-h-0 flex-1 overflow-visible">
+      <div class="space-y-3">
+        <div data-body-panel="form" class="space-y-3">
+          <div class="space-y-1.5">
+            <p class="text-sm font-medium text-heading">Enviar formulario como</p>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Serialización del formulario">
+              <Radio name="form-serialize" value="json" label="JSON" description="application/json" checked data-form-serialize />
+              <Radio name="form-serialize" value="xml" label="XML" description="application/xml" data-form-serialize />
+            </div>
+          </div>
+
+          {
+            variableEntries.length > 0 ? (
+              <form data-body-form class="max-h-88 overflow-y-auto">
+                <div class="space-y-3 p-1.5">
+                  {variableEntries.map((field) =>
+                    field.isArray ? (
+                      <TagInput
+                        name={field.key}
+                        label={field.key}
+                        values={field.arrayValues}
+                        validateEmail={field.isEmailList}
+                        placeholder={field.isEmailList ? 'Escribe un correo y separa con coma' : 'Escribe y separa con coma'}
+                      />
+                    ) : (
+                      <Input name={field.key} label={field.key} value={field.displayValue} data-form-field={field.key} data-original-type={field.originalType} />
+                    )
+                  )}
+                </div>
+              </form>
+            ) : (
+              <p class="text-sm text-subheading">No hay variables disponibles para este documento.</p>
+            )
+          }
+        </div>
+
+        <div data-body-panel="json" class="hidden">
+          <div class="overflow-hidden rounded-main border border-border bg-background">
+            <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+              <div class="flex items-center gap-2">
+                <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+                <span class="font-mono text-xs text-muted-foreground">body.json</span>
+              </div>
+            </div>
+            <div class="code-scroll code-container p-0">
+              <label for="body-json" class="sr-only">JSON</label>
+              <textarea
+                id="body-json"
+                name="body-json"
+                rows="14"
+                spellcheck="false"
+                data-body-json
+                class="w-full resize-y border-0 bg-transparent p-4 font-mono text-sm text-heading focus:ring-0 focus:outline-none">{requestJson}</textarea
+              >
+            </div>
+          </div>
+        </div>
+
+        <div data-body-panel="xml" class="hidden">
+          <div class="overflow-hidden rounded-main border border-border bg-background">
+            <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+              <div class="flex items-center gap-2">
+                <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+                <span class="font-mono text-xs text-muted-foreground">body.xml</span>
+              </div>
+            </div>
+            <div class="code-scroll code-container p-0">
+              <label for="body-xml" class="sr-only">XML</label>
+              <textarea
+                id="body-xml"
+                name="body-xml"
+                rows="14"
+                spellcheck="false"
+                data-body-xml
+                class="w-full resize-y border-0 bg-transparent p-4 font-mono text-sm text-heading focus:ring-0 focus:outline-none">{requestXml}</textarea
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-1 lg:hidden">
+          <Button type="button" size="lg" icon="Send" loadingText="Enviando..." data-send-btn class="h-10 w-full"> Enviar </Button>
+        </div>
+      </div>
+    </TabsContent>
+  </Tabs>
+</Card>
+
+<script>
+  type BodyFormat = 'form' | 'json' | 'xml'
+  type SerializeAs = 'json' | 'xml'
+
+  const BODY_FORMAT_LABELS: Record<BodyFormat, string> = {
+    form: 'Formulario',
+    json: 'JSON',
+    xml: 'XML',
+  }
+
+  function getBodyFormatContainer(root: HTMLElement): HTMLElement | null {
+    return root.querySelector('[data-body-format-select]') as HTMLElement | null
+  }
+
+  function getActiveBodyFormat(root: HTMLElement): BodyFormat {
+    const format = getBodyFormatContainer(root)?.dataset.bodyFormat
+    return format === 'json' || format === 'xml' || format === 'form' ? format : 'form'
+  }
+
+  function getFormSerializeAs(root: HTMLElement): SerializeAs {
+    const selected = root.querySelector('[data-form-serialize]:checked') as HTMLInputElement | null
+    return (selected?.value as SerializeAs) || 'json'
+  }
+
+  function getContentType(format: BodyFormat, serializeAs: SerializeAs): string {
+    if (format === 'form') {
+      return serializeAs === 'xml' ? 'application/xml' : 'application/json'
+    }
+    return format === 'xml' ? 'application/xml' : 'application/json'
+  }
+
+  function updateContentTypeHeader(root: HTMLElement) {
+    const contentTypeEl = root.querySelector('[data-header-content-type]') as HTMLElement | null
+    if (!contentTypeEl) return
+
+    const format = getActiveBodyFormat(root)
+    const serializeAs = getFormSerializeAs(root)
+    contentTypeEl.textContent = getContentType(format, serializeAs)
+  }
+
+  function closeBodyFormatDropdown(container: HTMLElement) {
+    const dropdown = container.querySelector('[data-dropdown-container]')
+    dropdown?.classList.remove('is-open')
+    dropdown?.querySelector('[data-dropdown-menu]')?.classList.remove('is-open')
+  }
+
+  function setBodyFormat(root: HTMLElement, format: BodyFormat) {
+    const container = getBodyFormatContainer(root)
+    if (container) {
+      container.dataset.bodyFormat = format
+      const label = container.querySelector('[data-dropdown-toggle] .truncate')
+      if (label) label.textContent = BODY_FORMAT_LABELS[format]
+    }
+
+    root.querySelectorAll('[data-body-panel]').forEach((panel) => {
+      const element = panel as HTMLElement
+      const isActive = element.dataset.bodyPanel === format
+      element.classList.toggle('hidden', !isActive)
+    })
+
+    updateContentTypeHeader(root)
+  }
+
+  function setupRequestPanel(root: HTMLElement) {
+    if (root.dataset.requestPanelInitialized === 'true') return
+    root.dataset.requestPanelInitialized = 'true'
+
+    root.addEventListener('click', (event) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+
+      const formatOption = target.closest('[data-body-format-option]') as HTMLElement | null
+      if (formatOption) {
+        const format = formatOption.dataset.bodyFormatOption as BodyFormat
+        if (format === 'form' || format === 'json' || format === 'xml') {
+          setBodyFormat(root, format)
+          const container = getBodyFormatContainer(root)
+          if (container) closeBodyFormatDropdown(container)
+        }
+      }
+    })
+
+    root.addEventListener('change', (event) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+
+      if (target.matches('[data-form-serialize]') && (target as HTMLInputElement).checked) {
+        updateContentTypeHeader(root)
+      }
+    })
+
+    const bodyForm = root.querySelector('[data-body-form]') as HTMLFormElement | null
+    bodyForm?.addEventListener('submit', (event) => {
+      event.preventDefault()
+    })
+
+    setBodyFormat(root, 'form')
+  }
+
+  function initRequestPanels() {
+    document.querySelectorAll<HTMLElement>('[data-http-client]').forEach(setupRequestPanel)
+  }
+
+  initRequestPanels()
+  document.addEventListener('astro:page-load', initRequestPanels)
+</script>
+
+<style>
+  .code-container,
+  pre {
+    background-color: transparent !important;
+  }
+</style>

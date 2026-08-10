@@ -1,0 +1,43 @@
+---
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Select from '@/components/form/Select.astro'
+
+interface Props {
+  urlVersioned: string
+  urlLatest: string
+  buildNumberLastVersion: string
+}
+
+const { urlVersioned, urlLatest, buildNumberLastVersion } = Astro.props
+---
+
+<Card>
+  <div class="space-y-4">
+    <div>
+      <h3 class="text-sm font-semibold text-heading">Selecciona la URL</h3>
+      <p class="mt-1 text-xs text-subheading">Elige si quieres usar una versión específica o siempre la última publicada.</p>
+    </div>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div class="min-w-0 flex-1">
+        <Select
+          name="request-url"
+          options={[
+            {
+              value: urlVersioned,
+              label: `${urlVersioned} (build ${buildNumberLastVersion || 'N/A'})`,
+              selected: true,
+            },
+            {
+              value: urlLatest,
+              label: `${urlLatest} (última versión)`,
+            },
+          ]}
+          data-url-select
+        />
+      </div>
+      <Button type="button" size="lg" icon="Send" loadingText="Enviando..." data-send-btn class="h-10 w-full shrink-0 sm:w-auto"> Enviar </Button>
+    </div>
+  </div>
+</Card>

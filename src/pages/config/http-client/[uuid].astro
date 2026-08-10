@@ -1,0 +1,346 @@
+---
+import Layout from '../_components/Layout.astro'
+import { actions } from 'astro:actions'
+import StateSwitch from '@/components/ui/StateSwitch.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import UrlSelector from './_components/UrlSelector.astro'
+import RequestPanel from './_components/RequestPanel.astro'
+import ResponsePanel from './_components/ResponsePanel.astro'
+
+const { uuid } = Astro.params
+
+if (!uuid) return Astro.redirect('/home')
+
+const build_number = Astro.url.searchParams.get('build_number') as string
+const base_url = import.meta.env.PUBLIC_CARGA_URL
+
+const { data, error } = await Astro.callAction(actions.documents.getRequestForDocument, {
+  uuid_template: uuid,
+  build_number: build_number,
+})
+
+const request = data?.data?.variables
+const buildNumberLastVersion = data?.data?.build_number || ''
+const urlVersioned = `${base_url}/documents/${uuid}/${buildNumberLastVersion}`
+const urlLatest = `${base_url}/documents/${uuid}`
+
+const token = data?.data?.jwtToken
+const bearerToken = token ?? 'tu_token'
+
+function jsonToXmlString(obj: Record<string, unknown> | null | undefined): string {
+  if (!obj) return '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n</document>'
+
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n'
+  for (const [key, value] of Object.entries(obj)) {
+    xml += `  <${key}>${value ?? ''}</${key}>\n`
+  }
+  xml += '</document>'
+  return xml
+}
+
+const requestJson = JSON.stringify(request ?? {}, null, 2)
+const requestXml = jsonToXmlString(request)
+const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
+  const isArray = Array.isArray(value)
+
+  return {
+    key,
+    isArray,
+    displayValue: value == null ? '' : typeof value === 'object' ? JSON.stringify(value) : String(value),
+    arrayValues: isArray ? value.map((item) => String(item ?? '')) : [],
+    originalType: isArray ? 'array' : typeof value,
+    isEmailList: isArray && /correo|email|mail/i.test(key),
+  }
+})
+---
+
+<Layout title="Cliente HTTP">
+  <StateSwitch hasError={!!error} isEmpty={!request}>
+    <div class="space-y-4" data-http-client data-token={bearerToken}>
+      <UrlSelector urlVersioned={urlVersioned} urlLatest={urlLatest} buildNumberLastVersion={buildNumberLastVersion} />
+
+      <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+        <RequestPanel bearerToken={bearerToken} variableEntries={variableEntries} requestJson={requestJson} requestXml={requestXml} />
+        <ResponsePanel />
+      </div>
+    </div>
+
+    <EmptyState slot="error" title="Error al cargar el cliente HTTP" description="No se pudo cargar la información del documento." />
+
+    <EmptyState
+      slot="empty"
+      title="Cliente HTTP no disponible"
+      state="info"
+      action="create"
+      hrefText="Crear versión"
+      href={`/config/version/${uuid}?build_number=${build_number}`}
+      description={data?.message || 'No se encontró información para este documento.'}
+    />
+  </StateSwitch>
+</Layout>
+
+<script>
+  import { toast } from '@/scripts/toast'
+
+  type BodyFormat = 'form' | 'json' | 'xml'
+  type SerializeAs = 'json' | 'xml'
+
+  type ResponsePayload = {
+    status: number
+    statusText: string
+    durationMs: number
+    headersText: string
+    bodyText: string
+    bodyLang: 'json' | 'xml' | 'plaintext'
+  }
+
+  function parseTypedValue(raw: string, originalType: string): unknown {
+    if (originalType === 'array') {
+      try {
+        const parsed = JSON.parse(raw)
+        return Array.isArray(parsed) ? parsed : []
+      } catch {
+        return []
+      }
+    }
+
+    if (originalType === 'number') {
+      const parsed = Number(raw)
+      return Number.isNaN(parsed) ? raw : parsed
+    }
+
+    if (originalType === 'boolean') {
+      if (raw === 'true') return true
+      if (raw === 'false') return false
+      return raw
+    }
+
+    if (originalType === 'object') {
+      try {
+        return JSON.parse(raw)
+      } catch {
+        return raw
+      }
+    }
+
+    return raw
+  }
+
+  function escapeXml(value: string): string {
+    return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
+  }
+
+  function valueToXmlContent(value: unknown): string {
+    if (value == null) return ''
+    if (Array.isArray(value)) return value.map((item) => String(item ?? '')).join(',')
+    if (typeof value === 'object') return JSON.stringify(value)
+    return String(value)
+  }
+
+  function objectToXml(data: Record<string, unknown>): string {
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n'
+    for (const [key, value] of Object.entries(data)) {
+      xml += `  <${key}>${escapeXml(valueToXmlContent(value))}</${key}>\n`
+    }
+    xml += '</document>'
+    return xml
+  }
+
+  function getBodyFormatContainer(root: HTMLElement): HTMLElement | null {
+    return root.querySelector('[data-body-format-select]') as HTMLElement | null
+  }
+
+  function getActiveBodyFormat(root: HTMLElement): BodyFormat {
+    const format = getBodyFormatContainer(root)?.dataset.bodyFormat
+    return format === 'json' || format === 'xml' || format === 'form' ? format : 'form'
+  }
+
+  function getFormSerializeAs(root: HTMLElement): SerializeAs {
+    const selected = root.querySelector('[data-form-serialize]:checked') as HTMLInputElement | null
+    return (selected?.value as SerializeAs) || 'json'
+  }
+
+  function getContentType(format: BodyFormat, serializeAs: SerializeAs): string {
+    if (format === 'form') {
+      return serializeAs === 'xml' ? 'application/xml' : 'application/json'
+    }
+    return format === 'xml' ? 'application/xml' : 'application/json'
+  }
+
+  function collectFormPayload(root: HTMLElement): Record<string, unknown> {
+    const payload: Record<string, unknown> = {}
+    const fields = root.querySelectorAll('[data-form-field]') as NodeListOf<HTMLInputElement>
+
+    fields.forEach((field) => {
+      const key = field.dataset.formField || field.name
+      const originalType = field.dataset.originalType || 'string'
+      payload[key] = parseTypedValue(field.value, originalType)
+    })
+
+    return payload
+  }
+
+  function buildRequestBody(root: HTMLElement): { contentType: string; body: string } {
+    const format = getActiveBodyFormat(root)
+    const serializeAs = getFormSerializeAs(root)
+    const contentType = getContentType(format, serializeAs)
+
+    if (format === 'form') {
+      const payload = collectFormPayload(root)
+      if (serializeAs === 'xml') {
+        return { contentType, body: objectToXml(payload) }
+      }
+      return { contentType, body: JSON.stringify(payload) }
+    }
+
+    if (format === 'json') {
+      const textarea = root.querySelector('[data-body-json]') as HTMLTextAreaElement
+      const raw = textarea?.value?.trim() || '{}'
+      try {
+        JSON.parse(raw)
+      } catch {
+        throw new Error('El JSON del body no es válido.')
+      }
+      return { contentType, body: raw }
+    }
+
+    const textarea = root.querySelector('[data-body-xml]') as HTMLTextAreaElement
+    const raw = textarea?.value?.trim() || ''
+    if (!raw) {
+      throw new Error('El body XML no puede estar vacío.')
+    }
+    return { contentType, body: raw }
+  }
+
+  function detectBodyLang(raw: string, contentType: string | null): 'json' | 'xml' | 'plaintext' {
+    if (contentType?.includes('application/json') || raw.trim().startsWith('{') || raw.trim().startsWith('[')) {
+      return 'json'
+    }
+    if (contentType?.includes('xml') || raw.trim().startsWith('<?xml') || raw.trim().startsWith('<')) {
+      return 'xml'
+    }
+    return 'plaintext'
+  }
+
+  function formatResponseBody(raw: string, contentType: string | null): { code: string; lang: 'json' | 'xml' | 'plaintext' } {
+    if (!raw) return { code: '(respuesta vacía)', lang: 'plaintext' }
+
+    const lang = detectBodyLang(raw, contentType)
+    if (lang === 'json') {
+      try {
+        return { code: JSON.stringify(JSON.parse(raw), null, 2), lang }
+      } catch {
+        return { code: raw, lang: 'plaintext' }
+      }
+    }
+
+    return { code: raw, lang }
+  }
+
+  function setSendButtonsLoading(buttons: NodeListOf<HTMLButtonElement>, loading: boolean) {
+    buttons.forEach((button) => {
+      button.dispatchEvent(new Event(loading ? 'button:start-loading' : 'button:stop-loading'))
+    })
+  }
+
+  function scrollToResponseCard(root: HTMLElement) {
+    const responseCard = root.querySelector('[data-response-card]') as HTMLElement | null
+    if (!responseCard) return
+
+    responseCard.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function dispatchResponse(root: HTMLElement, payload: ResponsePayload) {
+    root.dispatchEvent(new CustomEvent<ResponsePayload>('http-client:response', { detail: payload }))
+  }
+
+  function setupHttpClient(root: HTMLElement) {
+    if (root.dataset.initialized === 'true') return
+    root.dataset.initialized = 'true'
+
+    const sendButtons = root.querySelectorAll('[data-send-btn]') as NodeListOf<HTMLButtonElement>
+    const urlSelect = root.querySelector('[data-url-select]') as HTMLSelectElement | null
+    const token = root.dataset.token || 'tu_token'
+
+    async function sendRequest() {
+      const requestUrl = urlSelect?.value
+      if (!requestUrl) {
+        toast.error('Selecciona una URL válida')
+        return
+      }
+
+      let requestBody: { contentType: string; body: string }
+
+      try {
+        requestBody = buildRequestBody(root)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Body inválido')
+        return
+      }
+
+      setSendButtonsLoading(sendButtons, true)
+      const startedAt = performance.now()
+
+      try {
+        const response = await fetch(requestUrl, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': requestBody.contentType,
+          },
+          body: requestBody.body,
+        })
+
+        const durationMs = Math.round(performance.now() - startedAt)
+        const rawBody = await response.text()
+        const headersText = Array.from(response.headers.entries())
+          .map(([key, value]) => `${key}: ${value}`)
+          .join('\n')
+
+        const formattedBody = formatResponseBody(rawBody, response.headers.get('content-type'))
+
+        dispatchResponse(root, {
+          status: response.status,
+          statusText: response.statusText,
+          durationMs,
+          headersText,
+          bodyText: formattedBody.code,
+          bodyLang: formattedBody.lang,
+        })
+
+        if (response.ok) {
+          toast.success('Solicitud enviada correctamente')
+        } else {
+          toast.warn(`Respuesta ${response.status}`)
+        }
+      } catch (error) {
+        const durationMs = Math.round(performance.now() - startedAt)
+        dispatchResponse(root, {
+          status: 0,
+          statusText: 'Network Error',
+          durationMs,
+          headersText: '',
+          bodyText: error instanceof Error ? error.message : 'Error de conexión',
+          bodyLang: 'plaintext',
+        })
+        toast.error('Error al enviar la solicitud')
+      } finally {
+        setSendButtonsLoading(sendButtons, false)
+        scrollToResponseCard(root)
+      }
+    }
+
+    sendButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        void sendRequest()
+      })
+    })
+  }
+
+  function initAllHttpClients() {
+    document.querySelectorAll<HTMLElement>('[data-http-client]').forEach(setupHttpClient)
+  }
+
+  initAllHttpClients()
+  document.addEventListener('astro:page-load', initAllHttpClients)
+</script>

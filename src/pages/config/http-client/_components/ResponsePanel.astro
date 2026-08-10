@@ -1,0 +1,184 @@
+---
+import { Code } from 'astro:components'
+import Card from '@/components/ui/Card.astro'
+import Tabs from '@/components/tabs/Tabs.astro'
+import TabsList from '@/components/tabs/TabsList.astro'
+import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
+import TabsContent from '@/components/tabs/TabsContent.astro'
+---
+
+<Card class="flex h-full min-h-112 flex-col" data-response-card>
+  <Tabs defaultValue="response" variant="line" class="flex h-full min-h-0 flex-1 flex-col">
+    <div class="flex w-full shrink-0 flex-nowrap items-center justify-between gap-3">
+      <TabsList class="w-auto! min-w-0 shrink">
+        <TabsTrigger value="response">Response</TabsTrigger>
+        <TabsTrigger value="headers">Headers</TabsTrigger>
+      </TabsList>
+
+      <div class="ml-auto flex shrink-0 items-center gap-2 text-xs">
+        <span class="inline-flex items-center rounded-main border border-border bg-muted px-2 py-1 font-mono text-muted-foreground" data-response-status>—</span>
+        <span class="inline-flex items-center rounded-main border border-border bg-muted px-2 py-1 font-mono text-muted-foreground" data-response-time>—</span>
+      </div>
+    </div>
+
+    <TabsContent value="headers" class="mt-4 flex min-h-0 flex-1 flex-col">
+      <div class="code-scroll code-container h-full min-h-0 w-full flex-1 overflow-auto" data-response-headers>
+        <Code theme="catppuccin-latte" lang="json" defaultColor={false} code="Sin respuesta aún." />
+      </div>
+    </TabsContent>
+
+    <TabsContent value="response" class="mt-4 flex min-h-0 flex-1 flex-col">
+      <div class="code-scroll code-container h-full min-h-0 w-full flex-1 overflow-auto" data-response-body>
+        <Code theme="catppuccin-latte" lang="json" defaultColor={false} code="Envía una solicitud para ver la respuesta aquí." />
+      </div>
+    </TabsContent>
+  </Tabs>
+</Card>
+
+<script>
+  type ResponsePayload = {
+    status: number
+    statusText: string
+    durationMs: number
+    headersText: string
+    bodyText: string
+    bodyLang: 'json' | 'xml' | 'plaintext'
+  }
+
+  // Colores alineados con el tema catppuccin-latte de <Code />
+  const JSON_COLORS = {
+    key: '#1E66F5',
+    string: '#40A02B',
+    value: '#FE640B',
+    punctuation: '#7C7F93',
+  } as const
+
+  function createColorSpan(text: string, color: string): HTMLSpanElement {
+    const span = document.createElement('span')
+    span.style.color = color
+    span.textContent = text
+    return span
+  }
+
+  function appendHighlightedJson(codeEl: HTMLElement, code: string) {
+    const tokenPattern = /("(?:\\.|[^"\\])*")(\s*:)?|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b|[{}\[\]:,]|\s+|./g
+
+    for (const match of code.matchAll(tokenPattern)) {
+      const [token, stringLiteral, colon] = match
+
+      if (stringLiteral !== undefined) {
+        if (colon !== undefined) {
+          codeEl.appendChild(createColorSpan(stringLiteral, JSON_COLORS.key))
+          codeEl.appendChild(createColorSpan(colon, JSON_COLORS.punctuation))
+        } else {
+          codeEl.appendChild(createColorSpan(stringLiteral, JSON_COLORS.string))
+        }
+        continue
+      }
+
+      if (/^-?\d/.test(token) || token === 'true' || token === 'false' || token === 'null') {
+        codeEl.appendChild(createColorSpan(token, JSON_COLORS.value))
+        continue
+      }
+
+      codeEl.appendChild(createColorSpan(token, JSON_COLORS.punctuation))
+    }
+  }
+
+  function updateCodeBlock(container: HTMLElement, code: string, lang: 'json' | 'xml' | 'plaintext' = 'plaintext') {
+    const pre = document.createElement('pre')
+    pre.className = 'astro-code h-full min-h-full w-full'
+    pre.style.backgroundColor = 'transparent'
+    pre.style.color = '#4c4f69'
+    pre.tabIndex = 0
+
+    const codeEl = document.createElement('code')
+
+    if (lang === 'json') {
+      appendHighlightedJson(codeEl, code)
+    } else {
+      codeEl.textContent = code
+    }
+
+    pre.appendChild(codeEl)
+    container.replaceChildren(pre)
+  }
+
+  function statusClasses(status: number): string {
+    if (status >= 200 && status < 300) return 'border-green-200 bg-green-50 text-green-700'
+    if (status >= 400) return 'border-red-200 bg-red-50 text-red-700'
+    return 'border-amber-200 bg-amber-50 text-amber-700'
+  }
+
+  function renderResponse(root: HTMLElement, payload: ResponsePayload) {
+    const statusEl = root.querySelector('[data-response-status]') as HTMLElement
+    const timeEl = root.querySelector('[data-response-time]') as HTMLElement
+    const headersEl = root.querySelector('[data-response-headers]') as HTMLElement
+    const bodyEl = root.querySelector('[data-response-body]') as HTMLElement
+
+    statusEl.className = `inline-flex items-center rounded-main border px-2 py-1 font-mono text-xs ${statusClasses(payload.status)}`
+    statusEl.textContent = `${payload.status} ${payload.statusText}`.trim()
+    timeEl.textContent = `${payload.durationMs} ms`
+    updateCodeBlock(headersEl, payload.headersText || '(sin headers)', 'plaintext')
+    updateCodeBlock(bodyEl, payload.bodyText, payload.bodyLang)
+  }
+
+  function setupResponsePanel(root: HTMLElement) {
+    if (root.dataset.responsePanelInitialized === 'true') return
+    root.dataset.responsePanelInitialized = 'true'
+
+    root.addEventListener('http-client:response', ((event: CustomEvent<ResponsePayload>) => {
+      renderResponse(root, event.detail)
+    }) as EventListener)
+  }
+
+  function initResponsePanels() {
+    document.querySelectorAll<HTMLElement>('[data-http-client]').forEach(setupResponsePanel)
+  }
+
+  initResponsePanels()
+  document.addEventListener('astro:page-load', initResponsePanels)
+</script>
+
+<style>
+  .code-container,
+  pre {
+    background-color: transparent !important;
+  }
+
+  [data-response-card] > div {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  [data-response-card] [data-tabs-container] {
+    display: flex;
+    min-height: 0;
+    height: 100%;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  [data-response-card] [data-tabs-content][data-state='active'] {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  [data-response-card] .code-container {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    flex: 1;
+  }
+
+  [data-response-card] .code-container :global(pre),
+  [data-response-card] .code-container :global(.astro-code) {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+  }
+</style>
