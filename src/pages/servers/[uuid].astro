@@ -145,7 +145,6 @@ const selectedServer = {
     const btnCheckServer = document.getElementById('refresh-server') as HTMLButtonElement
 
     const serverData = JSON.parse(document.getElementById('server-data')!.textContent!)
-    console.log(serverData)
 
     if (form.dataset.initialized) return
     form.dataset.initialized = 'true'
