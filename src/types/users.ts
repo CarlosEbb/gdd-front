@@ -20,6 +20,7 @@ export interface Details {
   lastName: string
   email: string
   country: string
+  role: string
   zipCode: string
   status: string
   photo: string

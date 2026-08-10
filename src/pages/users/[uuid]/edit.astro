@@ -10,6 +10,8 @@ import UserForm from '../_components/UserForm.astro'
 const { uuid } = Astro.params
 
 const { data: userData, error: userError } = await Astro.callAction(actions.users.getByUuid, { uuid: uuid as string })
+
+const role = userData?.data?.role || ''
 const clientUuidsByUser = userData?.data?.clientUuids || []
 
 const { data: clientsData, error: clientsError } = await Astro.callAction(actions.clients.list, {})
@@ -33,6 +35,7 @@ const hasPermissions = permissions.length > 0
     <StateSwitch hasError={userError !== undefined}>
       <UserForm
         isEdit={true}
+        role={role}
         userData={userData}
         clients={clients}
         clientsError={clientsError}

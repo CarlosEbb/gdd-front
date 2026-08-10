@@ -4,6 +4,7 @@ import PasswordValidator from '@/components/form/PasswordValidator.astro'
 import FormPageLayout from '@/layouts/FormPageLayout.astro'
 import FormBlock from '@/components/ui/FormBlock.astro'
 import Button from '@/components/ui/Button.astro'
+import SelectionCard from '@/components/form/SelectionCard.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import Accordion from '@/components/ui/Accordion.astro'
 import Select from '@/components/form/Select.astro'
@@ -24,18 +25,19 @@ interface Props {
   permissions?: PermissionCategory[]
   permissionsError?: any
   hasPermissions?: boolean
+  role?: string
 }
 
-const { isEdit = false, userData, clients = [], clientsError, hasClients = false, permissions = [], permissionsError, hasPermissions = false } = Astro.props
+const { isEdit = false, userData, clients = [], clientsError, hasClients = false, permissions = [], permissionsError, hasPermissions = false, role } = Astro.props
 
 const user = userData?.data || null
 const userPermissionUuids = user?.permissionUuids || []
 
-const PUBLIC_PROJECT_URL = import.meta.env.PUBLIC_PROJECT_URL
+const API_URL = import.meta.env.API_URL
 const getInitialsNameAndLastName = (name: string, lastName: string) => (name?.charAt(0) || '') + (lastName?.charAt(0) || '')
 const initials = user ? getInitialsNameAndLastName(user.name, user.lastName).toUpperCase() : ''
 const hasPhoto = !user?.photo || user?.photo === '{}'
-const photo = hasPhoto ? '' : `${PUBLIC_PROJECT_URL}${user.photo}`
+const photo = hasPhoto ? '' : `${API_URL}${user.photo}`
 const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
 
 const btnText = isEdit ? 'Actualizar usuario' : 'Crear usuario'
@@ -158,20 +160,34 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
 
   <FormBlock title="Roles" description="Configura el nivel de autorización por módulos para el usuario" cols={1}>
     <StateSwitch hasError={!!permissionsError} isEmpty={!hasPermissions}>
-      <div class="space-y-2" role="group" aria-label="Selección rápida de roles">
-        <p class="text-sm font-medium text-heading">Selección rápida de roles</p>
-        <div class="flex flex-wrap gap-2">
+      <div class="space-y-2" role="radiogroup" aria-label="Roles del usuario">
+        <p class="text-sm font-medium text-heading">Rol del usuario</p>
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
           {
-            Object.entries(quickRoleConfigs).map(([roleKey, role]) => (
-              <Button type="button" variant="outline" size="sm" data-quick-role={roleKey} data-role-permissions={role.permissions.join(',')} aria-pressed="false">
-                {role.label}
-              </Button>
+            Object.entries(quickRoleConfigs).map(([roleKey, roleConfig]) => (
+              <SelectionCard
+                name="role"
+                value={roleKey}
+                label={roleConfig.label}
+                checked={roleKey === role}
+                required
+                data-quick-role={roleKey}
+                data-role-permissions={roleConfig.permissions.join(',')}
+              />
             ))
           }
         </div>
       </div>
 
-      <div>
+      <div class="flex justify-end">
+        <Button type="button" variant="secondary" size="sm" id="toggle-permissions" aria-expanded="false" aria-controls="permissions-accordion">
+          <span data-permissions-toggle-label>Ver permisos</span>
+          <Icon name="ChevronDown" size={16} data-permissions-toggle-icon="down" />
+          <Icon name="ChevronUp" size={16} data-permissions-toggle-icon="up" class="hidden" />
+        </Button>
+      </div>
+
+      <div id="permissions-accordion" class="hidden">
         {
           permissions.map((category) => (
             <Accordion title={category.category}>
@@ -302,12 +318,12 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
     })
 
     const permissionCheckboxes = document.querySelectorAll<HTMLInputElement>('[data-permission-checkbox]')
-    const quickRoleButtons = document.querySelectorAll<HTMLButtonElement>('[data-quick-role]')
+    const roleRadios = document.querySelectorAll<HTMLInputElement>('[data-quick-role]')
 
-    quickRoleButtons.forEach((button) => {
-      button.addEventListener('click', () => {
+    roleRadios.forEach((radio) => {
+      radio.addEventListener('change', () => {
         const rolePermissions = new Set(
-          (button.dataset.rolePermissions || '')
+          (radio.dataset.rolePermissions || '')
             .split(',')
             .map((permissionName) => permissionName.trim())
             .filter(Boolean)
@@ -321,11 +337,25 @@ const loadingText = isEdit ? 'Actualizando usuario...' : 'Creando usuario...'
           checkbox.checked = shouldBeChecked
           checkbox.dispatchEvent(new Event('change', { bubbles: true }))
         })
-
-        quickRoleButtons.forEach((roleButton) => {
-          roleButton.setAttribute('aria-pressed', String(roleButton === button))
-        })
       })
+    })
+
+    const permissionsAccordion = document.getElementById('permissions-accordion')
+    const togglePermissionsButton = document.getElementById('toggle-permissions')
+    const permissionsToggleLabel = togglePermissionsButton?.querySelector('[data-permissions-toggle-label]')
+    const permissionsToggleDownIcon = togglePermissionsButton?.querySelector('[data-permissions-toggle-icon="down"]')
+    const permissionsToggleUpIcon = togglePermissionsButton?.querySelector('[data-permissions-toggle-icon="up"]')
+
+    togglePermissionsButton?.addEventListener('click', () => {
+      if (!permissionsAccordion || !permissionsToggleLabel || !permissionsToggleDownIcon || !permissionsToggleUpIcon) return
+
+      const isHidden = permissionsAccordion.classList.toggle('hidden')
+      const isExpanded = !isHidden
+
+      togglePermissionsButton.setAttribute('aria-expanded', String(isExpanded))
+      permissionsToggleLabel.textContent = isExpanded ? 'Ocultar permisos' : 'Ver permisos'
+      permissionsToggleDownIcon.classList.toggle('hidden', isExpanded)
+      permissionsToggleUpIcon.classList.toggle('hidden', !isExpanded)
     })
   })
 </script>

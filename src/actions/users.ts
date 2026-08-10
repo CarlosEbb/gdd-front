@@ -28,6 +28,7 @@ export const users = {
       password: z.string(),
       country: z.string(),
       zipCode: z.string(),
+      role: z.string(),
       'clientUuids[]': z.array(z.string()).optional().default([]),
       'permissionUuids[]': z.array(z.string()).optional().default([]),
       img_profile_file: z.any().optional(),
@@ -38,6 +39,7 @@ export const users = {
 
       try {
         const formData = new FormData()
+
         Object.entries(input).forEach(([key, value]) => {
           if (key === 'img_profile_file') {
             if (value && value.size > 0) formData.append(key, value)
@@ -72,6 +74,7 @@ export const users = {
       country: z.string().optional(),
       img_profile_file: z.any().optional(),
       zipCode: z.string().optional(),
+      role: z.string(),
       'clientUuids[]': z.array(z.string()).optional().default([]),
       'permissionUuids[]': z.array(z.string()).optional().default([]),
     }),
@@ -81,7 +84,9 @@ export const users = {
 
       try {
         const formData = new FormData()
-        Object.entries(input).forEach(([key, value]) => {
+        const role = 'client'
+
+        Object.entries({ ...input, role }).forEach(([key, value]) => {
           if (key === 'img_profile_file') {
             if (value && value.size > 0) formData.append(key, value)
           } else if (Array.isArray(value)) {
