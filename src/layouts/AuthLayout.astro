@@ -1,7 +1,6 @@
 ---
 import '@/styles/global.css'
 
-import { Image } from 'astro:assets'
 import logo from '@/assets/images/imagotipo.png'
 import Layout from './Layout.astro'
 
@@ -76,16 +75,13 @@ const promoSlide = promoSlides[Math.floor(Math.random() * promoSlides.length)]
     </div>
     <div class="relative hidden bg-white lg:col-span-2 lg:block">
       <div class="absolute inset-2 overflow-hidden rounded-lg bg-primary/10">
-        <Image
-          src={promoSlide.image}
+        <img
+          src={promoSlide.image.src}
           alt=""
-          widths={[960, 1280, 1600, 1920]}
-          sizes="(min-width: 1024px) 66vw, 100vw"
-          quality={80}
-          format="webp"
           loading="eager"
           decoding="async"
           class="auth-promo__image h-full w-full object-cover"
+          draggable="false"
         />
         <div class="pointer-events-none absolute inset-0" aria-hidden="true">
           <div class="absolute inset-0 bg-linear-to-tr from-heading/50 via-primary/35 to-heading/30"></div>
