@@ -1,6 +1,6 @@
 ---
-import type { InfoUser } from '@/types/user'
-const { PUBLIC_PROJECT_URL } = import.meta.env
+import type { InfoProfile } from '@/types/profile'
+const API_URL = import.meta.env.API_URL
 
 interface Props {
   size: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
@@ -36,7 +36,7 @@ const initials = name.charAt(0).toUpperCase() + (last_name ? last_name.charAt(0)
 const textSize = SIZE_TEXT[size]
 
 const hasPhoto = photo === null || photo === '{}'
-const photoUrl = hasPhoto ? '' : `${PUBLIC_PROJECT_URL}${photo}`
+const photoUrl = hasPhoto ? '' : `${API_URL}${photo}`
 const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
 ---
 

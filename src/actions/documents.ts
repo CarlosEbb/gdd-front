@@ -54,7 +54,7 @@ export const documents = {
       }
     },
   }),
-  // remover del input los valores nulos
+
   createTemplate: defineAction({
     accept: 'form',
     input: z.object({
@@ -62,33 +62,19 @@ export const documents = {
       name: z.string(),
       description: z.string(),
       uuid_workspace: z.string(),
-      uuid_category: z
-        .string()
-        .nullable()
-        .optional()
-        .transform((val) => val || undefined),
-      prompt: z
-        .string()
-        .nullable()
-        .optional()
-        .transform((val) => val || undefined),
-      pageSize: z.string().optional(),
-      marginType: z.string().optional(),
-      orientation: z.string().optional(),
+      uuid_category: z.string().optional(),
+      pageSize: z.enum(PAPER_SIZES).optional(),
+      orientation: z.enum(ORIENTATION).optional(),
+      marginType: z.enum(MARGIN_PRESETS).optional(),
+      prompt: z.string().optional(),
+      uuidBaseTemplate: z.string().optional(),
     }),
     handler: async (input, request) => {
       await requirePermission(request, ['templates.create'])
       const token = await requireAuth(request)
 
-      const { uuid_category, prompt, ...rest } = input
-      const body = {
-        ...rest,
-        ...(uuid_category !== undefined && { uuid_category }),
-        ...(prompt !== undefined && { prompt }),
-      }
-      console.log(body)
       try {
-        const newDocument = await http.post<CreateDocument>('/template', token, body)
+        const newDocument = await http.post<CreateDocument>('/template', token, request, input)
 
         return newDocument
       } catch (error) {

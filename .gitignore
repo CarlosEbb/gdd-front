@@ -27,6 +27,9 @@ yarn.lock
 
 # jetbrains setting folder
 .idea/
-.windsurf/
-.agents/
-.cursor/
+
+.devin
+.cursor
+.agents
+skills-lock.json
+TODO.md

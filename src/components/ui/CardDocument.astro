@@ -5,7 +5,10 @@ import template from '@/assets/images/preview/template-1.png'
 import { formatShortDate } from '@/scripts/utils'
 import Icon from './Icon.astro'
 import Avatar from './Avatar.astro'
-const { PUBLIC_PROJECT_URL } = import.meta.env
+import type { PermissionData } from '@/lib/permissions'
+import { hasPermission } from '@/lib/permissions'
+
+const API_URL = import.meta.env.API_URL
 
 interface Props {
   document: Document
@@ -56,7 +59,7 @@ const { uuid, lastVersion, uuidWorkspace, title, updatedAt, description, owner, 
 const { pathThumbnails = null, buildNumber, nameVersion, uuid: uuidVersion = '' } = lastVersion || {}
 const { name: autor, photo } = owner
 
-const thumbnails = `${PUBLIC_PROJECT_URL}${path_thumbnails}` || template.src
+const permissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
 
 const ALLOWED_ACTIONS = ACTIONS.filter((action) => {
   if (!action.permission) return true

@@ -85,6 +85,18 @@
   }
 }
 
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    }
+}
+
 /* Contenedor de toasts que usa popover para aparecer sobre dialogs */
 #toast-container {
   position: fixed;

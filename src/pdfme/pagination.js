@@ -270,6 +270,32 @@ export class PaginationManager {
     return { ...this.#baseTemplate, schemas }
   }
 
+  /**
+   * Insert a new (empty) page in the document.
+   *
+   * @param {number} [afterPageNumber] – 1-based page number after which to insert.
+   *                                     Defaults to the last page of the current chunk.
+   * @returns {object|null} new chunked template ready for designer.updateTemplate()
+   */
+  addPage(afterPageNumber) {
+    const total = this.totalPages
+    let insertIndex
+    if (Number.isFinite(afterPageNumber) && afterPageNumber >= 1 && afterPageNumber <= total) {
+      insertIndex = afterPageNumber
+    } else {
+      insertIndex = total
+    }
+
+    this.#allSchemas.splice(insertIndex, 0, [])
+
+    // Navigate to the chunk containing the newly inserted page
+    const targetChunk = Math.floor(insertIndex / this.#chunkSize)
+    this.#currentChunk = targetChunk
+    const schemas = this.getCurrentChunkSchemas()
+    this.#currentChunkLen = schemas.length
+    return { ...this.#baseTemplate, schemas }
+  }
+
   /* ── Name deduplication ─────────────────────────────── */
 
   /**

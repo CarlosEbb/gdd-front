@@ -1,14 +1,16 @@
 ---
 import { Image } from 'astro:assets'
-import type { Category } from '@/types/templates'
-const { PUBLIC_PROJECT_URL } = import.meta.env
+import type { Templates } from '@/types/templates'
+import Button from './Button.astro'
+const API_URL = import.meta.env.API_URL
 
 interface Props {
   template: Templates
 }
 
 const { template } = Astro.props
-const thumbnails = `${PUBLIC_PROJECT_URL}${template.path_thumbnails}`
+const thumbnails = `${API_URL}${template.pathThumbnails}`
+const isMyTemplate = template.category?.toLowerCase() === 'mis plantillas'
 ---
 
 <div class="group relative cursor-pointer overflow-hidden rounded-lg border border-border bg-foreground transition-all duration-300 hover:border-muted hover:shadow-base" id={template.uuid}>

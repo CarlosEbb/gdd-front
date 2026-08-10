@@ -1,5 +1,3 @@
-type Status = 'active' | 'deleted'
-
 export interface Document {
   id: number
   uuid: string
@@ -128,22 +126,50 @@ export interface DocumentGenerated {
   response_data: ResponseDocumentGenerated
   error_details: null | string
   created_at: string
-  status: Status
-  encrypt: string
+  updated_at: string
+}
+
+export interface ResponseDocumentGenerated {
+  code: number
+  data: DocumentGeneratedData
+  message: string
+  timestamp: string
+}
+
+export interface DocumentGeneratedData {
+  url?: string
+  uuid?: string
+  errors?: string[]
+  summary?: Summary
+  warnings?: string[]
+}
+
+export interface Summary {
+  totalErrors: number
+  totalWarnings: number
+}
+
+export interface Pagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+export interface Stats {
+  total: number
+  success: number
+  error: number
+  validation_error: number
+  json_error: number
 }
 
 export interface Template {
-  id: number
-  title: string
-  name: string
-  description: string
-  open_date: string
-  id_workspace: number
-  created_at: string
-  updated_at: string
-  status: Status
   uuid: string
-  jwt_token: string
+  name: string
+  title: string
+  idWorkspace: number
+  uuidWorkspace: string
 }
 
 export interface RequestForDocument {
@@ -154,5 +180,118 @@ export interface RequestForDocument {
   jwtToken?: string
   variables: Record<string, any>
   elementos: string[]
+  validaciones: {
+    validationRules: Record<string, any>
+    hiddenConditions: Record<string, any>
+  }
+}
+
+export interface DocumentVersion {
   template: Template
+  versions: InfoVersion[]
+}
+
+export interface InfoVersion {
+  id: number
+  uuid: string
+  nameVersion: string
+  buildNumber: string
+  pathThumbnails: string
+  pathJson: string
+  ipAddress: string
+  idUser: number
+  uuidUser: string
+  idTemplate: number
+  uuidTemplate: string
+  idValidation: null
+  uuidValidation: null
+  createdAt: string
+  updatedAt: string
+  isPublished: boolean
+  publishedBy: PublishedBy | null
+}
+
+export interface PublishedBy {
+  id: number
+  uuid: string
+  name: string
+  lastName: string
+  photo: string | null
+}
+
+export interface Template {
+  title: string
+  name: string
+  description: string
+}
+
+export interface DocumentVersionHistory {
+  id: number
+  uuid: string
+  nameVersion: string
+  buildNumber: string
+  pathThumbnails: string
+  pathJson: string
+  ipAddress: null | string
+  idUser: number | null
+  uuidUser: null | string
+  idTemplate: number
+  uuidTemplate: string
+  idValidation: null
+  uuidValidation: null
+  createdAt: string
+  updatedAt: string
+  user: User | null
+  publication: Publication | null
+}
+
+export interface Publication {
+  id: number
+  uuid: string
+  publishedDate: string
+  idUser: number
+  uuidUser: string
+  idTemplate: number
+  uuidTemplate: string
+  idVersion: number
+  uuidVersion: string
+  createdAt: string
+  updatedAt: string
+  user: User
+}
+
+export interface User {
+  id: number
+  uuid: string
+  name: string
+  lastName: string
+  email?: string
+}
+
+type Status = 'ACTIVO' | 'ELIMINADO'
+
+export interface BulkResult {
+  row?: number
+  status: string
+  error?: string
+  url?: string
+}
+
+export interface BulkStatus {
+  status: string
+  total?: number
+  processed?: number
+  success?: number
+  errors?: number
+  results?: BulkResult[]
+}
+
+export interface BulkUploadResponse {
+  jobId: string
+}
+
+export interface BulkFileResponse {
+  base64: string
+  type: string
+  filename: string
 }

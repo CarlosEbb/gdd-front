@@ -10,10 +10,25 @@ interface Props {
   border?: 'border' | 'none'
   position?: 'left' | 'right' | 'default'
   mobileIcon?: keyof typeof icons
+  icon?: keyof typeof icons
+  menuClass?: string
   hideLabel?: boolean
 }
 
-const { buttonLabel = 'Seleccionar', withSearch = false, size = 'default', shadow = 'sm', border = 'border', position = 'default', mobileIcon = 'Menu', hideLabel = false } = Astro.props
+const {
+  buttonLabel = 'Seleccionar',
+  withSearch = false,
+  size = 'default',
+  shadow = 'base',
+  border = 'border',
+  position = 'default',
+  mobileIcon = 'Menu',
+  icon = undefined,
+  menuClass = '',
+  hideLabel = false,
+} = Astro.props
+
+const hasTriggerSlot = Astro.slots.has('trigger')
 
 const sizeClasses = {
   default: 'h-10 px-2',
@@ -56,35 +71,47 @@ const positionClasses = {
     data-dropdown-toggle
   >
     {
-      mobileIcon && (
-        <span class:list={['flex items-center justify-center', !hideLabel && 'md:hidden']}>
-          <Icon name={mobileIcon} class="h-5 w-5 text-gray-600" />
-        </span>
-      )
-    }
-    {!hideLabel && <span class:list={['truncate', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>}
-    {
-      !hideLabel && (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class:list={['-mr-1 ml-2 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180', mobileIcon && 'hidden md:block']}
-        >
-          <path d="m6 9 6 6 6-6" />
-        </svg>
+      hasTriggerSlot ? (
+        <slot name="trigger" />
+      ) : (
+        <>
+          {mobileIcon && (
+            <span class:list={['flex items-center justify-center', !hideLabel && 'md:hidden']}>
+              <Icon name={mobileIcon} class="size-5 text-heading" />
+            </span>
+          )}
+          {icon && (
+            <span class:list={['flex items-center justify-center', mobileIcon && 'hidden md:flex']}>
+              <Icon name={icon} class="size-4 text-heading" />
+            </span>
+          )}
+          {!hideLabel && <span class:list={['truncate text-subheading', mobileIcon && 'hidden md:inline']}>{buttonLabel}</span>}
+          {!hideLabel && (
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class:list={['-mr-1 ml-2 h-5 w-5 shrink-0 text-heading transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180', mobileIcon && 'hidden md:block']}
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          )}
+        </>
       )
     }
   </button>
 
   <div
     class:list={[
-      'ring-opacity-5 invisible absolute z-10 mt-1 max-h-72 scale-95 transform overflow-y-auto rounded-lg bg-white opacity-0 shadow-lg ring-1 ring-gray-200 transition-all duration-150 ease-out focus:outline-none [&.is-open]:visible [&.is-open]:scale-100 [&.is-open]:opacity-100',
+      'invisible fixed inset-x-0 bottom-0 z-50 flex max-h-[60vh] translate-y-full flex-col overflow-y-auto rounded-t-3xl bg-background opacity-0 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 ease-out focus:outline-none',
+      '[&.is-open]:visible [&.is-open]:translate-y-0 [&.is-open]:opacity-100',
+      'md:ring-opacity-5 md:absolute md:bottom-auto md:mt-1 md:block md:max-h-72 md:w-auto md:translate-y-0 md:scale-95 md:rounded-main md:shadow-lg md:ring-1 md:ring-border md:transition-all md:duration-150',
+      'md:[&.is-open]:scale-100',
       positionClasses[position],
       position === 'right' ? 'md:origin-top-right' : 'md:origin-top-left',
       menuClass,

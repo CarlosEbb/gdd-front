@@ -4,7 +4,8 @@ import Select from '../form/Select.astro'
 import Input from '../form/Input.astro'
 import Button from '../ui/Button.astro'
 import Icon from '../ui/Icon.astro'
-import { MARGIN_PRESETS, ORIENTATION, PAPER_SIZES, PAPER_SIZE_LABELS, MARGIN_PRESET_LABELS } from '@/constants/file-settings'
+import SelectionCard from '../form/SelectionCard.astro'
+import { PAPER_SIZES, ORIENTATION, MARGIN_PRESETS } from '@/constants/file-settings'
 
 const workspaces = await Astro.session?.get('workspaces')
 
@@ -14,6 +15,7 @@ const showWarningFromServer = workspaces !== undefined && workspaces.length === 
 
 <Modal modalId="save-template" title="Crear documento">
   <form class="space-y-4" id="save-template-form">
+    <input type="hidden" name="uuidBaseTemplate" value="" />
     <div>
       <p class:list={['text-sm text-warning', { hidden: !showWarningFromServer }]} id="no-workspaces-warning">No tienes espacios de trabajo disponibles</p>
       <Select
@@ -36,73 +38,42 @@ const showWarningFromServer = workspaces !== undefined && workspaces.length === 
       <Input label="Descripción" name="description" placeholder="Una descripción breve del documento" required />
     </div>
 
-    <button
-      type="button"
-      id="toggle-generate-with-ia"
-      class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-custom-blue3 bg-custom-blue3/10 px-4 py-3 text-left transition-all hover:shadow-md"
-    >
-      <div class="flex items-center gap-2">
-        <Icon name="Sparkles" class="size-5 text-gray-600" stroke-width={1.5} />
-        <span class="text-sm font-medium text-gray-700">Generar con IA</span>
-        <span class="rounded border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs text-gray-700">Funcionalidad experimental</span>
-      </div>
-      <Icon name="ChevronDown" class="size-5 text-gray-500 transition-transform duration-200" id="toggle-ia-icon" stroke-width={1.5} />
-    </button>
-
-    <div class="-mt-4 grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out" id="prompt-container">
-      <div class="-mx-1 overflow-hidden px-1 pt-1">
-        <Input label="Crear documento con IA" name="prompt" placeholder="Genera un documento sobre..." />
-        <p class="text-sm text-gray-500">Ingrese el prompt para crear el documento con IA.</p>
-      </div>
-    </div>
-
-    <button
-      type="button"
-      id="toggle-document-settings"
-      class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-left transition-all hover:bg-gray-100"
-    >
-      <div class="flex items-center gap-2">
-        <Icon name="Settings" class="size-5 text-gray-600" stroke-width={1.5} />
-        <span class="text-sm font-medium text-gray-700">Configuraciones del documento</span>
-      </div>
-      <Icon name="ChevronDown" class="size-5 text-gray-500 transition-transform duration-200" id="toggle-icon" stroke-width={1.5} />
-    </button>
-
-    <div class="-mt-4 grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out" id="document-settings-container">
-      <div class="-mx-1 space-y-4 overflow-hidden px-1 pt-1">
-        <div>
-          <Select
-            label="Tamaño de papel"
-            value={PAPER_SIZES[0]}
-            name="pageSize"
-            placeholder="Seleccione el tamaño de papel"
-            options={PAPER_SIZES.map((size) => ({ value: size, label: PAPER_SIZE_LABELS[size] }))}
-          />
-        </div>
-
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <Select
-              label="Margen"
-              name="marginType"
-              placeholder="Seleccione un margen"
-              options={MARGIN_PRESETS.map((margin) => ({ value: margin, label: MARGIN_PRESET_LABELS[margin] }))}
-              value={MARGIN_PRESETS[1]}
-            />
-          </div>
-
-          <div>
-            <Select
-              label="Orientación"
-              name="orientation"
-              placeholder="Seleccione una orientación"
-              value={ORIENTATION[0]}
-              options={ORIENTATION.map((orientation) => ({ value: orientation, label: orientation === 'PORTRAIT' ? 'Vertical' : 'Horizontal' }))}
-            />
-          </div>
+    <div>
+      <input type="checkbox" name="generate_with_ai" id="generate_with_ai" class="hidden" />
+      <button type="button" class="flex w-full cursor-pointer items-center justify-between border-b border-border pb-1.5" id="generate-with-ai-toggle">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-subheading">
+          <Icon class="text-primary" name="Sparkles" size={18} />
+          Crear documento con IA
+        </h3>
+        <Icon class="text-subheading transition-transform duration-200" name="ChevronDown" size={20} stroke-width={1.5} id="generate-with-ai-icon" />
+      </button>
+      <div class="mt-2 grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out" id="prompt-container">
+        <div class="overflow-hidden rounded-main bg-foreground p-0 shadow-sm transition-[padding] duration-300 ease-in-out" id="prompt-inner">
+          <label for="prompt" class="block text-sm font-medium text-heading">Describe el documento que deseas generar</label>
+          <textarea name="prompt" placeholder="Crea un documento sobre..." class="field-sizing-content w-full rounded-main border border-border bg-background p-2"></textarea>
+          <p class="text-sm text-subheading">Ingrese el prompt para crear el documento con IA.</p>
         </div>
       </div>
     </div>
+
+    <div>
+      <button type="button" class="flex w-full cursor-pointer items-center justify-between border-b border-border pb-1.5" id="page-settings-toggle">
+        <h3 class="text-sm font-semibold text-subheading">Configuración de página</h3>
+        <Icon class="text-subheading transition-transform duration-200" name="ChevronDown" size={20} stroke-width={1.5} id="page-settings-icon" />
+      </button>
+      <div class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out" id="page-settings-content">
+        <div class="overflow-hidden p-1">
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <Select
+                label="Tamaño de papel"
+                name="pageSize"
+                placeholder="Seleccione un tamaño de papel"
+                options={PAPER_SIZES.map((size) => ({ value: size, label: size }))}
+                value={PAPER_SIZES[0]}
+                required
+              />
+            </div>
 
             <div>
               <Select
@@ -152,29 +123,21 @@ const showWarningFromServer = workspaces !== undefined && workspaces.length === 
   function initializeCreateDocumentModal() {
     const modalSaveTemplate = document.getElementById('save-template') as HTMLDialogElement
     const form = document.getElementById('save-template-form') as HTMLFormElement
-    const toggleGenerateWithIA = document.getElementById('toggle-generate-with-ia') as HTMLButtonElement
+    const btnGenerateWithIA = document.getElementById('generate_with_ai') as HTMLInputElement
+    const generateWithAIToggle = document.getElementById('generate-with-ai-toggle') as HTMLButtonElement
+    const generateWithAIIcon = document.getElementById('generate-with-ai-icon') as HTMLElement
     const promptContainer = document.getElementById('prompt-container') as HTMLDivElement
-    const toggleIaIcon = document.getElementById('toggle-ia-icon') as HTMLElement
-    const toggleDocumentSettings = document.getElementById('toggle-document-settings') as HTMLButtonElement
-    const documentSettingsContainer = document.getElementById('document-settings-container') as HTMLDivElement
-    const toggleIcon = document.getElementById('toggle-icon') as HTMLElement
+    const pageSettingsToggle = document.getElementById('page-settings-toggle') as HTMLButtonElement
+    const pageSettingsContent = document.getElementById('page-settings-content') as HTMLDivElement
+    const pageSettingsIcon = document.getElementById('page-settings-icon') as HTMLElement
 
     if (!form) return
 
-    const handleToggleDocumentSettings = () => {
-      const isExpanded = documentSettingsContainer.classList.contains('grid-rows-[1fr]')
-      if (isExpanded) {
-        documentSettingsContainer.classList.remove('grid-rows-[1fr]', 'opacity-100', 'mt-4')
-        documentSettingsContainer.classList.add('grid-rows-[0fr]', 'opacity-0', '-mt-4')
-        toggleIcon.classList.remove('rotate-180')
-      } else {
-        documentSettingsContainer.classList.remove('grid-rows-[0fr]', 'opacity-0', '-mt-4')
-        documentSettingsContainer.classList.add('grid-rows-[1fr]', 'opacity-100', 'mt-4')
-        toggleIcon.classList.add('rotate-180')
-      }
-    }
-
-    toggleDocumentSettings.addEventListener('click', handleToggleDocumentSettings)
+    pageSettingsToggle?.addEventListener('click', () => {
+      const isOpen = pageSettingsContent.classList.toggle('grid-rows-[1fr]')
+      pageSettingsContent.classList.toggle('grid-rows-[0fr]', !isOpen)
+      pageSettingsIcon.classList.toggle('rotate-180')
+    })
 
     const handleSaveTemplate = async (e: Event) => {
       e.preventDefault()
@@ -185,13 +148,6 @@ const showWarningFromServer = workspaces !== undefined && workspaces.length === 
         .replace(/ /g, '_')
         .replace(/[^a-z0-9_]/g, '')
       formData.append('name', name)
-
-      // remove valores nulos
-      for (const [key, value] of formData.entries()) {
-        if (value === null || value === undefined || value === '') {
-          formData.delete(key)
-        }
-      }
 
       try {
         setButtonLoading('#btn-save-template', true)
@@ -222,25 +178,94 @@ const showWarningFromServer = workspaces !== undefined && workspaces.length === 
       }
     }
 
-    const handleToggleGenerateWithIA = () => {
-      const promptInput = form.querySelector('input[name="prompt"]') as HTMLInputElement
-      const isExpanded = promptContainer.classList.contains('grid-rows-[1fr]')
-
-      if (isExpanded) {
-        promptContainer.classList.remove('grid-rows-[1fr]', 'opacity-100', 'mt-4')
-        promptContainer.classList.add('grid-rows-[0fr]', 'opacity-0', '-mt-4')
-        toggleIaIcon.classList.remove('rotate-180')
-        promptInput?.removeAttribute('name')
+    const handleGenerateWithIA = () => {
+      btnGenerateWithIA.checked = !btnGenerateWithIA.checked
+      const promptTextarea = form.querySelector('textarea[name="prompt"]') as HTMLTextAreaElement
+      const isOpen = promptContainer.classList.toggle('grid-rows-[1fr]')
+      promptContainer.classList.toggle('grid-rows-[0fr]', !isOpen)
+      generateWithAIIcon.classList.toggle('rotate-180')
+      const promptInner = document.getElementById('prompt-inner') as HTMLDivElement
+      if (isOpen) {
+        promptInner.classList.add('p-4')
+        promptInner.classList.remove('p-0')
       } else {
-        promptContainer.classList.remove('grid-rows-[0fr]', 'opacity-0', '-mt-4')
-        promptContainer.classList.add('grid-rows-[1fr]', 'opacity-100', 'mt-4')
-        toggleIaIcon.classList.add('rotate-180')
-        promptInput?.setAttribute('name', 'prompt')
+        promptInner.classList.remove('p-4')
+        promptInner.classList.add('p-0')
+      }
+
+      const action = btnGenerateWithIA.checked ? 'setAttribute' : 'removeAttribute'
+      promptTextarea[action]('name', 'prompt')
+    }
+
+    generateWithAIToggle.addEventListener('click', handleGenerateWithIA)
+
+    const checkAndLoadWorkspaces = async () => {
+      const selectWorkspace = document.getElementById('select-workspace') as HTMLSelectElement | null
+      const warningText = document.getElementById('no-workspaces-warning') as HTMLParagraphElement | null
+
+      if (!selectWorkspace) return
+
+      const optionsCount = Array.from(selectWorkspace.options).filter((opt) => opt.value !== '').length
+      if (optionsCount > 0) return
+
+      const placeholderOption = selectWorkspace.querySelector('option[value=""]') as HTMLOptionElement | null
+      const originalPlaceholder = placeholderOption?.textContent || 'Seleccione un espacio de trabajo'
+
+      try {
+        if (placeholderOption) {
+          placeholderOption.textContent = 'Cargando espacios de trabajo...'
+        }
+
+        const { data, error } = await callAction(actions.workspaces.list())
+
+        if (error || !data || !Array.isArray(data.data)) {
+          placeholderOption!.textContent = 'Error al cargar espacios de trabajo'
+          return
+        }
+
+        selectWorkspace.innerHTML = ''
+        const newPlaceholder = document.createElement('option')
+        newPlaceholder.value = ''
+        newPlaceholder.disabled = true
+        newPlaceholder.selected = true
+        newPlaceholder.textContent = originalPlaceholder
+        selectWorkspace.add(newPlaceholder)
+
+        const workspacesList = data.data
+        if (workspacesList.length === 0) {
+          selectWorkspace.disabled = true
+          warningText?.classList.remove('hidden')
+          return
+        }
+
+        workspacesList.forEach((workspace: any) => {
+          const opt = document.createElement('option')
+          opt.value = workspace.uuid
+          opt.textContent = workspace.name
+          selectWorkspace.add(opt)
+        })
+
+        selectWorkspace.disabled = false
+        warningText?.classList.add('hidden')
+      } catch (error) {
+        console.error('Error al cargar espacios de trabajo:', error)
+        placeholderOption!.textContent = 'Error al cargar espacios de trabajo'
       }
     }
 
-    toggleGenerateWithIA.addEventListener('click', handleToggleGenerateWithIA)
-    toggleDocumentSettings.addEventListener('click', handleToggleDocumentSettings)
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'open') {
+          if (modalSaveTemplate.hasAttribute('open')) {
+            checkAndLoadWorkspaces()
+          }
+        }
+      })
+    })
+
+    if (modalSaveTemplate) {
+      observer.observe(modalSaveTemplate, { attributes: true })
+    }
 
     form.addEventListener('submit', handleSaveTemplate)
   }
