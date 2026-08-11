@@ -8,6 +8,8 @@ import bgTest2 from '@/assets/images/bg-1.avif'
 import bgTest from '@/assets/images/bg-2.avif'
 import bgTest4 from '@/assets/images/bg-4.avif'
 
+const NAME_APP = import.meta.env.PUBLIC_NAME_PROJECT
+
 interface Props {
   titleTabBrowser?: string
   titleCardAuth: string
@@ -24,7 +26,7 @@ const promoSlides: PromoSlide[] = [
   {
     image: bgTest,
     title: 'Documentos inteligentes para equipos que avanzan',
-    description: 'Con CreaDocs creas, organizas y generas documentos desde un solo lugar: plantillas, espacios de trabajo y automatización para agilizar tu operación.',
+    description: `Con ${NAME_APP} creas, organizas y generas documentos desde un solo lugar: plantillas, espacios de trabajo y automatización para agilizar tu operación.`,
   },
   {
     image: bgTest2,
@@ -34,7 +36,7 @@ const promoSlides: PromoSlide[] = [
   {
     image: bgTest4,
     title: 'Menos papel, más impacto positivo',
-    description: 'Con CreaDocs digitalizas tus procesos y reduces el uso de papel: genera, gestiona y reutiliza documentos de forma sostenible, sin perder control ni trazabilidad.',
+    description: `Con ${NAME_APP} digitalizas tus procesos y reduces el uso de papel: genera, gestiona y reutiliza documentos de forma sostenible, sin perder control ni trazabilidad.`,
   },
 ]
 
@@ -73,33 +75,26 @@ const promoSlide = promoSlides[Math.floor(Math.random() * promoSlides.length)]
         </div>
       </div>
     </div>
-    <div class="relative hidden bg-white lg:col-span-2 lg:block">
+    <div class="relative hidden bg-foreground lg:col-span-2 lg:block">
       <div class="absolute inset-2 overflow-hidden rounded-lg bg-primary/10">
-        <img
-          src={promoSlide.image.src}
-          alt=""
-          loading="eager"
-          decoding="async"
-          class="auth-promo__image h-full w-full object-cover"
-          draggable="false"
-        />
+        <img src={promoSlide.image.src} alt="" loading="eager" decoding="async" class="auth-promo__image h-full w-full object-cover" draggable="false" />
         <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-          <div class="absolute inset-0 bg-linear-to-tr from-heading/50 via-primary/35 to-heading/30"></div>
-          <div class="absolute inset-0 bg-linear-to-t from-heading/75 via-primary/25 to-transparent"></div>
-          <div class="absolute inset-0 bg-linear-to-r from-heading/30 via-transparent to-primary/20"></div>
-          <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_50%)]"></div>
+          <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/45 to-black/25"></div>
+          <div class="absolute inset-0 bg-linear-to-tr from-black/50 via-primary/30 to-black/20"></div>
+          <div class="absolute inset-0 bg-linear-to-r from-black/35 via-transparent to-primary/25"></div>
+          <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_oklab,var(--primary)_40%,transparent),transparent_55%)]"></div>
         </div>
         <div class="absolute inset-0 z-10 flex items-end p-8 lg:p-14 xl:p-16">
           <section class="auth-promo max-w-4xl space-y-4" aria-labelledby="auth-promo-title">
             <h2
               id="auth-promo-title"
-              class="auth-promo__item auth-promo__item--title text-3xl font-bold tracking-tight text-balance text-white drop-shadow-sm sm:text-4xl lg:text-5xl lg:leading-[1.1]"
+              class="auth-promo__item auth-promo__item--title text-3xl font-semibold tracking-tight text-balance text-white drop-shadow-md sm:text-4xl lg:text-5xl lg:leading-[1.1]"
             >
               {promoSlide.title}
             </h2>
             <p
               id="auth-promo-description"
-              class="auth-promo__item auth-promo__item--description max-w-lg text-sm leading-relaxed text-pretty text-white/85 drop-shadow-sm sm:text-base lg:text-lg lg:leading-8"
+              class="auth-promo__item auth-promo__item--description max-w-lg text-sm leading-relaxed text-pretty text-white/95 drop-shadow-md sm:text-base lg:text-lg lg:leading-8"
             >
               {promoSlide.description}
             </p>
