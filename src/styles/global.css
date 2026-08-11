@@ -26,6 +26,8 @@
     --elevation-base: 0 2px 8px rgba(0, 0, 0, 0.04);
     --radius: 6px;
     --warning: oklch(79.094% 0.14898 60.676);
+    --scrollbar-thumb: oklch(0.708 0 0 / 0.45);
+    --scrollbar-track: transparent;
 }
 
 .dark {
@@ -49,6 +51,8 @@
     --ring: oklch(0.556 0 0);
     --elevation-base: 0 2px 8px rgba(0, 0, 0, 0.04);
     --warning: oklch(79.094% 0.14898 60.676);
+    --scrollbar-thumb: oklch(0.708 0 0 / 0.55);
+    --scrollbar-track: transparent;
 }
 
 @theme inline {
@@ -88,6 +92,8 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
     }
   body {
     @apply bg-background text-foreground;
@@ -95,6 +101,12 @@
   html {
     @apply font-sans;
     }
+}
+
+/* Alias para zonas que ya usan la clase; hereda el scrollbar del sistema */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 /* Contenedor de toasts que usa popover para aparecer sobre dialogs */
