@@ -1,0 +1,56 @@
+---
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Icon from '@/components/ui/Icon.astro'
+
+interface Props {
+  uuid: string
+  buildNumber: string
+}
+
+const { uuid, buildNumber } = Astro.props
+---
+
+<div class="lg:hidden">
+  <Dropdown buttonLabel="Más opciones" size="sm" position="right" mobileIcon="Ellipsis" hideLabel>
+    <div class="mx-2 border-b border-border p-2.5 lg:hidden">
+      <h3 class="mb-2 text-xs font-semibold tracking-wide text-subheading uppercase">Documento</h3>
+      <ul class="space-y-1">
+        <li class="md:hidden">
+          <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" data-mobile-action="new-version">
+            <Icon name="GitBranch" class="size-4" stroke-width={1.5} />
+            Crear versión
+          </button>
+        </li>
+        <li class="md:hidden">
+          <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" data-mobile-action="generate-pdf">
+            <Icon name="FileText" class="size-4" stroke-width={1.5} />
+            Visualizar
+          </button>
+        </li>
+        <li class="md:hidden">
+          <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" data-mobile-action="document-settings">
+            <Icon name="Settings" class="size-4" stroke-width={1.5} />
+            Configuración del documento
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="mx-2 p-2.5">
+      <h3 class="mb-2 text-xs font-semibold tracking-wide text-subheading uppercase lg:hidden">Configuración</h3>
+      <ul class="space-y-1">
+        <li>
+          <a href={`/config/documentation/${uuid}?build_number=${buildNumber}`} class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted">
+            <Icon name="FileInput" class="size-4" stroke-width={1.5} />
+            Documentación
+          </a>
+        </li>
+        <li>
+          <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-destructive hover:bg-destructive/20" data-mobile-action="delete">
+            <Icon name="Trash2" class="size-4" stroke-width={1.5} />
+            Eliminar
+          </button>
+        </li>
+      </ul>
+    </div>
+  </Dropdown>
+</div>

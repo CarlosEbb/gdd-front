@@ -1,0 +1,34 @@
+---
+import Button from '@/components/ui/Button.astro'
+import Link from '@/components/ui/Link.astro'
+
+interface Props {
+  uuid: string
+  buildNumber: string
+}
+
+const { uuid, buildNumber } = Astro.props
+---
+
+<div class="hidden shrink-0 items-center gap-x-2 lg:flex">
+  <Button
+    type="button"
+    size="sm"
+    iconOnly
+    variant="transparent"
+    data-open-modal="delete-document"
+    title="Eliminar documento"
+    class="!hover:bg-red-50 !hover:text-red-600 text-red-500"
+    icon="Trash"
+  />
+
+  <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
+
+  <Link href={`/config/documentation/${uuid}?build_number=${buildNumber}`} id="documentationLink" size="sm" variant="transparent" title="Documentación" icon="FileInput">
+    <span class="hidden xl:inline">Documentación</span>
+  </Link>
+
+  <Button type="button" size="sm" id="btn-save-document" loadingText="Guardando..." data-uuid-template={uuid} title="Guardar" class="shrink-0" icon="Save">
+    <span class="hidden md:inline">Guardar</span>
+  </Button>
+</div>

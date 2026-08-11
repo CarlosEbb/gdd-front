@@ -1,0 +1,32 @@
+---
+import Modal from '@/components/modal/Modal.astro'
+import Button from '@/components/ui/Button.astro'
+import Select from '@/components/form/Select.astro'
+import { PAPER_SIZES, MARGIN_PRESETS, ORIENTATION, MARGIN_PRESET_LABELS, PAPER_SIZE_LABELS } from '@/constants/file-settings'
+---
+
+<Modal title="Configuración del documento" modalId="document-settings">
+  <form class="space-y-4" id="document-settings-form">
+    <div>
+      <Select label="Tamaño de papel" name="pageSize" options={PAPER_SIZES.map((size) => ({ value: size, label: PAPER_SIZE_LABELS[size] }))} />
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div>
+        <Select label="Margen" name="marginType" options={MARGIN_PRESETS.map((margin) => ({ value: margin, label: MARGIN_PRESET_LABELS[margin] }))} />
+      </div>
+      <div>
+        <Select label="Orientación" name="orientation" options={ORIENTATION.map((o) => ({ value: o, label: o === 'PORTRAIT' ? 'Vertical' : 'Horizontal' }))} />
+      </div>
+    </div>
+
+    <p class="text-xs text-gray-500">
+      Los cambios se aplican al documento actual. Recuerda presionar <b>Guardar</b> para persistirlos.
+    </p>
+
+    <div class="flex justify-end space-x-4 border-t border-border pt-4">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" id="btn-apply-document-settings">Aplicar</Button>
+    </div>
+  </form>
+</Modal>

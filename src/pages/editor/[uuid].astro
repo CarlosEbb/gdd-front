@@ -1,14 +1,35 @@
 ---
 import EditorLayout from '@/layouts/EditorLayout.astro'
-import Editor from '@/components/editor/EditorPdf.astro'
+import CreateVersionModal from '@/components/modal/CreateVersionModal.astro'
+import Sidebar from '@/components/ui/Sidebar.astro'
+import CreateDocumentModal from '@/components/modal/CreateDocumentModal.astro'
+import DeleteDocumentModal from './_components/modals/DeleteDocumentModal.astro'
+import DocumentSettingsModal from './_components/modals/DocumentSettingsModal.astro'
+import EditorNavbar from './_components/EditorNavbar.astro'
+import EditorDocumentLoader from './_components/EditorDocumentLoader.astro'
+import SEditor from '@/components/skeleton/SEditor.astro'
 
 const { uuid } = Astro.params
-
 if (!uuid) return Astro.redirect('/home')
+
+const urlParams = Astro.url.searchParams
+const buildNumber = urlParams.get('build_number') as string
+const nameDocument = urlParams.get('name_document') as string
+
+const SHOW_PAGE_FOR_VIEW = false
 ---
 
 <EditorLayout class="px-0 pt-14" title="Editor de documentos">
-  <div class="">
-    <Editor uuid={uuid} />
-  </div>
+  <Sidebar variant="drawer" initialVisible={false} showToggleButton={false} />
+
+  <EditorNavbar uuid={uuid} buildNumber={buildNumber} showPageForView={SHOW_PAGE_FOR_VIEW} />
+
+  <EditorDocumentLoader uuid={uuid} buildNumber={buildNumber} server:defer>
+    <SEditor slot="fallback" />
+  </EditorDocumentLoader>
+
+  <CreateVersionModal uuidTemplate={uuid} mode="editor" />
+  <DeleteDocumentModal uuid={uuid} buildNumber={buildNumber} nameDocument={nameDocument} />
+  <DocumentSettingsModal />
+  <CreateDocumentModal />
 </EditorLayout>

@@ -1,0 +1,53 @@
+---
+import { actions } from 'astro:actions'
+import type { SchemaFile } from '@/types/documents'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import EditorCanvas from './EditorCanvas.astro'
+
+interface Props {
+  uuid: string
+  buildNumber: string
+}
+
+const { uuid, buildNumber } = Astro.props
+
+let schemaFile: SchemaFile | null = null
+let hasError = false
+
+if (buildNumber) {
+  const { data, error } = await Astro.callAction(actions.documents.getDocument, {
+    uuid_template: uuid,
+    build_number: buildNumber,
+    compress: true,
+  })
+
+  if (error) {
+    console.error('Error al obtener el documento:', error)
+    hasError = true
+  } else {
+    schemaFile = data?.data || null
+  }
+}
+---
+
+{
+  hasError ? (
+    <div class="flex h-[calc(100vh-56px)] items-center justify-center p-4">
+      <EmptyState
+        state="error"
+        showBorder={false}
+        title="Error al cargar el documento"
+        description="Ha ocurrido un error al cargar el documento. Por favor, intenta nuevamente."
+        href={`/editor/${uuid}?build_number=${buildNumber}`}
+        hrefText="Reintentar"
+        action="refresh"
+      />
+    </div>
+  ) : (
+    <>
+      <EditorCanvas />
+      <script type="application/json" id="schema-file-data" set:html={JSON.stringify(schemaFile)} />
+      <script>import {initializeEditorPage} from '../_scripts/initializeEditorPage'; initializeEditorPage()</script>
+    </>
+  )
+}

@@ -1,0 +1,24 @@
+---
+import Button from '@/components/ui/Button.astro'
+import Search from '@/components/ui/Search.astro'
+---
+
+<div class="hidden shrink-0 items-center gap-x-0.5 md:flex">
+  <Search size="sm" class="me-1" />
+  <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
+  <Button type="button" size="sm" icon="FileText" variant="transparent" id="generatePdfBtn" title="Visualizar PDF" class="shrink-0">
+    <span class="hidden xl:inline">Visualizar</span>
+  </Button>
+  <Button
+    type="button"
+    size="sm"
+    iconOnly
+    variant="transparent"
+    id="btn-document-settings"
+    data-open-modal="document-settings"
+    title="Configuración del documento"
+    class="shrink-0"
+    icon="Settings"
+  />
+  <Button type="button" size="sm" iconOnly variant="transparent" data-open-modal="new-version-document" class="hidden shrink-0 md:inline-flex" title="Crear versión" icon="GitBranch" />
+</div>

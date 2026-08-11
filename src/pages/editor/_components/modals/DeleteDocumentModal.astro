@@ -1,0 +1,29 @@
+---
+import Modal from '@/components/modal/Modal.astro'
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+
+interface Props {
+  uuid: string
+  buildNumber: string
+  nameDocument: string
+}
+
+const { uuid, buildNumber, nameDocument } = Astro.props
+---
+
+<Modal title="Eliminar documento" modalId="delete-document">
+  <form class="space-y-6" id="delete-document-form">
+    <div class="flex flex-col items-center justify-center py-5">
+      <Icon name="Trash" size={48} stroke-width={1.5} class="text-red-300" />
+      <p class="mb-2 text-lg font-semibold text-gray-900">{nameDocument}</p>
+      <p class="mb-4 text-center">¿Estás seguro de querer eliminar el documento <b>{nameDocument}</b>?</p>
+      <input type="hidden" name="uuid_template" value={uuid} />
+      <input type="hidden" name="name_version" value={buildNumber} />
+    </div>
+    <div class="flex justify-end space-x-4 border-t border-border pt-4">
+      <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+      <Button type="submit" size="sm" id="btn-delete-document" loadingText="Eliminando...">Eliminar documento</Button>
+    </div>
+  </form>
+</Modal>

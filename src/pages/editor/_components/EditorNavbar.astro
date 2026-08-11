@@ -1,0 +1,72 @@
+---
+import NavbarBrand from './navbar/NavbarBrand.astro'
+import PaginationControls from './navbar/PaginationControls.astro'
+import DocumentActions from './navbar/DocumentActions.astro'
+import SystemActions from './navbar/SystemActions.astro'
+import MobileMoreMenu from './navbar/MobileMoreMenu.astro'
+
+interface Props {
+  uuid: string
+  buildNumber: string
+  showPageForView?: boolean
+}
+
+const { uuid, buildNumber, showPageForView = false } = Astro.props
+---
+
+<nav class="flex h-14" id="editor-nav">
+  <div id="progress-bar" class="pointer-events-none fixed top-0 left-0 z-50 h-[3px] w-0 bg-primary opacity-0 transition-all duration-200 ease-out"></div>
+  <div class="flex w-full items-center border-b border-border bg-background px-2">
+    <NavbarBrand />
+    <div class="ms-auto flex shrink-0 items-center gap-x-3">
+      <PaginationControls showPageForView={showPageForView} />
+      <DocumentActions />
+      <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
+      <SystemActions uuid={uuid} buildNumber={buildNumber} />
+      <MobileMoreMenu uuid={uuid} buildNumber={buildNumber} />
+    </div>
+  </div>
+</nav>
+
+<script>
+  let progressInterval: ReturnType<typeof setInterval> | undefined
+
+  document.addEventListener('astro:before-preparation', () => {
+    const progressBar = document.getElementById('progress-bar')
+
+    if (progressBar) {
+      clearInterval(progressInterval)
+
+      progressBar.style.opacity = '1'
+      progressBar.style.width = '0%'
+
+      let width = 0
+      progressInterval = setInterval(() => {
+        if (width >= 90) {
+          clearInterval(progressInterval)
+        } else {
+          const increment = width < 30 ? 5 : width < 60 ? 2 : 0.5
+          width += increment
+          progressBar.style.width = `${width}%`
+        }
+      }, 50)
+    }
+  })
+
+  document.addEventListener('astro:page-load', () => {
+    const progressBar = document.getElementById('progress-bar')
+
+    if (progressBar) {
+      clearInterval(progressInterval)
+      progressBar.style.width = '100%'
+
+      setTimeout(() => {
+        progressBar.style.opacity = '0'
+
+        setTimeout(() => {
+          progressBar.style.width = '0%'
+        }, 300)
+      }, 200)
+    }
+  })
+</script>
