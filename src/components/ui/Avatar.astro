@@ -43,7 +43,7 @@ const isHiddenPhoto = hasPhoto === false ? '' : 'hidden'
 <img src={photoUrl} alt="Foto de perfil" class={`aspect-square ${sizeClass} rounded-full border border-border object-cover ${isHiddenPhoto}`} />
 
 <div
-  class={`flex aspect-square ${sizeClass} items-center justify-center rounded-full bg-linear-to-r from-cyan-500 to-blue-500 object-cover font-semibold ${textSize} ${isHiddenPhoto ? '' : 'hidden'}`}
+  class={`flex aspect-square ${sizeClass} items-center text-white justify-center rounded-full bg-linear-to-r from-cyan-500 to-blue-500 object-cover font-semibold ${textSize} ${isHiddenPhoto ? '' : 'hidden'}`}
   title={`${name} ${last_name}`}
 >
   {initials}
