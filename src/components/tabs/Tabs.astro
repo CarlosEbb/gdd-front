@@ -32,28 +32,22 @@ const { defaultValue, variant = 'default', class: className } = Astro.props
     })
   }
 
-  function updateTabsState(container: Element, activeValue: string | null) {
-    const triggers = container.querySelectorAll('[data-tabs-trigger]')
-    const contents = container.querySelectorAll('[data-tabs-content]')
+  function getOwnTabsElements(container: Element, selector: string): Element[] {
+    return Array.from(container.querySelectorAll(selector)).filter((element) => element.closest('[data-tabs-container]') === container)
+  }
 
-    // Actualizar triggers
+  function updateTabsState(container: Element, activeValue: string | null) {
+    const triggers = getOwnTabsElements(container, '[data-tabs-trigger]')
+    const contents = getOwnTabsElements(container, '[data-tabs-content]')
+
     triggers.forEach((trigger) => {
       const value = trigger.getAttribute('data-tabs-trigger')
-      if (value === activeValue) {
-        trigger.setAttribute('data-state', 'active')
-      } else {
-        trigger.setAttribute('data-state', 'inactive')
-      }
+      trigger.setAttribute('data-state', value === activeValue ? 'active' : 'inactive')
     })
 
-    // Actualizar contenidos
     contents.forEach((content) => {
       const value = content.getAttribute('data-tabs-content')
-      if (value === activeValue) {
-        content.setAttribute('data-state', 'active')
-      } else {
-        content.setAttribute('data-state', 'inactive')
-      }
+      content.setAttribute('data-state', value === activeValue ? 'active' : 'inactive')
     })
   }
 
