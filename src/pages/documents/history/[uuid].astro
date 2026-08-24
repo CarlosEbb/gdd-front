@@ -18,11 +18,14 @@ const { data, error } = await Astro.callAction(actions.documents.getHistory, { u
 
 const history = data?.data ?? []
 const currentPath = Astro.url.pathname
+
+const versionParams = new URLSearchParams(Astro.url.searchParams)
+const versionBackHref = versionParams.toString() ? `/config/version/${uuid}?${versionParams.toString()}` : `/config/version/${uuid}`
 ---
 
 <MainLayout title="Historial de documentos">
   <Container>
-    <Header title="Historial de documentos" subtitle="Sigue la evolución del documento a través del tiempo." showBreadcrumb={false} backHref={`/config/version/${uuid}`} />
+    <Header title="Historial de documentos" subtitle="Sigue la evolución del documento a través del tiempo." showBreadcrumb={false} backHref={versionBackHref} />
 
     <StateSwitch isEmpty={!history.length} hasError={!!error}>
       <Card>

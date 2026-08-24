@@ -1,6 +1,8 @@
 ---
 import Dropdown from '@/components/ui/Dropdown.astro'
 import TabsLayout from '@/layouts/TabsLayout.astro'
+import Link from '@/components/ui/Link.astro'
+
 import { actions } from 'astro:actions'
 interface Props {
   title: string
@@ -11,32 +13,47 @@ const { title } = Astro.props
 
 const buildNumber = Astro.url.searchParams.get('build_number') as string
 const nameWorkspace = Astro.url.searchParams.get('name_workspace') as string
+const uuidWorkspace = Astro.url.searchParams.get('id_workspace') as string
+
+const queryParams = new URLSearchParams()
+if (buildNumber) queryParams.set('build_number', buildNumber)
+if (uuidWorkspace) queryParams.set('id_workspace', uuidWorkspace)
+if (nameWorkspace) queryParams.set('name_workspace', nameWorkspace)
+const queryString = queryParams.toString()
+const withQuery = (path: string) => (queryString ? `${path}?${queryString}` : path)
 
 const NAVIGATION = [
-  { href: `/config/version/${uuid}?build_number=${buildNumber}`, label: 'Versiones' },
-  { href: `/config/documentation/${uuid}?build_number=${buildNumber}`, label: 'Documentación' },
-  { href: `/config/validation/${uuid}?build_number=${buildNumber}`, label: 'Validaciones' },
-  // { href: `/config/security/${uuid}?build_number=${buildNumber}`, label: 'Seguridad' },
-  { href: `/config/metrics/${uuid}?build_number=${buildNumber}`, label: 'Métricas' },
-  { href: `/config/generated/${uuid}?build_number=${buildNumber}`, label: 'Generados' },
-  { href: `/config/bulk-upload/${uuid}?build_number=${buildNumber}`, label: 'Carga Masiva' },
-  { href: `/config/http-client/${uuid}?build_number=${buildNumber}`, label: 'Cliente HTTP' },
+  { href: withQuery(`/config/version/${uuid}`), label: 'Versiones' },
+  { href: withQuery(`/config/documentation/${uuid}`), label: 'Documentación' },
+  { href: withQuery(`/config/validation/${uuid}`), label: 'Validaciones' },
+  { href: withQuery(`/config/metrics/${uuid}`), label: 'Métricas' },
+  { href: withQuery(`/config/generated/${uuid}`), label: 'Generados' },
+  { href: withQuery(`/config/bulk-upload/${uuid}`), label: 'Carga Masiva' },
+  { href: withQuery(`/config/http-client/${uuid}`), label: 'Enviar documento' },
 ]
 
 const { data } = await Astro.callAction(actions.documents.getByUser, { limit: null })
 const documents = data?.data ?? []
 const getCurrentUrl = Astro.url.pathname
 const [_, page, tab] = getCurrentUrl.split('/')
+
+const editorParams = new URLSearchParams()
+if (buildNumber) editorParams.set('build_number', buildNumber)
+if (uuidWorkspace) editorParams.set('id_workspace', uuidWorkspace)
+if (nameWorkspace) editorParams.set('name_workspace', nameWorkspace)
+if (title) editorParams.set('name_document', title)
+const editorHref = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWorkspace}&name_document=${encodeURIComponent(title)}${nameWorkspace ? `&name_workspace=${encodeURIComponent(nameWorkspace)}` : ''}`
 ---
 
 <TabsLayout title={title} navigation={NAVIGATION} subtitle={nameWorkspace ? `Espacio de trabajo: ${nameWorkspace}` : ''} titleForPage="Gestionar documento">
-  <div slot="actions">
+  <div slot="actions" class="flex items-center gap-2">
+    <Link href={editorHref} size="sm" icon="ArrowUpRight" iconPosition="right"> Editar documento </Link>
     <Dropdown shadow="none" buttonLabel="Cambiar documento">
       <ul>
         {
           documents.map((document) => (
             <li>
-              <a href={`/${page}/${tab}/${document.uuid}?build_number=${buildNumber}`} class="flex items-center gap-x-2 px-4 py-2 text-sm text-heading hover:bg-foreground">
+              <a href={withQuery(`/${page}/${tab}/${document.uuid}`)} class="flex items-center gap-x-2 px-4 py-2 text-sm text-heading hover:bg-foreground">
                 {document.name}
               </a>
             </li>

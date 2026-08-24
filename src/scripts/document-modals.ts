@@ -76,14 +76,20 @@ export function initDocumentModals() {
 
   document.addEventListener('document:generated', async (event: Event) => {
     const cardData = (event as CustomEvent).detail
-    const { uuid, buildNumber } = cardData
-    navigate(`/config/generated/${uuid}?build_number=${buildNumber}`)
+    const { uuid, buildNumber, workspaceId, nameWorkspace } = cardData
+    const params = new URLSearchParams({ build_number: buildNumber })
+    if (workspaceId) params.set('id_workspace', workspaceId)
+    if (nameWorkspace) params.set('name_workspace', nameWorkspace)
+    navigate(`/config/generated/${uuid}?${params.toString()}`)
   })
 
   document.addEventListener('document:view-documentation', async (event: Event) => {
     const cardData = (event as CustomEvent).detail
-    const { uuid, buildNumber, nameWorkspace } = cardData
-    navigate(`/config/documentation/${uuid}?build_number=${buildNumber}&name_workspace=${nameWorkspace}`)
+    const { uuid, buildNumber, workspaceId, nameWorkspace } = cardData
+    const params = new URLSearchParams({ build_number: buildNumber })
+    if (workspaceId) params.set('id_workspace', workspaceId)
+    if (nameWorkspace) params.set('name_workspace', nameWorkspace)
+    navigate(`/config/documentation/${uuid}?${params.toString()}`)
   })
 
   document.addEventListener('document:duplicate', (event: Event) => {

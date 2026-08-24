@@ -5,9 +5,16 @@ import Icon from '@/components/ui/Icon.astro'
 interface Props {
   uuid: string
   buildNumber: string
+  uuidWorkspace?: string
+  nameWorkspace?: string
 }
 
-const { uuid, buildNumber } = Astro.props
+const { uuid, buildNumber, uuidWorkspace = '', nameWorkspace = '' } = Astro.props
+
+const documentationParams = new URLSearchParams({ build_number: buildNumber })
+if (uuidWorkspace) documentationParams.set('id_workspace', uuidWorkspace)
+if (nameWorkspace) documentationParams.set('name_workspace', nameWorkspace)
+const documentationHref = `/config/documentation/${uuid}?${documentationParams.toString()}`
 ---
 
 <div class="lg:hidden">
@@ -39,7 +46,7 @@ const { uuid, buildNumber } = Astro.props
       <h3 class="mb-2 text-xs font-semibold tracking-wide text-subheading uppercase lg:hidden">Configuración</h3>
       <ul class="space-y-1">
         <li>
-          <a href={`/config/documentation/${uuid}?build_number=${buildNumber}`} class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted">
+          <a href={documentationHref} class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted">
             <Icon name="FileInput" class="size-4" stroke-width={1.5} />
             Documentación
           </a>

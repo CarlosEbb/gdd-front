@@ -5,9 +5,16 @@ import Link from '@/components/ui/Link.astro'
 interface Props {
   uuid: string
   buildNumber: string
+  uuidWorkspace?: string
+  nameWorkspace?: string
 }
 
-const { uuid, buildNumber } = Astro.props
+const { uuid, buildNumber, uuidWorkspace = '', nameWorkspace = '' } = Astro.props
+
+const documentationParams = new URLSearchParams({ build_number: buildNumber })
+if (uuidWorkspace) documentationParams.set('id_workspace', uuidWorkspace)
+if (nameWorkspace) documentationParams.set('name_workspace', nameWorkspace)
+const documentationHref = `/config/documentation/${uuid}?${documentationParams.toString()}`
 ---
 
 <div class="hidden shrink-0 items-center gap-x-2 lg:flex">
@@ -24,7 +31,7 @@ const { uuid, buildNumber } = Astro.props
 
   <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
 
-  <Link href={`/config/documentation/${uuid}?build_number=${buildNumber}`} id="documentationLink" size="sm" variant="transparent" title="Documentación" icon="FileInput">
+  <Link href={documentationHref} id="documentationLink" size="sm" variant="transparent" title="Documentación" icon="FileInput">
     <span class="hidden xl:inline">Documentación</span>
   </Link>
 

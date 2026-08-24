@@ -5,6 +5,7 @@ import { Code } from 'astro:components'
 import Icon from '@/components/ui/Icon.astro'
 import Card from '@/components/ui/Card.astro'
 import Button from '@/components/ui/Button.astro'
+import Link from '@/components/ui/Link.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 
@@ -13,6 +14,15 @@ const { uuid } = Astro.params
 if (!uuid) return Astro.redirect('/home')
 
 const build_number = Astro.url.searchParams.get('build_number') as string
+const uuidWorkspace = Astro.url.searchParams.get('id_workspace') as string
+const nameWorkspace = Astro.url.searchParams.get('name_workspace') as string
+
+const versionParams = new URLSearchParams()
+if (build_number) versionParams.set('build_number', build_number)
+if (uuidWorkspace) versionParams.set('id_workspace', uuidWorkspace)
+if (nameWorkspace) versionParams.set('name_workspace', nameWorkspace)
+const versionHref = `/config/version/${uuid}?${versionParams.toString()}`
+const httpClientHref = `/config/http-client/${uuid}?${versionParams.toString()}`
 const base_url = import.meta.env.PUBLIC_CARGA_URL
 const PUBLIC_CARGA_URL = import.meta.env.PUBLIC_CARGA_URL
 
@@ -67,8 +77,8 @@ const requestXml = jsonToXmlString(request)
           </div>
         </div>
         <div class="inline-flex rounded-main border border-border bg-background p-0.5">
-          <button class="format-tab active rounded-main bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-all duration-200" data-format="json">JSON</button>
-          <button class="format-tab rounded-main px-4 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-heading" data-format="xml">XML</button>
+          <button class="format-tab active rounded-main bg-primary px-4 py-1.5 text-sm font-medium text-white transition-all duration-200" data-format="json">JSON</button>
+          <button class="format-tab rounded-main px-4 py-1.5 text-sm font-medium text-subheading transition-all duration-200 hover:text-heading" data-format="xml">XML</button>
         </div>
       </div>
 
@@ -234,30 +244,45 @@ const requestXml = jsonToXmlString(request)
       </Card>
 
       <Card class="overflow-visible">
-        <div slot="header">
-          <h3 class="text-base font-semibold text-heading">Importar la solicitud en Postman para probarla</h3>
-          <p class="mt-1 text-sm text-subheading">Opcional. Sigue estos pasos para importar y probar la petición directamente en Postman.</p>
-        </div>
+        <div class="grid grid-cols-1 divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+          <section class="pb-6 lg:pr-6 lg:pb-0">
+            <h3 class="text-base font-semibold text-heading">Importar la solicitud en Postman para probarla</h3>
+            <p class="mt-1 text-sm text-subheading">Opcional. Sigue estos pasos para importar y probar la petición directamente en Postman.</p>
 
-        <ol class="relative ml-12 space-y-6 border-l border-border">
-          <li class="relative pl-6">
-            <span class="absolute top-1 -left-[7px] h-3 w-3 rounded-full border-2 border-primary bg-background"></span>
-            <p class="text-sm text-heading">Descarga la colección de Postman</p>
-            <Button variant="secondary" size="sm" icon="Download" class="postman-btn mt-3" data-token={bearerToken}>Descargar colección</Button>
-          </li>
-          <li class="relative pl-6">
-            <span class="absolute top-1 -left-[7px] h-3 w-3 rounded-full border-2 border-primary bg-background"></span>
-            <p class="text-sm text-heading">Abre Postman (Desktop o Web)</p>
-          </li>
-          <li class="relative pl-6">
-            <span class="absolute top-1 -left-[7px] h-3 w-3 rounded-full border-2 border-primary bg-background"></span>
-            <p class="text-sm text-heading">Ve a <code class="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">File → Import</code></p>
-          </li>
-          <li class="relative pl-6">
-            <span class="absolute top-1 -left-[7px] h-3 w-3 rounded-full border-2 border-primary bg-background"></span>
-            <p class="text-sm text-heading">Selecciona el archivo descargado</p>
-          </li>
-        </ol>
+            <ol class="relative mt-6 ml-12 space-y-6 border-l border-border">
+              <li class="relative pl-6">
+                <span class="absolute top-1 -left-[7px] h-3 w-3 rounded-full border-2 border-primary bg-background"></span>
+                <p class="text-sm text-heading">Descarga la colección de Postman</p>
+                <Button variant="secondary" size="sm" icon="Download" class="postman-btn mt-3" data-token={bearerToken}>Descargar colección</Button>
+              </li>
+              <li class="relative pl-6">
+                <span class="absolute top-1 -left-[7px] h-3 w-3 rounded-full border-2 border-primary bg-background"></span>
+                <p class="text-sm text-heading">Abre Postman (Desktop o Web)</p>
+              </li>
+              <li class="relative pl-6">
+                <span class="absolute top-1 -left-[7px] h-3 w-3 rounded-full border-2 border-primary bg-background"></span>
+                <p class="text-sm text-heading">Ve a <code class="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">File → Import</code></p>
+              </li>
+              <li class="relative pl-6">
+                <span class="absolute top-1 -left-[7px] h-3 w-3 rounded-full border-2 border-primary bg-background"></span>
+                <p class="text-sm text-heading">Selecciona el archivo descargado</p>
+              </li>
+            </ol>
+          </section>
+
+          <section class="pt-6 lg:pt-0 lg:pl-6">
+            <h3 class="text-base font-semibold text-heading">Probar la solicitud en el cliente HTTP</h3>
+            <p class="mt-1 text-sm text-subheading">Envía la solicitud directamente desde la aplicación y consulta la respuesta del servicio.</p>
+
+            <div class="mt-6 rounded-main border border-border bg-muted/40 p-4">
+              <div class="flex items-start gap-3">
+                <Icon name="Send" stroke-width={1.5} class="mt-0.5 size-5 shrink-0 text-primary" />
+                <p class="text-sm text-subheading">Configura los datos de la petición y prueba el endpoint sin salir de la plataforma.</p>
+              </div>
+              <Link href={httpClientHref} variant="default" size="sm" icon="ArrowRight" iconPosition="right" class="mt-4"> Enviar documento </Link>
+            </div>
+          </section>
+        </div>
 
         <div slot="footer" class="flex items-start gap-2 text-sm text-subheading">
           <Icon name="Info" stroke-width={1.5} class="mt-0.5 size-4 shrink-0 text-primary" />
@@ -277,7 +302,7 @@ const requestXml = jsonToXmlString(request)
       state="info"
       action="create"
       hrefText="Crear versión"
-      href={`/config/version/${uuid}?build_number=${build_number}`}
+      href={versionHref}
       description={data?.message || 'No se encontró documentación para este documento.'}
     />
   </StateSwitch>
@@ -428,12 +453,12 @@ const requestXml = jsonToXmlString(request)
 
         // Update active class on tabs
         document.querySelectorAll('.format-tab').forEach((t) => {
-          t.classList.remove('active', 'bg-primary', 'text-primary-foreground')
-          t.classList.add('text-muted-foreground', 'hover:text-heading')
+          t.classList.remove('active', 'bg-primary', 'text-white')
+          t.classList.add('text-subheading', 'hover:text-heading')
         })
 
-        target.classList.add('active', 'bg-primary', 'text-primary-foreground')
-        target.classList.remove('text-muted-foreground', 'hover:text-heading')
+        target.classList.add('active', 'bg-primary', 'text-white')
+        target.classList.remove('text-subheading', 'hover:text-heading')
 
         // Show/hide blocks
         document.querySelectorAll('.format-block').forEach((b) => b.classList.add('hidden'))

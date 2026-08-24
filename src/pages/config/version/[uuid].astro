@@ -19,6 +19,16 @@ const { uuid } = Astro.params
 if (!uuid) return Astro.redirect('/home')
 
 const API_URL = import.meta.env.API_URL
+const buildNumber = Astro.url.searchParams.get('build_number') as string
+const uuidWorkspace = Astro.url.searchParams.get('id_workspace') as string
+const nameWorkspace = Astro.url.searchParams.get('name_workspace') as string
+
+const workspaceParams = new URLSearchParams()
+if (buildNumber) workspaceParams.set('build_number', buildNumber)
+if (uuidWorkspace) workspaceParams.set('id_workspace', uuidWorkspace)
+if (nameWorkspace) workspaceParams.set('name_workspace', nameWorkspace)
+const workspaceQuery = workspaceParams.toString()
+const historyHref = workspaceQuery ? `/documents/history/${uuid}?${workspaceQuery}` : `/documents/history/${uuid}`
 
 const { data, error } = await Astro.callAction(actions.documents.getVersions, { uuid_template: uuid })
 const versions = data?.data.versions || []
@@ -28,6 +38,17 @@ const getCurrentVersionPublished = versions.find((version) => version.isPublishe
 const thumbnail = getCurrentVersionPublished?.pathThumbnails ? `${API_URL}/${getCurrentVersionPublished.pathThumbnails}` : null
 const publishedBy = getCurrentVersionPublished?.publishedBy
 const filteredVersionsUnpublished = versions.filter((version) => !version.isPublished)
+
+const publishedEditorParams = new URLSearchParams()
+if (getCurrentVersionPublished) {
+  publishedEditorParams.set('build_number', getCurrentVersionPublished.buildNumber)
+  publishedEditorParams.set('name_document', nameTemplate)
+  if (uuidWorkspace) publishedEditorParams.set('id_workspace', uuidWorkspace)
+  if (nameWorkspace) publishedEditorParams.set('name_workspace', nameWorkspace)
+}
+const publishedEditorHref = getCurrentVersionPublished
+  ? `/editor/${getCurrentVersionPublished.uuidTemplate}?${publishedEditorParams.toString()}`
+  : ''
 ---
 
 <Layout title="Versión">
@@ -42,11 +63,11 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
                 <Button size="sm" icon="Reply" variant="destructive" data-open-modal="unpublish-version" data-version-uuid-template={getCurrentVersionPublished.uuidTemplate}>
                   Despublicar
                 </Button>
-                <Link href={`/documents/history/${uuid}`} variant="outline" icon="Clock" size="sm" title="Ver historial">
+                <Link href={historyHref} variant="outline" icon="Clock" size="sm" title="Ver historial">
                   Historial
                 </Link>
                 <Link
-                  href={`/editor/${getCurrentVersionPublished.uuidTemplate}?build_number=${getCurrentVersionPublished.buildNumber}&name_document=${nameTemplate}`}
+                  href={publishedEditorHref}
                   variant="outline"
                   icon="AppWindow"
                   size="sm"
@@ -123,7 +144,7 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
     <div class="mb-12">
       <div class="mb-4 flex items-center justify-between">
         <h2 class="text-xl font-semibold text-heading">Versiones del documento</h2>
-        <Link href={`/documents/history/${uuid}`} variant="outline" icon="Clock" size="sm" title="Ver historial"> Historial </Link>
+        <Link href={historyHref} variant="outline" icon="Clock" size="sm" title="Ver historial"> Historial </Link>
       </div>
       <div class="overflow-hidden rounded-main border border-border bg-background">
         <StateSwitch isEmpty={filteredVersionsUnpublished.length === 0}>
@@ -305,7 +326,13 @@ const filteredVersionsUnpublished = versions.filter((version) => !version.isPubl
             }
 
             toast.success(data!.message)
-            navigate(data!.data.redirect)
+            const redirectUrl = new URL(data!.data.redirect, window.location.origin)
+            const currentParams = new URLSearchParams(window.location.search)
+            const idWorkspace = currentParams.get('id_workspace')
+            const nameWorkspaceParam = currentParams.get('name_workspace')
+            if (idWorkspace) redirectUrl.searchParams.set('id_workspace', idWorkspace)
+            if (nameWorkspaceParam) redirectUrl.searchParams.set('name_workspace', nameWorkspaceParam)
+            navigate(redirectUrl.pathname + redirectUrl.search)
             publishModal.close()
           } catch {
             toast.error('Ha ocurrido un error. Por favor, intente nuevamente.')

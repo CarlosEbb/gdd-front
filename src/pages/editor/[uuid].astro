@@ -15,6 +15,8 @@ if (!uuid) return Astro.redirect('/home')
 const urlParams = Astro.url.searchParams
 const buildNumber = urlParams.get('build_number') as string
 const nameDocument = urlParams.get('name_document') as string
+const uuidWorkspace = urlParams.get('id_workspace') as string
+const nameWorkspace = urlParams.get('name_workspace') as string
 
 const SHOW_PAGE_FOR_VIEW = false
 ---
@@ -22,7 +24,7 @@ const SHOW_PAGE_FOR_VIEW = false
 <EditorLayout class="px-0 pt-14" title="Editor de documentos">
   <Sidebar variant="drawer" initialVisible={false} showToggleButton={false} />
 
-  <EditorNavbar uuid={uuid} buildNumber={buildNumber} showPageForView={SHOW_PAGE_FOR_VIEW} />
+  <EditorNavbar uuid={uuid} buildNumber={buildNumber} uuidWorkspace={uuidWorkspace} nameWorkspace={nameWorkspace} showPageForView={SHOW_PAGE_FOR_VIEW} />
 
   <EditorDocumentLoader uuid={uuid} buildNumber={buildNumber} server:defer>
     <SEditor slot="fallback" />

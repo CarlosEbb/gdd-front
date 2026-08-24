@@ -8,10 +8,12 @@ import MobileMoreMenu from './navbar/MobileMoreMenu.astro'
 interface Props {
   uuid: string
   buildNumber: string
+  uuidWorkspace?: string
+  nameWorkspace?: string
   showPageForView?: boolean
 }
 
-const { uuid, buildNumber, showPageForView = false } = Astro.props
+const { uuid, buildNumber, uuidWorkspace = '', nameWorkspace = '', showPageForView = false } = Astro.props
 ---
 
 <nav class="flex h-14" id="editor-nav">
@@ -22,8 +24,8 @@ const { uuid, buildNumber, showPageForView = false } = Astro.props
       <PaginationControls showPageForView={showPageForView} />
       <DocumentActions />
       <div class="mx-1 hidden h-8 w-px shrink-0 bg-muted-foreground lg:block"></div>
-      <SystemActions uuid={uuid} buildNumber={buildNumber} />
-      <MobileMoreMenu uuid={uuid} buildNumber={buildNumber} />
+      <SystemActions uuid={uuid} buildNumber={buildNumber} uuidWorkspace={uuidWorkspace} nameWorkspace={nameWorkspace} />
+      <MobileMoreMenu uuid={uuid} buildNumber={buildNumber} uuidWorkspace={uuidWorkspace} nameWorkspace={nameWorkspace} />
     </div>
   </div>
 </nav>

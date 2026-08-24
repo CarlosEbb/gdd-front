@@ -40,7 +40,14 @@ export function setupSaveDocument(ctx: EditorContext) {
       toast.success(data.message)
 
       const newVersion = data.data.lastVersion?.buildNumber
-      documentationLink.href = `/config/documentation/${uuidTemplate}?build_number=${newVersion}`
+      const currentUrl = new URL(window.location.href)
+      const documentationUrl = new URL(`/config/documentation/${uuidTemplate}`, window.location.origin)
+      documentationUrl.searchParams.set('build_number', newVersion)
+      const idWorkspace = currentUrl.searchParams.get('id_workspace')
+      const nameWorkspace = currentUrl.searchParams.get('name_workspace')
+      if (idWorkspace) documentationUrl.searchParams.set('id_workspace', idWorkspace)
+      if (nameWorkspace) documentationUrl.searchParams.set('name_workspace', nameWorkspace)
+      documentationLink.href = documentationUrl.pathname + documentationUrl.search
       updateUrlWithNewVersion(newVersion)
     } catch (error) {
       toast.error('Ah ocurrido un error al guardar la plantilla. Por favor, intente nuevamente.')

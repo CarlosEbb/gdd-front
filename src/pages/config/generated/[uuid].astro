@@ -21,10 +21,21 @@ const pdfBaseUrl = PUBLIC_PDF_URL || 'http://localhost:8303'
 
 const { uuid } = Astro.params
 const build_number = Astro.url.searchParams.get('build_number') as string
+const uuidWorkspace = Astro.url.searchParams.get('id_workspace') as string
+const nameWorkspace = Astro.url.searchParams.get('name_workspace') as string
 
 if (!uuid || !build_number) {
   return Astro.redirect('/home')
 }
+
+const clearFiltersParams = new URLSearchParams({
+  page: '1',
+  status: 'all',
+  build_number,
+})
+if (uuidWorkspace) clearFiltersParams.set('id_workspace', uuidWorkspace)
+if (nameWorkspace) clearFiltersParams.set('name_workspace', nameWorkspace)
+const clearFiltersHref = `/config/generated/${uuid}?${clearFiltersParams.toString()}`
 
 const pageParam = Astro.url.searchParams.get('page')
 const currentPage = pageParam ? parseInt(pageParam, 10) : 1
@@ -291,7 +302,7 @@ const canAnnulDocument = (status: string) => {
         />
 
         <EmptyState
-          href={`/config/generated/${uuid}?page=1&status=all&build_number=${build_number}`}
+          href={clearFiltersHref}
           hrefText="Limpiar filtros"
           slot="empty"
           title="No se encontraron documentos"
