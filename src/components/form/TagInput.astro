@@ -10,6 +10,7 @@ interface Props {
   separator?: string
   validateEmail?: boolean
   serverError?: string
+  idPrefix?: string
 }
 
 const {
@@ -21,11 +22,12 @@ const {
   separator = ',',
   validateEmail = false,
   serverError,
+  idPrefix = '',
 } = Astro.props
 
-const inputId = `tag-input-${name}`
-const errorId = `error-${name}`
-const hintId = `hint-${name}`
+const inputId = `tag-input-${idPrefix}${name}`
+const errorId = `error-${idPrefix}${name}`
+const hintId = `hint-${idPrefix}${name}`
 const helperText = hint ?? (validateEmail ? 'Separa los correos por coma (,). Ejemplo: correo1@ejemplo.com, correo2@ejemplo.com' : '')
 const stateClasses = serverError
   ? 'border-destructive focus-within:border-destructive focus-within:ring-destructive'
