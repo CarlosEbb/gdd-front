@@ -157,7 +157,7 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
         </div>
 
         <div class="pt-1 lg:hidden">
-          <Button type="button" size="lg" icon="Send" loadingText="Enviando..." data-send-btn class="h-10 w-full"> Enviar </Button>
+          <Button type="button" size="lg" icon="Send" loadingText="Enviando..." data-send-btn data-send-mode="advanced" class="h-10 w-full"> Enviar </Button>
         </div>
       </div>
     </TabsContent>
@@ -167,6 +167,8 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
 <script>
   type BodyFormat = 'form' | 'json' | 'xml'
   type SerializeAs = 'json' | 'xml'
+
+  type BodyData = Record<string, unknown>
 
   const BODY_FORMAT_LABELS: Record<BodyFormat, string> = {
     form: 'Formulario',
@@ -210,7 +212,150 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
     dropdown?.querySelector('[data-dropdown-menu]')?.classList.remove('is-open')
   }
 
+  function parseFormValue(raw: string, originalType: string): unknown {
+    if (originalType === 'array' || originalType === 'object') {
+      try {
+        return JSON.parse(raw)
+      } catch {
+        return originalType === 'array' ? [] : raw
+      }
+    }
+
+    if (originalType === 'number') {
+      const value = Number(raw)
+      return Number.isNaN(value) ? raw : value
+    }
+
+    if (originalType === 'boolean') {
+      if (raw === 'true') return true
+      if (raw === 'false') return false
+    }
+
+    return raw
+  }
+
+  function collectFormData(root: HTMLElement): BodyData {
+    const data: BodyData = {}
+
+    root.querySelectorAll<HTMLInputElement>('[data-form-field]').forEach((field) => {
+      const key = field.dataset.formField || field.name
+      if (!key) return
+      data[key] = parseFormValue(field.value, field.dataset.originalType || 'string')
+    })
+
+    return data
+  }
+
+  function parseJsonData(raw: string): BodyData | null {
+    try {
+      const data: unknown = JSON.parse(raw)
+      return data !== null && typeof data === 'object' && !Array.isArray(data) ? (data as BodyData) : null
+    } catch {
+      return null
+    }
+  }
+
+  function parseXmlData(raw: string): BodyData | null {
+    const document = new DOMParser().parseFromString(raw, 'application/xml')
+    if (document.querySelector('parsererror')) return null
+
+    const data: BodyData = {}
+    const root = document.documentElement
+    if (!root) return null
+
+    Array.from(root.children).forEach((element) => {
+      data[element.tagName] = element.children.length > 0 ? parseXmlElement(element) : element.textContent || ''
+    })
+    return data
+  }
+
+  function parseXmlElement(element: Element): unknown {
+    if (element.children.length === 0) return element.textContent || ''
+
+    const data: BodyData = {}
+    Array.from(element.children).forEach((child) => {
+      data[child.tagName] = child.children.length > 0 ? parseXmlElement(child) : child.textContent || ''
+    })
+    return data
+  }
+
+  function escapeXml(value: string): string {
+    return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
+  }
+
+  function xmlValue(value: unknown): string {
+    if (value == null) return ''
+    if (Array.isArray(value)) return value.map((item) => String(item ?? '')).join(',')
+    if (typeof value === 'object') return JSON.stringify(value)
+    return String(value)
+  }
+
+  function serializeXml(data: BodyData): string {
+    const lines = Object.entries(data).map(([key, value]) => `  <${key}>${escapeXml(xmlValue(value))}</${key}>`)
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<document>\n${lines.join('\n')}\n</document>`
+  }
+
+  function formatFormValue(value: unknown, originalType: string): string {
+    if (originalType === 'object' && typeof value === 'string') {
+      return value
+    }
+    if (originalType === 'array' || originalType === 'object') {
+      return JSON.stringify(value ?? (originalType === 'array' ? [] : {}))
+    }
+    return value == null ? '' : String(value)
+  }
+
+  function updateTagInput(root: HTMLElement, key: string, value: unknown) {
+    const hidden = Array.from(root.querySelectorAll<HTMLInputElement>('[data-form-field]')).find((field) => field.dataset.formField === key)
+    const tagInput = hidden?.closest('[data-tag-input]')
+    if (!hidden || !tagInput) return
+
+    const values = Array.isArray(value) ? value.map((item) => String(item ?? '')) : String(value ?? '').split(',').map((item) => item.trim()).filter(Boolean)
+    const list = tagInput.querySelector('[data-tag-list]')
+    const template = tagInput.querySelector('[data-tag-template]') as HTMLTemplateElement | null
+    if (!list || !template) return
+
+    list.replaceChildren()
+    values.forEach((tagValue) => {
+      const tag = template.content.firstElementChild?.cloneNode(true) as HTMLElement | null
+      if (!tag) return
+      tag.dataset.value = tagValue
+      tag.querySelector('[data-tag-label]')?.replaceChildren(document.createTextNode(tagValue))
+      tag.querySelector('[data-tag-remove]')?.setAttribute('aria-label', `Eliminar ${tagValue}`)
+      list.appendChild(tag)
+    })
+
+    hidden.value = JSON.stringify(values)
+    const pendingField = tagInput.querySelector<HTMLInputElement>('[data-tag-input-field]')
+    if (pendingField) pendingField.value = ''
+  }
+
+  function updateFormData(root: HTMLElement, data: BodyData) {
+    root.querySelectorAll<HTMLInputElement>('[data-form-field]').forEach((field) => {
+      const key = field.dataset.formField || field.name
+      if (!key || !Object.prototype.hasOwnProperty.call(data, key)) return
+
+      if (field.dataset.originalType === 'array') {
+        updateTagInput(root, key, data[key])
+        return
+      }
+
+      field.value = formatFormValue(data[key], field.dataset.originalType || 'string')
+    })
+  }
+
+  function getBodyData(root: HTMLElement, format: BodyFormat): BodyData | null {
+    if (format === 'form') return collectFormData(root)
+
+    const selector = format === 'json' ? '[data-body-json]' : '[data-body-xml]'
+    const raw = root.querySelector<HTMLTextAreaElement>(selector)?.value || ''
+    return format === 'json' ? parseJsonData(raw) : parseXmlData(raw)
+  }
+
   function setBodyFormat(root: HTMLElement, format: BodyFormat) {
+    const currentFormat = getActiveBodyFormat(root)
+    const data = getBodyData(root, currentFormat)
+
     const container = getBodyFormatContainer(root)
     if (container) {
       container.dataset.bodyFormat = format
@@ -223,6 +368,16 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
       const isActive = element.dataset.bodyPanel === format
       element.classList.toggle('hidden', !isActive)
     })
+
+    if (data) {
+      if (format === 'form') {
+        updateFormData(root, data)
+      } else {
+        const selector = format === 'json' ? '[data-body-json]' : '[data-body-xml]'
+        const textarea = root.querySelector<HTMLTextAreaElement>(selector)
+        if (textarea) textarea.value = format === 'json' ? JSON.stringify(data, null, 2) : serializeXml(data)
+      }
+    }
 
     updateContentTypeHeader(root)
   }

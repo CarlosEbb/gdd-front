@@ -5,6 +5,7 @@ import Tabs from '@/components/tabs/Tabs.astro'
 import TabsList from '@/components/tabs/TabsList.astro'
 import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
 import TabsContent from '@/components/tabs/TabsContent.astro'
+import Link from '@/components/ui/Link.astro'
 ---
 
 <Card class="flex h-full min-h-112 flex-col" data-response-card>
@@ -28,6 +29,11 @@ import TabsContent from '@/components/tabs/TabsContent.astro'
     </TabsContent>
 
     <TabsContent value="response" class="mt-4 flex min-h-0 flex-1 flex-col">
+      <div class="mb-3 hidden shrink-0" data-response-url-container>
+        <Link href="#" target="_blank" rel="noopener noreferrer" variant="outline" size="sm" icon="ExternalLink" iconPosition="right" data-response-url>
+          Abrir enlace de la respuesta
+        </Link>
+      </div>
       <div class="code-scroll code-container h-full min-h-0 w-full flex-1 overflow-auto" data-response-body>
         <Code theme="catppuccin-latte" lang="json" defaultColor={false} code="Envía una solicitud para ver la respuesta aquí." />
       </div>
@@ -110,17 +116,41 @@ import TabsContent from '@/components/tabs/TabsContent.astro'
     return 'border-amber-200 bg-amber-50 text-amber-700'
   }
 
+  function getResponseUrl(bodyText: string): string | null {
+    try {
+      const parsed: unknown = JSON.parse(bodyText)
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null
+
+      const data = (parsed as Record<string, unknown>).data
+      if (typeof data !== 'object' || data === null || Array.isArray(data)) return null
+
+      const urlValue = (data as Record<string, unknown>).url
+      if (typeof urlValue !== 'string' || !urlValue.trim()) return null
+
+      const url = new URL(urlValue.trim(), window.location.origin)
+      return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null
+    } catch {
+      return null
+    }
+  }
+
   function renderResponse(root: HTMLElement, payload: ResponsePayload) {
     const statusEl = root.querySelector('[data-response-status]') as HTMLElement
     const timeEl = root.querySelector('[data-response-time]') as HTMLElement
     const headersEl = root.querySelector('[data-response-headers]') as HTMLElement
     const bodyEl = root.querySelector('[data-response-body]') as HTMLElement
+    const urlContainer = root.querySelector('[data-response-url-container]') as HTMLElement
+    const urlEl = root.querySelector('[data-response-url]') as HTMLAnchorElement
 
     statusEl.className = `inline-flex items-center rounded-main border px-2 py-1 font-mono text-xs ${statusClasses(payload.status)}`
     statusEl.textContent = `${payload.status} ${payload.statusText}`.trim()
     timeEl.textContent = `${payload.durationMs} ms`
     updateCodeBlock(headersEl, payload.headersText || '(sin headers)', 'plaintext')
     updateCodeBlock(bodyEl, payload.bodyText, payload.bodyLang)
+
+    const responseUrl = getResponseUrl(payload.bodyText)
+    urlEl.href = responseUrl || '#'
+    urlContainer.classList.toggle('hidden', !responseUrl)
   }
 
   function setupResponsePanel(root: HTMLElement) {

@@ -1,0 +1,311 @@
+---
+import Card from '@/components/ui/Card.astro'
+import Icon from '@/components/ui/Icon.astro'
+import Link from '@/components/ui/Link.astro'
+---
+
+<Card class="flex h-full min-h-112 flex-col" data-basic-response-card>
+  <div class="flex h-full min-h-0 flex-1 flex-col space-y-4">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h3 class="text-sm font-semibold text-heading">Resultado</h3>
+        <p class="mt-1 text-xs text-subheading">Resumen de la respuesta del servicio.</p>
+      </div>
+
+      <div class="flex shrink-0 flex-wrap items-center gap-2 text-xs">
+        <span class="inline-flex items-center rounded-main border border-border bg-muted px-2 py-1 font-mono text-muted-foreground" data-basic-http-status>—</span>
+        <span class="inline-flex items-center rounded-main border border-border bg-muted px-2 py-1 font-mono text-muted-foreground" data-basic-response-time>—</span>
+      </div>
+    </div>
+
+    <div class="min-h-0 flex-1 overflow-y-auto" data-basic-response-content>
+      <div class="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-main border border-dashed border-border bg-muted/30 px-4 py-8 text-center" data-basic-response-empty>
+        <Icon name="Inbox" stroke-width={1.5} class="size-8 text-muted-foreground" />
+        <div class="space-y-1">
+          <p class="text-sm font-medium text-heading">Sin respuesta aún</p>
+          <p class="text-xs text-subheading">Envía el formulario para ver aquí el resultado del servicio.</p>
+        </div>
+      </div>
+
+      <div class="hidden space-y-4" data-basic-response-result>
+        <div class="rounded-main border border-border bg-muted/40 p-4" data-basic-status-banner>
+          <div class="flex items-start gap-3">
+            <div class="mt-0.5 shrink-0">
+              <span data-basic-icon="success" class="hidden text-emerald-600 dark:text-emerald-400" aria-hidden="true">
+                <Icon name="CircleCheck" stroke-width={1.5} class="size-5" />
+              </span>
+              <span data-basic-icon="error" class="hidden text-destructive" aria-hidden="true">
+                <Icon name="CircleX" stroke-width={1.5} class="size-5" />
+              </span>
+              <span data-basic-icon="warning" class="hidden text-warning" aria-hidden="true">
+                <Icon name="TriangleAlert" stroke-width={1.5} class="size-5" />
+              </span>
+              <span data-basic-icon="info" class="text-muted-foreground" aria-hidden="true">
+                <Icon name="Info" stroke-width={1.5} class="size-5" />
+              </span>
+            </div>
+            <div class="min-w-0 space-y-1">
+              <p class="text-sm font-semibold text-heading" data-basic-response-message>—</p>
+              <p class="text-xs text-subheading" data-basic-response-timestamp>—</p>
+              <p class="font-mono text-xs text-muted-foreground" data-basic-response-code>—</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hidden space-y-3 rounded-main border border-border p-4" data-basic-success-block>
+          <div class="space-y-1">
+            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Identificador</p>
+            <p class="font-mono text-sm break-all text-heading" data-basic-response-uuid>—</p>
+          </div>
+
+          <div class="space-y-2">
+            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Documento</p>
+            <Link href="#" target="_blank" variant="outline" size="sm" icon="ExternalLink" iconPosition="right" data-basic-response-url class="w-full sm:w-auto">
+              Ver documento PDF
+            </Link>
+          </div>
+        </div>
+
+        <div class="hidden space-y-3" data-basic-validation-block>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-main border border-border bg-background p-3">
+              <p class="text-xs text-muted-foreground">Errores</p>
+              <p class="mt-1 text-lg font-semibold text-heading" data-basic-total-errors>0</p>
+            </div>
+            <div class="rounded-main border border-border bg-background p-3">
+              <p class="text-xs text-muted-foreground">Advertencias</p>
+              <p class="mt-1 text-lg font-semibold text-heading" data-basic-total-warnings>0</p>
+            </div>
+          </div>
+
+          <div class="hidden space-y-2" data-basic-errors-block>
+            <p class="text-sm font-medium text-heading">Errores de validación</p>
+            <ul class="space-y-2" data-basic-errors-list></ul>
+          </div>
+
+          <div class="hidden space-y-2" data-basic-warnings-block>
+            <p class="text-sm font-medium text-heading">Advertencias</p>
+            <ul class="space-y-2" data-basic-warnings-list></ul>
+          </div>
+        </div>
+
+        <div class="hidden rounded-main border border-border bg-muted/40 p-4" data-basic-raw-fallback>
+          <p class="mb-2 text-sm font-medium text-heading">Detalle</p>
+          <pre class="overflow-x-auto font-mono text-xs whitespace-pre-wrap text-subheading" data-basic-raw-body></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <template data-basic-list-item-template>
+    <li data-basic-list-item>
+      <span data-basic-list-item-text></span>
+    </li>
+  </template>
+</Card>
+
+<script>
+  type ResponseKind = 'success' | 'error' | 'warning' | 'info'
+
+  type BasicApiResponse = {
+    code?: number
+    message?: string
+    timestamp?: string
+    data?: {
+      uuid?: string
+      url?: string
+      errors?: string[]
+      warnings?: string[]
+      summary?: {
+        totalErrors?: number
+        totalWarnings?: number
+      }
+    }
+  }
+
+  type BasicResponsePayload = {
+    status: number
+    statusText: string
+    durationMs: number
+    bodyText: string
+  }
+
+  function statusClasses(status: number): string {
+    if (status >= 200 && status < 300) {
+      return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+    }
+    if (status >= 400 || status === 0) {
+      return 'border-destructive/30 bg-destructive/10 text-destructive'
+    }
+    return 'border-warning/30 bg-warning/10 text-warning'
+  }
+
+  function bannerClasses(kind: ResponseKind): string {
+    if (kind === 'success') return 'border-emerald-500/30 bg-emerald-500/10'
+    if (kind === 'error') return 'border-destructive/30 bg-destructive/10'
+    if (kind === 'warning') return 'border-warning/30 bg-warning/10'
+    return 'border-border bg-muted/40'
+  }
+
+  function listItemClasses(tone: 'error' | 'warning'): string {
+    return tone === 'error'
+      ? 'rounded-main border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive'
+      : 'rounded-main border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning'
+  }
+
+  function setActiveIcon(root: HTMLElement, kind: ResponseKind) {
+    root.querySelectorAll<HTMLElement>('[data-basic-icon]').forEach((icon) => {
+      icon.classList.toggle('hidden', icon.dataset.basicIcon !== kind)
+    })
+  }
+
+  function formatTimestamp(value?: string): string {
+    if (!value) return 'Sin fecha'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return value
+    return date.toLocaleString('es-ES', {
+      dateStyle: 'medium',
+      timeStyle: 'medium',
+    })
+  }
+
+  function createListItem(root: HTMLElement, text: string, tone: 'error' | 'warning'): HTMLLIElement | null {
+    const template = root.querySelector('[data-basic-list-item-template]') as HTMLTemplateElement | null
+    const node = template?.content.firstElementChild?.cloneNode(true) as HTMLLIElement | null
+    if (!node) return null
+
+    node.className = listItemClasses(tone)
+    const textEl = node.querySelector('[data-basic-list-item-text]') as HTMLElement | null
+    if (textEl) textEl.textContent = text
+    return node
+  }
+
+  function toggleHidden(element: HTMLElement | null, hidden: boolean) {
+    if (!element) return
+    element.classList.toggle('hidden', hidden)
+  }
+
+  function parseApiResponse(bodyText: string): BasicApiResponse | null {
+    try {
+      return JSON.parse(bodyText) as BasicApiResponse
+    } catch {
+      return null
+    }
+  }
+
+  function renderBasicResponse(root: HTMLElement, payload: BasicResponsePayload) {
+    const httpStatusEl = root.querySelector('[data-basic-http-status]') as HTMLElement
+    const timeEl = root.querySelector('[data-basic-response-time]') as HTMLElement
+    const emptyEl = root.querySelector('[data-basic-response-empty]') as HTMLElement
+    const resultEl = root.querySelector('[data-basic-response-result]') as HTMLElement
+    const bannerEl = root.querySelector('[data-basic-status-banner]') as HTMLElement
+    const messageEl = root.querySelector('[data-basic-response-message]') as HTMLElement
+    const timestampEl = root.querySelector('[data-basic-response-timestamp]') as HTMLElement
+    const codeEl = root.querySelector('[data-basic-response-code]') as HTMLElement
+    const successBlock = root.querySelector('[data-basic-success-block]') as HTMLElement
+    const uuidEl = root.querySelector('[data-basic-response-uuid]') as HTMLElement
+    const urlEl = root.querySelector('[data-basic-response-url]') as HTMLAnchorElement
+    const validationBlock = root.querySelector('[data-basic-validation-block]') as HTMLElement
+    const totalErrorsEl = root.querySelector('[data-basic-total-errors]') as HTMLElement
+    const totalWarningsEl = root.querySelector('[data-basic-total-warnings]') as HTMLElement
+    const errorsBlock = root.querySelector('[data-basic-errors-block]') as HTMLElement
+    const warningsBlock = root.querySelector('[data-basic-warnings-block]') as HTMLElement
+    const errorsList = root.querySelector('[data-basic-errors-list]') as HTMLUListElement
+    const warningsList = root.querySelector('[data-basic-warnings-list]') as HTMLUListElement
+    const rawFallback = root.querySelector('[data-basic-raw-fallback]') as HTMLElement
+    const rawBody = root.querySelector('[data-basic-raw-body]') as HTMLElement
+
+    httpStatusEl.className = `inline-flex items-center rounded-main border px-2 py-1 font-mono text-xs ${statusClasses(payload.status)}`
+    httpStatusEl.textContent = payload.status === 0 ? payload.statusText : `${payload.status} ${payload.statusText}`.trim()
+    timeEl.textContent = `${payload.durationMs} ms`
+
+    toggleHidden(emptyEl, true)
+    toggleHidden(resultEl, false)
+    toggleHidden(successBlock, true)
+    toggleHidden(validationBlock, true)
+    toggleHidden(errorsBlock, true)
+    toggleHidden(warningsBlock, true)
+    toggleHidden(rawFallback, true)
+    errorsList.replaceChildren()
+    warningsList.replaceChildren()
+
+    const parsed = parseApiResponse(payload.bodyText)
+
+    if (!parsed) {
+      setActiveIcon(root, 'info')
+      bannerEl.className = `rounded-main border p-4 ${bannerClasses('info')}`
+      messageEl.textContent = payload.status === 0 ? payload.bodyText : 'No se pudo interpretar la respuesta'
+      timestampEl.textContent = 'Sin fecha'
+      codeEl.textContent = `HTTP ${payload.status}`
+      rawBody.textContent = payload.bodyText || '(respuesta vacía)'
+      toggleHidden(rawFallback, false)
+      return
+    }
+
+    const hasValidation = Array.isArray(parsed.data?.errors) || Array.isArray(parsed.data?.warnings) || !!parsed.data?.summary
+    const isSuccess = !!parsed.data?.uuid || !!parsed.data?.url
+    const kind: ResponseKind = isSuccess
+      ? 'success'
+      : hasValidation || (parsed.code !== undefined && parsed.code >= 400)
+        ? 'error'
+        : payload.status >= 400 || payload.status === 0
+          ? 'error'
+          : 'info'
+
+    bannerEl.className = `rounded-main border p-4 ${bannerClasses(kind)}`
+    setActiveIcon(root, kind)
+
+    messageEl.textContent = parsed.message || payload.statusText || 'Respuesta recibida'
+    timestampEl.textContent = formatTimestamp(parsed.timestamp)
+    codeEl.textContent = parsed.code !== undefined ? `Código ${parsed.code}` : `HTTP ${payload.status}`
+
+    if (isSuccess) {
+      uuidEl.textContent = parsed.data?.uuid || '—'
+      if (parsed.data?.url) {
+        urlEl.href = parsed.data.url
+        urlEl.classList.remove('pointer-events-none', 'opacity-50')
+      } else {
+        urlEl.href = '#'
+        urlEl.classList.add('pointer-events-none', 'opacity-50')
+      }
+      toggleHidden(successBlock, false)
+      return
+    }
+
+    if (hasValidation) {
+      const errors = parsed.data?.errors ?? []
+      const warnings = parsed.data?.warnings ?? []
+      totalErrorsEl.textContent = String(parsed.data?.summary?.totalErrors ?? errors.length)
+      totalWarningsEl.textContent = String(parsed.data?.summary?.totalWarnings ?? warnings.length)
+
+      errors.forEach((error) => {
+        const item = createListItem(root, error, 'error')
+        if (item) errorsList.appendChild(item)
+      })
+      warnings.forEach((warning) => {
+        const item = createListItem(root, warning, 'warning')
+        if (item) warningsList.appendChild(item)
+      })
+
+      toggleHidden(errorsBlock, errors.length === 0)
+      toggleHidden(warningsBlock, warnings.length === 0)
+      toggleHidden(validationBlock, false)
+    }
+  }
+
+  function setupBasicResponsePanel(root: HTMLElement) {
+    if (root.dataset.basicResponseInitialized === 'true') return
+    root.dataset.basicResponseInitialized = 'true'
+
+    root.addEventListener('http-client:basic-response', ((event: CustomEvent<BasicResponsePayload>) => {
+      renderBasicResponse(root, event.detail)
+    }) as EventListener)
+  }
+
+  function initBasicResponsePanels() {
+    document.querySelectorAll<HTMLElement>('[data-http-client]').forEach(setupBasicResponsePanel)
+  }
+
+  initBasicResponsePanels()
+  document.addEventListener('astro:page-load', initBasicResponsePanels)
+</script>

@@ -3,15 +3,29 @@ import Layout from '../_components/Layout.astro'
 import { actions } from 'astro:actions'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
+import Tabs from '@/components/tabs/Tabs.astro'
+import TabsList from '@/components/tabs/TabsList.astro'
+import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
+import TabsContent from '@/components/tabs/TabsContent.astro'
 import UrlSelector from './_components/UrlSelector.astro'
 import RequestPanel from './_components/RequestPanel.astro'
 import ResponsePanel from './_components/ResponsePanel.astro'
+import BasicRequestPanel from './_components/BasicRequestPanel.astro'
+import BasicResponsePanel from './_components/BasicResponsePanel.astro'
 
 const { uuid } = Astro.params
 
 if (!uuid) return Astro.redirect('/home')
 
 const build_number = Astro.url.searchParams.get('build_number') as string
+const uuidWorkspace = Astro.url.searchParams.get('id_workspace') as string
+const nameWorkspace = Astro.url.searchParams.get('name_workspace') as string
+
+const versionParams = new URLSearchParams()
+if (build_number) versionParams.set('build_number', build_number)
+if (uuidWorkspace) versionParams.set('id_workspace', uuidWorkspace)
+if (nameWorkspace) versionParams.set('name_workspace', nameWorkspace)
+const versionHref = `/config/version/${uuid}?${versionParams.toString()}`
 const base_url = import.meta.env.PUBLIC_CARGA_URL
 
 const { data, error } = await Astro.callAction(actions.documents.getRequestForDocument, {
@@ -56,13 +70,34 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
 
 <Layout title="Cliente HTTP">
   <StateSwitch hasError={!!error} isEmpty={!request}>
-    <div class="space-y-4" data-http-client data-token={bearerToken}>
-      <UrlSelector urlVersioned={urlVersioned} urlLatest={urlLatest} buildNumberLastVersion={buildNumberLastVersion} />
+    <div data-http-client data-token={bearerToken}>
+      <Tabs defaultValue="basic" variant="default">
+        <TabsList>
+          <TabsTrigger value="basic">Básica</TabsTrigger>
+          <TabsTrigger value="advanced">Avanzada</TabsTrigger>
+        </TabsList>
 
-      <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
-        <RequestPanel bearerToken={bearerToken} variableEntries={variableEntries} requestJson={requestJson} requestXml={requestXml} />
-        <ResponsePanel />
-      </div>
+        <TabsContent value="basic" class="mt-4">
+          <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+            <BasicRequestPanel
+              variableEntries={variableEntries}
+              urlVersioned={urlVersioned}
+              urlLatest={urlLatest}
+              buildNumberLastVersion={buildNumberLastVersion}
+            />
+            <BasicResponsePanel />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="advanced" class="mt-4 space-y-4">
+          <UrlSelector urlVersioned={urlVersioned} urlLatest={urlLatest} buildNumberLastVersion={buildNumberLastVersion} />
+
+          <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+            <RequestPanel bearerToken={bearerToken} variableEntries={variableEntries} requestJson={requestJson} requestXml={requestXml} />
+            <ResponsePanel />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
 
     <EmptyState slot="error" title="Error al cargar el cliente HTTP" description="No se pudo cargar la información del documento." />
@@ -73,7 +108,7 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
       state="info"
       action="create"
       hrefText="Crear versión"
-      href={`/config/version/${uuid}?build_number=${build_number}`}
+      href={versionHref}
       description={data?.message || 'No se encontró información para este documento.'}
     />
   </StateSwitch>
@@ -84,6 +119,7 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
 
   type BodyFormat = 'form' | 'json' | 'xml'
   type SerializeAs = 'json' | 'xml'
+  type SendMode = 'basic' | 'advanced'
 
   type ResponsePayload = {
     status: number
@@ -92,6 +128,13 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
     headersText: string
     bodyText: string
     bodyLang: 'json' | 'xml' | 'plaintext'
+  }
+
+  type BasicResponsePayload = {
+    status: number
+    statusText: string
+    durationMs: number
+    bodyText: string
   }
 
   function parseTypedValue(raw: string, originalType: string): unknown {
@@ -167,9 +210,9 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
     return format === 'xml' ? 'application/xml' : 'application/json'
   }
 
-  function collectFormPayload(root: HTMLElement): Record<string, unknown> {
+  function collectFormPayload(scope: ParentNode): Record<string, unknown> {
     const payload: Record<string, unknown> = {}
-    const fields = root.querySelectorAll('[data-form-field]') as NodeListOf<HTMLInputElement>
+    const fields = scope.querySelectorAll('[data-form-field]') as NodeListOf<HTMLInputElement>
 
     fields.forEach((field) => {
       const key = field.dataset.formField || field.name
@@ -180,13 +223,23 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
     return payload
   }
 
-  function buildRequestBody(root: HTMLElement): { contentType: string; body: string } {
+  function buildBasicRequestBody(root: HTMLElement): { contentType: string; body: string } {
+    const form = root.querySelector('[data-basic-body-form]') as HTMLFormElement | null
+    const payload = collectFormPayload(form ?? root)
+    return {
+      contentType: 'application/json',
+      body: JSON.stringify(payload),
+    }
+  }
+
+  function buildAdvancedRequestBody(root: HTMLElement): { contentType: string; body: string } {
     const format = getActiveBodyFormat(root)
     const serializeAs = getFormSerializeAs(root)
     const contentType = getContentType(format, serializeAs)
 
     if (format === 'form') {
-      const payload = collectFormPayload(root)
+      const form = root.querySelector('[data-body-form]') as HTMLFormElement | null
+      const payload = collectFormPayload(form ?? root)
       if (serializeAs === 'xml') {
         return { contentType, body: objectToXml(payload) }
       }
@@ -237,33 +290,43 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
     return { code: raw, lang }
   }
 
-  function setSendButtonsLoading(buttons: NodeListOf<HTMLButtonElement>, loading: boolean) {
+  function setSendButtonsLoading(buttons: HTMLButtonElement[], loading: boolean) {
     buttons.forEach((button) => {
       button.dispatchEvent(new Event(loading ? 'button:start-loading' : 'button:stop-loading'))
     })
   }
 
-  function scrollToResponseCard(root: HTMLElement) {
-    const responseCard = root.querySelector('[data-response-card]') as HTMLElement | null
+  function scrollToResponseCard(root: HTMLElement, mode: SendMode) {
+    const selector = mode === 'basic' ? '[data-basic-response-card]' : '[data-response-card]'
+    const responseCard = root.querySelector(selector) as HTMLElement | null
     if (!responseCard) return
 
     responseCard.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  function dispatchResponse(root: HTMLElement, payload: ResponsePayload) {
+  function dispatchAdvancedResponse(root: HTMLElement, payload: ResponsePayload) {
     root.dispatchEvent(new CustomEvent<ResponsePayload>('http-client:response', { detail: payload }))
+  }
+
+  function dispatchBasicResponse(root: HTMLElement, payload: BasicResponsePayload) {
+    root.dispatchEvent(new CustomEvent<BasicResponsePayload>('http-client:basic-response', { detail: payload }))
+  }
+
+  function getRequestUrl(root: HTMLElement, mode: SendMode): string | null {
+    const selector = mode === 'basic' ? '[data-basic-url-select]' : '[data-url-select]'
+    const urlSelect = root.querySelector(selector) as HTMLSelectElement | null
+    return urlSelect?.value || null
   }
 
   function setupHttpClient(root: HTMLElement) {
     if (root.dataset.initialized === 'true') return
     root.dataset.initialized = 'true'
 
-    const sendButtons = root.querySelectorAll('[data-send-btn]') as NodeListOf<HTMLButtonElement>
-    const urlSelect = root.querySelector('[data-url-select]') as HTMLSelectElement | null
+    const sendButtons = Array.from(root.querySelectorAll('[data-send-btn]')) as HTMLButtonElement[]
     const token = root.dataset.token || 'tu_token'
 
-    async function sendRequest() {
-      const requestUrl = urlSelect?.value
+    async function sendRequest(mode: SendMode) {
+      const requestUrl = getRequestUrl(root, mode)
       if (!requestUrl) {
         toast.error('Selecciona una URL válida')
         return
@@ -272,13 +335,14 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
       let requestBody: { contentType: string; body: string }
 
       try {
-        requestBody = buildRequestBody(root)
+        requestBody = mode === 'basic' ? buildBasicRequestBody(root) : buildAdvancedRequestBody(root)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'Body inválido')
         return
       }
 
-      setSendButtonsLoading(sendButtons, true)
+      const modeButtons = sendButtons.filter((button) => (button.dataset.sendMode || 'advanced') === mode)
+      setSendButtonsLoading(modeButtons, true)
       const startedAt = performance.now()
 
       try {
@@ -293,20 +357,29 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
 
         const durationMs = Math.round(performance.now() - startedAt)
         const rawBody = await response.text()
-        const headersText = Array.from(response.headers.entries())
-          .map(([key, value]) => `${key}: ${value}`)
-          .join('\n')
 
-        const formattedBody = formatResponseBody(rawBody, response.headers.get('content-type'))
+        if (mode === 'basic') {
+          dispatchBasicResponse(root, {
+            status: response.status,
+            statusText: response.statusText,
+            durationMs,
+            bodyText: rawBody,
+          })
+        } else {
+          const headersText = Array.from(response.headers.entries())
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n')
+          const formattedBody = formatResponseBody(rawBody, response.headers.get('content-type'))
 
-        dispatchResponse(root, {
-          status: response.status,
-          statusText: response.statusText,
-          durationMs,
-          headersText,
-          bodyText: formattedBody.code,
-          bodyLang: formattedBody.lang,
-        })
+          dispatchAdvancedResponse(root, {
+            status: response.status,
+            statusText: response.statusText,
+            durationMs,
+            headersText,
+            bodyText: formattedBody.code,
+            bodyLang: formattedBody.lang,
+          })
+        }
 
         if (response.ok) {
           toast.success('Solicitud enviada correctamente')
@@ -315,24 +388,37 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
         }
       } catch (error) {
         const durationMs = Math.round(performance.now() - startedAt)
-        dispatchResponse(root, {
-          status: 0,
-          statusText: 'Network Error',
-          durationMs,
-          headersText: '',
-          bodyText: error instanceof Error ? error.message : 'Error de conexión',
-          bodyLang: 'plaintext',
-        })
+        const message = error instanceof Error ? error.message : 'Error de conexión'
+
+        if (mode === 'basic') {
+          dispatchBasicResponse(root, {
+            status: 0,
+            statusText: 'Network Error',
+            durationMs,
+            bodyText: message,
+          })
+        } else {
+          dispatchAdvancedResponse(root, {
+            status: 0,
+            statusText: 'Network Error',
+            durationMs,
+            headersText: '',
+            bodyText: message,
+            bodyLang: 'plaintext',
+          })
+        }
+
         toast.error('Error al enviar la solicitud')
       } finally {
-        setSendButtonsLoading(sendButtons, false)
-        scrollToResponseCard(root)
+        setSendButtonsLoading(modeButtons, false)
+        scrollToResponseCard(root, mode)
       }
     }
 
     sendButtons.forEach((button) => {
       button.addEventListener('click', () => {
-        void sendRequest()
+        const mode = (button.dataset.sendMode as SendMode) || 'advanced'
+        void sendRequest(mode)
       })
     })
   }

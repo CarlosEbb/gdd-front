@@ -1,0 +1,109 @@
+---
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Input from '@/components/form/Input.astro'
+import TagInput from '@/components/form/TagInput.astro'
+import Select from '@/components/form/Select.astro'
+
+interface VariableEntry {
+  key: string
+  isArray: boolean
+  displayValue: string
+  arrayValues: string[]
+  originalType: string
+  isEmailList: boolean
+}
+
+interface Props {
+  variableEntries: VariableEntry[]
+  urlVersioned: string
+  urlLatest: string
+  buildNumberLastVersion: string
+}
+
+const { variableEntries, urlVersioned, urlLatest, buildNumberLastVersion } = Astro.props
+---
+
+<Card class="flex h-full min-h-112 flex-col" data-basic-request-card>
+  <div class="flex h-full min-h-0 flex-1 flex-col space-y-4">
+    <div>
+      <h3 class="text-sm font-semibold text-heading">Datos del documento</h3>
+      <p class="mt-1 text-xs text-subheading">Completa los campos y envía la solicitud. Se enviará como JSON.</p>
+    </div>
+
+    <Select
+      id="basic-request-url"
+      name="basic-request-url"
+      label="Ruta"
+      options={[
+        {
+          value: urlVersioned,
+          label: `${urlVersioned} (build ${buildNumberLastVersion || 'N/A'})`,
+          selected: true,
+        },
+        {
+          value: urlLatest,
+          label: `${urlLatest} (última versión)`,
+        },
+      ]}
+      data-basic-url-select
+    />
+
+    {
+      variableEntries.length > 0 ? (
+        <form data-basic-body-form class="min-h-0 flex-1 overflow-y-auto">
+          <div class="space-y-3 p-0.5">
+            {variableEntries.map((field) =>
+              field.isArray ? (
+                <TagInput
+                  name={field.key}
+                  idPrefix="basic-"
+                  label={field.key}
+                  values={field.arrayValues}
+                  validateEmail={field.isEmailList}
+                  placeholder={field.isEmailList ? 'Escribe un correo y separa con coma' : 'Escribe y separa con coma'}
+                />
+              ) : (
+                <Input
+                  id={`basic-${field.key}`}
+                  name={field.key}
+                  label={field.key}
+                  value={field.displayValue}
+                  data-form-field={field.key}
+                  data-original-type={field.originalType}
+                />
+              )
+            )}
+          </div>
+        </form>
+      ) : (
+        <p class="text-sm text-subheading">No hay variables disponibles para este documento.</p>
+      )
+    }
+
+    <div class="shrink-0 pt-1">
+      <Button type="button" size="lg" icon="Send" loadingText="Enviando..." data-send-btn data-send-mode="basic" class="h-10 w-full">
+        Enviar
+      </Button>
+    </div>
+  </div>
+</Card>
+
+<script>
+  function setupBasicRequestPanel(root: HTMLElement) {
+    if (root.dataset.basicRequestInitialized === 'true') return
+    root.dataset.basicRequestInitialized = 'true'
+
+    const form = root.querySelector('[data-basic-body-form]') as HTMLFormElement | null
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault()
+    })
+  }
+
+  function initBasicRequestPanels() {
+    document.querySelectorAll<HTMLElement>('[data-http-client]').forEach(setupBasicRequestPanel)
+  }
+
+  initBasicRequestPanels()
+  document.addEventListener('astro:page-load', initBasicRequestPanels)
+</script>
