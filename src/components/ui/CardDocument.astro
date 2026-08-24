@@ -76,6 +76,7 @@ const editorUrl = new URL(`/editor/${uuid}`, Astro.url)
 editorUrl.searchParams.set('build_number', String(buildNumber))
 editorUrl.searchParams.set('id_workspace', uuidWorkspace)
 editorUrl.searchParams.set('name_document', title)
+if (workspace?.name) editorUrl.searchParams.set('name_workspace', workspace.name)
 
 const url = editorUrl.pathname + editorUrl.search
 ---

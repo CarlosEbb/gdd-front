@@ -172,7 +172,15 @@ const sizeClasses: Record<Size, string> = {
       const description = clone.querySelector('[data-description]')
       const date = clone.querySelector('[data-date]')
 
-      if (link) link.href = `/editor/${doc.uuid}?build_number=${doc.lastVersion?.buildNumber}&id_workspace=${doc.uuidWorkspace}&name_document=${doc.title}`
+      if (link) {
+        const params = new URLSearchParams({
+          build_number: String(doc.lastVersion?.buildNumber ?? ''),
+          id_workspace: doc.uuidWorkspace,
+          name_document: doc.title,
+        })
+        if (doc.workspace?.name) params.set('name_workspace', doc.workspace.name)
+        link.href = `/editor/${doc.uuid}?${params.toString()}`
+      }
       if (title) title.textContent = doc.title
       if (description) description.textContent = doc.description || 'Sin descripción'
       if (date) date.textContent = formatDate(doc.updatedAt)

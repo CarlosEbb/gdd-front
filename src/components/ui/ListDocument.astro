@@ -68,7 +68,7 @@ const ALLOWED_ACTIONS = ACTIONS.filter((action) => {
 const hasDeletePermission = permissions ? hasPermission(permissions, 'templates.delete') : false
 const showDropdown = ALLOWED_ACTIONS.length > 0 || hasDeletePermission
 
-const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWorkspace}&name_document=${title}`
+const url = `/editor/${uuid}?build_number=${buildNumber}&id_workspace=${uuidWorkspace}&name_document=${encodeURIComponent(title)}${workspace?.name ? `&name_workspace=${encodeURIComponent(workspace.name)}` : ''}`
 ---
 
 <CardList
