@@ -9,7 +9,7 @@ const isRemembered = Astro.cookies.has('remembered_username') ?? ''
 
 <AuthLayout titleTabBrowser="Iniciar sesión" titleCardAuth="Ingresa tu información" descriptionCardAuth="Escribe tu email y contraseña para iniciar sesión">
   <form method="POST" id="form-login" class="space-y-6">
-    <Input label="Usuario / Correo" name="email" value={remembered} type="email" placeholder="correo@dominio.com" required />
+    <Input label="Correo" name="email" value={remembered} type="email" placeholder="correo@dominio.com" required />
     <Input label="Contraseña" name="password" type="password" placeholder="••••••••" required />
 
     <div class="mt-3 flex items-center justify-between gap-3 sm:mb-1 md:mt-4 lg:mb-4 xl:mb-8">
