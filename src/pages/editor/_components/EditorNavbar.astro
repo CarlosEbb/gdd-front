@@ -33,7 +33,8 @@ const { uuid, buildNumber, uuidWorkspace = '', nameWorkspace = '', showPageForVi
 <script>
   let progressInterval: ReturnType<typeof setInterval> | undefined
 
-  document.addEventListener('astro:before-preparation', () => {
+  document.addEventListener('astro:before-preparation', (event) => {
+    if (event.defaultPrevented) return
     const progressBar = document.getElementById('progress-bar')
 
     if (progressBar) {

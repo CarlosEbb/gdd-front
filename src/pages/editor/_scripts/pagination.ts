@@ -2,7 +2,7 @@ import { toast } from '@/scripts/toast'
 import type { EditorContext } from './types'
 
 export function setupPagination(ctx: EditorContext) {
-  const { state, domContainer, withSyncing } = ctx
+  const { state, domContainer, withSyncing, markDirty } = ctx
 
   const paginationBar = document.getElementById('pagination-bar') as HTMLElement
   const paginationPrev = document.getElementById('pagination-prev') as HTMLButtonElement
@@ -75,6 +75,7 @@ export function setupPagination(ctx: EditorContext) {
     withSyncing(() => {
       designerInstance.updateTemplate(newTemplate as any)
     })
+    markDirty()
     updatePaginationUI()
     toast.success('Página creada')
   }
@@ -89,6 +90,7 @@ export function setupPagination(ctx: EditorContext) {
     withSyncing(() => {
       designerInstance.updateTemplate(newTemplate as any)
     })
+    markDirty()
     updatePaginationUI()
     toast.success('Página eliminada')
   }
@@ -99,7 +101,9 @@ export function setupPagination(ctx: EditorContext) {
     const currentSchemas = designerInstance.getTemplate().schemas
     const newTemplate = direction === 'prev' ? paginationManager.prev(currentSchemas) : paginationManager.next(currentSchemas)
     if (newTemplate) {
-      designerInstance.updateTemplate(newTemplate as any)
+      withSyncing(() => {
+        designerInstance.updateTemplate(newTemplate as any)
+      })
       updatePaginationUI()
       return true
     }
@@ -112,7 +116,9 @@ export function setupPagination(ctx: EditorContext) {
     const currentSchemas = designerInstance.getTemplate().schemas
     const newTemplate = paginationManager.goToPage(pageNumber, currentSchemas)
     if (newTemplate) {
-      designerInstance.updateTemplate(newTemplate as any)
+      withSyncing(() => {
+        designerInstance.updateTemplate(newTemplate as any)
+      })
     }
     updatePaginationUI()
   }
@@ -123,7 +129,9 @@ export function setupPagination(ctx: EditorContext) {
     const currentSchemas = designerInstance.getTemplate().schemas
     const newTemplate = paginationManager.setChunkSize(newSize, currentSchemas)
     if (newTemplate) {
-      designerInstance.updateTemplate(newTemplate as any)
+      withSyncing(() => {
+        designerInstance.updateTemplate(newTemplate as any)
+      })
     }
     updatePaginationUI()
   }
@@ -247,7 +255,9 @@ export function setupPagination(ctx: EditorContext) {
     paginationCreatePage?.addEventListener('click', createNewPage)
 
     designerInstance.onChangeTemplate((updatedTemplate: any) => {
-      if (!state.pagination || state.isSyncingTemplate) return
+      if (state.isSyncingTemplate) return
+      markDirty()
+      if (!state.pagination) return
 
       const { pagesChanged, overflow } = state.pagination.handleTemplateChange(updatedTemplate.schemas)
 

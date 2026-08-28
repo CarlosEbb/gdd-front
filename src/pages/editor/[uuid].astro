@@ -4,6 +4,7 @@ import CreateVersionModal from '@/components/modal/CreateVersionModal.astro'
 import Sidebar from '@/components/ui/Sidebar.astro'
 import CreateDocumentModal from '@/components/modal/CreateDocumentModal.astro'
 import DeleteDocumentModal from './_components/modals/DeleteDocumentModal.astro'
+import UnsavedChangesModal from './_components/modals/UnsavedChangesModal.astro'
 import DocumentSettingsModal from './_components/modals/DocumentSettingsModal.astro'
 import SchemaIOModal from './_components/modals/SchemaIOModal.astro'
 import EditorNavbar from './_components/EditorNavbar.astro'
@@ -34,6 +35,7 @@ const SHOW_PAGE_FOR_VIEW = false
 
   <CreateVersionModal uuidTemplate={uuid} mode="editor" />
   <DeleteDocumentModal uuid={uuid} buildNumber={buildNumber} nameDocument={nameDocument} />
+  <UnsavedChangesModal />
   <DocumentSettingsModal />
   <PermissionGuard permission="admin.full">
     <SchemaIOModal />

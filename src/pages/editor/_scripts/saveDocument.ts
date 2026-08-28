@@ -37,6 +37,7 @@ export function setupSaveDocument(ctx: EditorContext) {
 
       nameVersion && modalNewVersionDocument.close()
       ctx.syncEditorWithOutputTemplate(templateData)
+      ctx.clearDirty()
       toast.success(data.message)
 
       const newVersion = data.data.lastVersion?.buildNumber

@@ -15,6 +15,7 @@ import { setupGeneratePdf } from './generatePdf'
 import { setupMobileActions } from './mobileActions'
 import { setupDeleteDocument } from './deleteDocument'
 import { setupTemplateIO } from './templateIO'
+import { setupUnsavedChanges } from './unsavedChanges'
 
 function createEditorContext(domContainer: HTMLElement): EditorContext {
   const state: EditorState = {
@@ -22,7 +23,18 @@ function createEditorContext(domContainer: HTMLElement): EditorContext {
     pagination: undefined,
     isSyncingTemplate: false,
     pendingTemplateUpdate: null,
+    isDirty: false,
+    isReady: false,
     updatePaginationUI: () => {},
+  }
+
+  const markDirty = () => {
+    if (!state.isReady) return
+    state.isDirty = true
+  }
+
+  const clearDirty = () => {
+    state.isDirty = false
   }
 
   const withSyncing = (fn: () => void) => {
@@ -73,6 +85,8 @@ function createEditorContext(domContainer: HTMLElement): EditorContext {
     getOutputTemplate,
     syncEditorWithOutputTemplate,
     withSyncing,
+    markDirty,
+    clearDirty,
   }
 }
 
@@ -132,6 +146,10 @@ async function initializeEditor(ctx: EditorContext, schemaFile: any) {
   setupTemplateIO(ctx)
   setupMobileActions(ctx, ctx.state.designer, plugins, fonts)
   setupDocumentSettings(ctx)
+  requestAnimationFrame(() => {
+    ctx.clearDirty()
+    ctx.state.isReady = true
+  })
 }
 
 export function initializeEditorPage() {
@@ -154,8 +172,9 @@ export function initializeEditorPage() {
 
   const ctx = createEditorContext(domContainer)
 
-  setupDeleteDocument()
+  setupDeleteDocument(ctx)
   setupSaveDocument(ctx)
+  setupUnsavedChanges(ctx)
 
   initializeEditor(ctx, schemaFile).catch(() => {
     toast.error('Ha ocurrido un error al inicializar el editor. Por favor, intente nuevamente.')

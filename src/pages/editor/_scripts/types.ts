@@ -20,6 +20,8 @@ export type EditorState = {
   pagination: PaginationManager | undefined
   isSyncingTemplate: boolean
   pendingTemplateUpdate: number | null
+  isDirty: boolean
+  isReady: boolean
   updatePaginationUI: () => void
 }
 
@@ -30,4 +32,6 @@ export type EditorContext = {
   getOutputTemplate: () => OutputTemplateResult
   syncEditorWithOutputTemplate: (template: any) => void
   withSyncing: (fn: () => void) => void
+  markDirty: () => void
+  clearDirty: () => void
 }

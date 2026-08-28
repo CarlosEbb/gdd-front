@@ -2,8 +2,9 @@ import { callAction, setButtonLoading } from '@/scripts/utils.js'
 import { toast } from '@/scripts/toast'
 import { actions } from 'astro:actions'
 import { navigate } from 'astro:transitions/client'
+import type { EditorContext } from './types'
 
-export function setupDeleteDocument() {
+export function setupDeleteDocument(ctx: EditorContext) {
   const formDeleteDocument = document.getElementById('delete-document-form') as HTMLFormElement
   const modalDeleteDocument = document.getElementById('delete-document') as HTMLDialogElement
   if (!formDeleteDocument) return
@@ -21,6 +22,7 @@ export function setupDeleteDocument() {
         return
       }
       toast.success(data.message)
+      ctx.clearDirty()
       navigate(data.data.redirect)
     } catch (error) {
       toast.error('Ah ocurrido un error al eliminar la plantilla. Por favor, intente nuevamente.')

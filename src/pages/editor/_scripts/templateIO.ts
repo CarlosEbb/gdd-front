@@ -67,6 +67,7 @@ export function setupTemplateIO(ctx: EditorContext) {
           ctx.state.pagination = new PaginationManager(loadedTemplate as any)
           const tpl = ctx.state.pagination.isSingleChunk ? loadedTemplate : ctx.state.pagination.getChunkedTemplate()
           ctx.state.designer.updateTemplate(tpl as any)
+          ctx.markDirty()
           ctx.state.updatePaginationUI()
         }
         toast.success('Schema cargado correctamente')

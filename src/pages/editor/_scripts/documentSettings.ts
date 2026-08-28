@@ -64,6 +64,7 @@ function applyDocumentSettings(ctx: EditorContext, settings: DocumentSettings) {
   const currentSchemas = designerInstance.getTemplate().schemas
   const newTemplate = paginationManager.updateBasePdf(newBasePdf, currentSchemas)
   designerInstance.updateTemplate(newTemplate as any)
+  ctx.markDirty()
   ctx.state.updatePaginationUI()
 
   if (outOfBounds.length) {
