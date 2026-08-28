@@ -50,6 +50,11 @@ export function setupMobileActions(ctx: EditorContext, designer: Designer | unde
           modal?.showModal()
           break
         }
+        case 'schema-io': {
+          const modal = document.getElementById('schema-io') as HTMLDialogElement | null
+          modal?.showModal()
+          break
+        }
       }
 
       const dropdownMenu = btn.closest('[data-dropdown-menu]')

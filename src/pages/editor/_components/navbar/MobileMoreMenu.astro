@@ -1,6 +1,7 @@
 ---
 import Dropdown from '@/components/ui/Dropdown.astro'
 import Icon from '@/components/ui/Icon.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
 interface Props {
   uuid: string
@@ -40,6 +41,14 @@ const documentationHref = `/config/documentation/${uuid}?${documentationParams.t
             Configuración del documento
           </button>
         </li>
+        <PermissionGuard permission="admin.full">
+          <li class="md:hidden">
+            <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" data-mobile-action="schema-io">
+              <Icon name="Braces" class="size-4" stroke-width={1.5} />
+              Importar y exportar schema
+            </button>
+          </li>
+        </PermissionGuard>
       </ul>
     </div>
     <div class="mx-2 p-2.5">

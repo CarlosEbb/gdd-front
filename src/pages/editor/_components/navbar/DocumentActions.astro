@@ -1,6 +1,7 @@
 ---
 import Button from '@/components/ui/Button.astro'
 import Search from '@/components/ui/Search.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 ---
 
 <div class="hidden shrink-0 items-center gap-x-0.5 md:flex">
@@ -20,5 +21,17 @@ import Search from '@/components/ui/Search.astro'
     class="shrink-0"
     icon="Settings"
   />
+  <PermissionGuard permission="admin.full">
+    <Button
+      type="button"
+      size="sm"
+      iconOnly
+      variant="transparent"
+      data-open-modal="schema-io"
+      title="Importar y exportar schema"
+      class="shrink-0"
+      icon="Braces"
+    />
+  </PermissionGuard>
   <Button type="button" size="sm" iconOnly variant="transparent" data-open-modal="new-version-document" class="hidden shrink-0 md:inline-flex" title="Crear versión" icon="GitBranch" />
 </div>

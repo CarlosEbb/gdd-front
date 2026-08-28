@@ -3,6 +3,21 @@ import { downloadJsonFile, readJsonFile, toggleFullscreen, handleBasePdfChange }
 import { PaginationManager } from '@/pdfme/pagination.js'
 import type { EditorContext } from './types'
 
+function getSchemaFileName(): string {
+  const name = new URLSearchParams(window.location.search).get('name_document')?.trim()
+  if (!name) return 'schema'
+  return name.replace(/[<>:"/\\|?*]/g, '-').replace(/\s+/g, '_').slice(0, 80)
+}
+
+function isValidTemplate(template: unknown): template is { schemas: unknown[] } {
+  return typeof template === 'object' && template !== null && Array.isArray((template as { schemas?: unknown }).schemas)
+}
+
+function closeSchemaIOModal() {
+  const modal = document.getElementById('schema-io') as HTMLDialogElement | null
+  modal?.close()
+}
+
 export function setupTemplateIO(ctx: EditorContext) {
   const basePdfInput = document.getElementById('basePdfInput')
   if (basePdfInput) {
@@ -19,9 +34,13 @@ export function setupTemplateIO(ctx: EditorContext) {
           throw new Error('Designer no está inicializado')
         }
         const currentTemplate = ctx.getFullSyncedTemplate()
-        downloadJsonFile(currentTemplate, 'plantilla')
-      } catch (error) {
-        toast.error('Ah ocurrido un error al descargar la plantilla. Por favor, intente nuevamente.')
+        if (!currentTemplate) {
+          throw new Error('No hay schema para exportar')
+        }
+        downloadJsonFile(currentTemplate, getSchemaFileName())
+        toast.success('Schema descargado')
+      } catch {
+        toast.error('Ha ocurrido un error al descargar el schema. Por favor, intente nuevamente.')
       }
     })
   }
@@ -41,15 +60,21 @@ export function setupTemplateIO(ctx: EditorContext) {
 
       try {
         const loadedTemplate = await readJsonFile(file)
+        if (!isValidTemplate(loadedTemplate)) {
+          throw new Error('El archivo no contiene un schema válido.')
+        }
         if (ctx.state.designer) {
           ctx.state.pagination = new PaginationManager(loadedTemplate as any)
           const tpl = ctx.state.pagination.isSingleChunk ? loadedTemplate : ctx.state.pagination.getChunkedTemplate()
           ctx.state.designer.updateTemplate(tpl as any)
           ctx.state.updatePaginationUI()
         }
-        toast.success('Plantilla cargada correctamente')
+        toast.success('Schema cargado correctamente')
+        closeSchemaIOModal()
       } catch (err) {
-        toast.error(`Error al cargar la plantilla:\n${err}`)
+        toast.error(`Error al cargar el schema:\n${err}`)
+      } finally {
+        inputElement.value = ''
       }
     })
   }
