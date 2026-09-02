@@ -1,5 +1,6 @@
 import { generate } from '@pdfme/generator'
 import { PDFDocument } from 'pdf-lib'
+import { API_URL } from 'astro:env/client'
 
 // Función para descargar el archivo JSON
 export function downloadJsonFile(json, title) {
@@ -280,7 +281,7 @@ export async function GeneratePdf(designer, uuid_template, build_number, jsonCon
     const token = localStorage.getItem('token')
 
     // Llamar al endpoint para generar el PDF
-    const response = await fetch(`${import.meta.env.API_URL}/template/generatePDF/${uuid_template}/${build_number}`, {
+    const response = await fetch(`${API_URL}/template/generatePDF/${uuid_template}/${build_number}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

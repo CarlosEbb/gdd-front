@@ -17,7 +17,7 @@ export default defineConfig({
 
   env: {
     schema: {
-      API_URL: envField.string({ context: 'server', access: 'secret' }),
+      API_URL: envField.string({ context: 'client', access: 'public' }),
       PUBLIC_PROJECT_URL: envField.string({ context: 'client', access: 'public' }),
       PUBLIC_CARGA_URL: envField.string({ context: 'client', access: 'public' }),
       PUBLIC_NAME_PROJECT: envField.string({ context: 'client', access: 'public' }),

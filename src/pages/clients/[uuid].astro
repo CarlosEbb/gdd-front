@@ -19,7 +19,7 @@ import Card from '@/components/ui/Card.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 import Dropdown from '@/components/ui/Dropdown.astro'
 
-const API_URL = import.meta.env.API_URL
+import { API_URL } from 'astro:env/client'
 const { uuid } = Astro.params
 const { data, error } = await Astro.callAction(actions.clients.getByUuid, { uuid: uuid! })
 

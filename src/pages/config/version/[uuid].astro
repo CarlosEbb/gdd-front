@@ -13,12 +13,12 @@ import Avatar from '@/components/ui/Avatar.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import Input from '@/components/form/Input.astro'
+import { API_URL } from 'astro:env/client'
 
 const { uuid } = Astro.params
 
 if (!uuid) return Astro.redirect('/home')
 
-const API_URL = import.meta.env.API_URL
 const buildNumber = Astro.url.searchParams.get('build_number') as string
 const uuidWorkspace = Astro.url.searchParams.get('id_workspace') as string
 const nameWorkspace = Astro.url.searchParams.get('name_workspace') as string

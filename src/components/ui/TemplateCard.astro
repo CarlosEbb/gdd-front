@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets'
 import type { Templates } from '@/types/templates'
 import Button from './Button.astro'
-const API_URL = import.meta.env.API_URL
+import { API_URL } from 'astro:env/client'
 
 interface Props {
   template: Templates

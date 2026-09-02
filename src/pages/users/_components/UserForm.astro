@@ -15,6 +15,7 @@ import type { DetailsClient } from '@/types/clients'
 import type { PermissionCategory } from '@/types/permissions'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 import { quickRoleConfigs } from '../_constants'
+import { API_URL } from 'astro:env/client'
 
 interface Props {
   isEdit?: boolean
@@ -33,7 +34,6 @@ const { isEdit = false, userData, clients = [], clientsError, hasClients = false
 const user = userData?.data || null
 const userPermissionUuids = user?.permissionUuids || []
 
-const API_URL = import.meta.env.API_URL
 const getInitialsNameAndLastName = (name: string, lastName: string) => (name?.charAt(0) || '') + (lastName?.charAt(0) || '')
 const initials = user ? getInitialsNameAndLastName(user.name, user.lastName).toUpperCase() : ''
 const hasPhoto = !user?.photo || user?.photo === '{}'

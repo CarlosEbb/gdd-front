@@ -1,6 +1,7 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
 import { icons } from '@lucide/astro'
+import { API_URL as baseUrl } from 'astro:env/client'
 import Icon from './Icon.astro'
 
 interface Props extends HTMLAttributes<'div'> {
@@ -20,7 +21,6 @@ const hasSecondaryText = !!secondaryText
 const hasActionsSlot = Astro.slots.has('actions')
 const hasAvatarSlot = Astro.slots.has('avatar')
 
-const baseUrl = import.meta.env.API_URL
 const urlImage = hasImage ? `${baseUrl}${img}` : undefined
 ---
 
