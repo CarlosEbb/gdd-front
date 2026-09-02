@@ -1,5 +1,5 @@
 import { defineAction } from 'astro:actions'
-import { z } from 'astro:schema'
+import { z } from 'astro/zod'
 import { handleApiError, http } from './http'
 import type { InfoProfile } from '@/types/profile'
 import { requireAuth } from '@/lib/permissions'
@@ -11,7 +11,7 @@ export const profile = {
     input: z.object({
       name: z.string(),
       lastName: z.string(),
-      email: z.string().email(),
+      email: z.email(),
       country: z.string().optional(),
       img_profile_file: z.any().optional(),
       zipCode: z.string().optional(),

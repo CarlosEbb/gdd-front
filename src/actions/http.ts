@@ -1,6 +1,7 @@
 import type { ApiResponse } from '@/types/response'
 import { ActionError } from 'astro:actions'
 import type { ActionAPIContext } from 'astro:actions'
+import { API_URL, PUBLIC_CARGA_URL } from 'astro:env/client'
 
 interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   token: string
@@ -38,14 +39,10 @@ function isApiError(error: unknown): error is ApiError {
   return typeof error === 'object' && error !== null && '_isApiError' in error
 }
 
-function getEnvValue(name: 'API_URL' | 'PUBLIC_CARGA_URL'): string | undefined {
-  return import.meta.env[name] ?? (globalThis as any).process?.env?.[name]
-}
-
 /** Bulk usa PUBLIC_CARGA_URL; el resto de la API usa API_URL */
 function resolveBaseUrl(useCargaUrl = false): string {
+  const baseUrl = useCargaUrl ? PUBLIC_CARGA_URL : API_URL
   const envName = useCargaUrl ? 'PUBLIC_CARGA_URL' : 'API_URL'
-  const baseUrl = getEnvValue(envName)
 
   if (!baseUrl) {
     throw new Error(`La variable de entorno ${envName} no está configurada. Configúrala en tu entorno.`)

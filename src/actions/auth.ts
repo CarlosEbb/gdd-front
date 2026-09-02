@@ -1,5 +1,5 @@
 import { ActionError, defineAction } from 'astro:actions'
-import { z } from 'astro:schema'
+import { z } from 'astro/zod'
 import type { ApiResponse } from '@/types/response'
 import type { AuthResponse } from '@/types/users'
 import { handleApiError, http } from './http'
@@ -9,7 +9,7 @@ export const auth = {
   login: defineAction({
     accept: 'form',
     input: z.object({
-      email: z.string().email(),
+      email: z.email(),
       password: z.string(),
     }),
     handler: async (input, request) => {
@@ -76,7 +76,7 @@ export const auth = {
   resetPassword: defineAction({
     accept: 'form',
     input: z.object({
-      email: z.string().email(),
+      email: z.email(),
     }),
     handler: async (input, request) => {
       try {

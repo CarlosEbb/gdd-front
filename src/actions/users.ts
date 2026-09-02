@@ -1,5 +1,5 @@
 import { defineAction } from 'astro:actions'
-import { z } from 'astro:schema'
+import { z } from 'astro/zod'
 import { handleApiError, http } from './http'
 import { Status, type AuthResponse, type Details, type GetUserByUuidResponse } from '@/types/users'
 import { requirePermission, requireAuth } from '@/lib/permissions'
@@ -24,7 +24,7 @@ export const users = {
     input: z.object({
       name: z.string(),
       lastName: z.string(),
-      email: z.string().email(),
+      email: z.email(),
       password: z.string(),
       country: z.string(),
       zipCode: z.string(),
@@ -70,7 +70,7 @@ export const users = {
       uuid: z.string(),
       name: z.string(),
       lastName: z.string(),
-      email: z.string().email(),
+      email: z.email(),
       country: z.string().optional(),
       img_profile_file: z.any().optional(),
       zipCode: z.string().optional(),

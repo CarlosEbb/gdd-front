@@ -2,7 +2,7 @@ import { defineAction } from 'astro:actions'
 import { handleApiError, http } from './http'
 import { requirePermission, requireAuth } from '@/lib/permissions'
 import type { Metrics, MetricsByDocument } from '@/types/metrics'
-import { z } from 'astro:schema'
+import { z } from 'astro/zod'
 
 export const metrics = {
   getGeneral: defineAction({

@@ -2,7 +2,7 @@ import { defineAction } from 'astro:actions'
 import { handleApiError, http } from './http'
 import type { CreateTemplate, DeleteTemplate, Templates } from '@/types/templates'
 import { requirePermission, requireAuth } from '@/lib/permissions'
-import { z } from 'astro:schema'
+import { z } from 'astro/zod'
 
 export const templates = {
   get: defineAction({

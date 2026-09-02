@@ -1,7 +1,7 @@
 import { defineAction } from 'astro:actions'
 import { handleApiError, http } from './http'
 import { requirePermission, requireAuth } from '@/lib/permissions'
-import { z } from 'astro:schema'
+import { z } from 'astro/zod'
 import type { Publication } from '@/types/publications'
 
 export const publications = {

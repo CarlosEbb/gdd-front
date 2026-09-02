@@ -1,5 +1,5 @@
 import { defineAction } from 'astro:actions'
-import { z } from 'astro:schema'
+import { z } from 'astro/zod'
 import type { ApiResponse } from '@/types/response'
 import { handleApiError, http } from './http'
 import type { CheckServer, createServer, DetailsServer } from '@/types/servers'
@@ -9,7 +9,7 @@ export const servers = {
   register: defineAction({
     accept: 'form',
     input: z.object({
-      ip: z.string().ip(),
+      ip: z.union([z.ipv4(), z.ipv6()]),
       puerto: z.number(),
       name: z.string(),
       username: z.string(),
@@ -62,9 +62,11 @@ export const servers = {
     accept: 'form',
     input: z.object({
       uuid: z.string(),
-      ip: z.string({ message: 'La IP es obligatoria' }).ip({ message: 'La IP no es válida' }),
-      puerto: z.string({ message: 'El puerto es obligatorio' }),
-      name: z.string({ message: 'El nombre es obligatorio' }),
+      ip: z.union([z.ipv4({ error: 'La IP no es válida' }), z.ipv6({ error: 'La IP no es válida' })], {
+        error: 'La IP es obligatoria',
+      }),
+      puerto: z.string({ error: 'El puerto es obligatorio' }),
+      name: z.string({ error: 'El nombre es obligatorio' }),
       username: z.string(),
       password: z.string(),
     }),
