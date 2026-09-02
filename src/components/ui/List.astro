@@ -65,7 +65,7 @@ const urlImage = hasImage ? `${baseUrl}${img}` : undefined
       status && (
         <div class="hidden flex-col items-end sm:flex">
           <span class={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${status === 'online' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
-            <span class={`h-1.5 w-1.5 rounded-full ${status === 'online' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+            <span class={`h-1.5 w-1.5 rounded-full ${status === 'online' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
             {status.toUpperCase()}
           </span>
         </div>

@@ -77,8 +77,8 @@ const isEmpty = !validations && elements.length === 0 && fields.length === 0
   </StateSwitch>
 </Layout>
 
-<script type="application/json" id="json-input-data" set:html={JSON.stringify(request)} />
-<script type="application/json" id="json-validations-data" set:html={JSON.stringify(validations)} />
+<script type="application/json" id="json-input-data" set:html={JSON.stringify(request)}></script>
+<script type="application/json" id="json-validations-data" set:html={JSON.stringify(validations)}></script>
 
 <script>
   import { initValidationSystem } from './_scripts/json-validation'

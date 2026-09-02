@@ -60,7 +60,7 @@ function getCustomContextText(log: any) {
               </div>
               {customContextText && (
                 <span class="flex items-center gap-x-2 font-sans text-sm leading-relaxed text-subheading">
-                  <strong class="font-medium text-heading">{executorName}</strong> <div class="text-sm leading-relaxed text-heading" set:html={customContextText} />
+                  <strong class="font-medium text-heading">{executorName}</strong> <div class="text-sm leading-relaxed text-heading" set:html={customContextText}></div>
                 </span>
               )}
             </div>
@@ -97,12 +97,12 @@ function getCustomContextText(log: any) {
                 <div class="flex items-center gap-1.5 font-medium text-subheading">
                   {log.client ? (
                     <>
-                      <span class="h-1.5 w-1.5 rounded-full bg-primary" />
+                      <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
                       <span>{log.client.name}</span>
                     </>
                   ) : (
                     <>
-                      <span class="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                      <span class="h-1.5 w-1.5 rounded-full bg-muted-foreground"></span>
                       <span class="text-muted-foreground italic">Ámbito Global Core</span>
                     </>
                   )}

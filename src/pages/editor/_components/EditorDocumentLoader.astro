@@ -46,7 +46,7 @@ if (buildNumber) {
   ) : (
     <>
       <EditorCanvas />
-      <script type="application/json" id="schema-file-data" set:html={JSON.stringify(schemaFile)} />
+      <script type="application/json" id="schema-file-data" set:html={JSON.stringify(schemaFile)}></script>
       <script>import {initializeEditorPage} from '../_scripts/initializeEditorPage'; initializeEditorPage()</script>
     </>
   )

@@ -37,7 +37,7 @@ if (!uuid || !build_number) return Astro.redirect('/home')
   </div>
 </Layout>
 
-<script type="application/json" id="metrics-data" set:html={JSON.stringify({ uuid })} />
+<script type="application/json" id="metrics-data" set:html={JSON.stringify({ uuid })}></script>
 <script>
   import { callAction, formatShortDate } from '@/scripts/utils'
   import ApexCharts, { type ApexOptions } from 'apexcharts'

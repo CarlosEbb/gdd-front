@@ -41,7 +41,7 @@ const versionBackHref = versionParams.toString() ? `/config/version/${uuid}?${ve
 
               return (
                 <li class="group relative py-5 pl-8 sm:pl-12">
-                  {!isLast ? <div class="absolute top-[36px] bottom-[-20px] left-[11px] w-px bg-muted-foreground" /> : ''}
+                  {!isLast ? <div class="absolute top-[36px] bottom-[-20px] left-[11px] w-px bg-muted-foreground"></div> : ''}
                   <div
                     class={`${isLatest ? 'bg-primary-foreground ring-primary' : 'bg-muted-foreground ring-muted'} absolute top-[26px] left-[7.5px] flex h-[8px] w-[8px] items-center justify-center rounded-full ring-[3px]`}
                   />
