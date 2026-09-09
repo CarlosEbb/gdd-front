@@ -11,11 +11,16 @@ export default defineConfig({
     // @ts-ignore
     plugins: [tailwindcss()],
   },
-
+  security: {
+    checkOrigin: false // Desactiva la verificación de CSRF en endpoints/formularios
+  },
+  // server: {
+  //   port: 4321,
+  //   host: '172.16.10.44'
+  // },
   adapter: node({
     mode: 'standalone',
   }),
-
   env: {
     schema: {
       API_URL: envField.string({ context: 'client', access: 'public' }),
