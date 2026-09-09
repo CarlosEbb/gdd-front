@@ -12,7 +12,8 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
   security: {
-    checkOrigin: false // Desactiva la verificación de CSRF en endpoints/formularios
+    checkOrigin: false, // Desactiva la verificación de CSRF en endpoints/formularios
+    actionBodySizeLimit: 20 * 1024 * 1024 // 10MB limit (o ajustar según necesidad)
   },
   // server: {
   //   port: 4321,
