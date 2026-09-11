@@ -1,0 +1,28 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+interface Props extends HTMLAttributes<'input'> {
+  label?: string
+  name: string
+  checked?: boolean
+}
+
+const { label, name, checked = false, ...rest } = Astro.props
+const inputId = rest.id ?? name
+---
+
+<label class="flex min-h-10 cursor-pointer items-center gap-2" for={inputId}>
+  <input
+    id={inputId}
+    type="checkbox"
+    name={name}
+    checked={checked}
+    class:list={['size-4 shrink-0 cursor-pointer accent-primary focus-visible:outline-2 focus-visible:outline-ring', rest.class]}
+    {...rest}
+  />
+  {
+    label && (
+      <span class="text-sm font-medium text-heading">{label}</span>
+    )
+  }
+</label>
