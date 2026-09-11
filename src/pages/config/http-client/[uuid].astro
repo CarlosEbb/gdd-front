@@ -12,6 +12,7 @@ import RequestPanel from './_components/RequestPanel.astro'
 import ResponsePanel from './_components/ResponsePanel.astro'
 import BasicRequestPanel from './_components/BasicRequestPanel.astro'
 import BasicResponsePanel from './_components/BasicResponsePanel.astro'
+import { serializeXmlBody } from '@/scripts/xml-body'
 
 const { uuid } = Astro.params
 
@@ -41,19 +42,8 @@ const urlLatest = `${base_url}/documents/${uuid}`
 const token = data?.data?.jwtToken
 const bearerToken = token ?? 'tu_token'
 
-function jsonToXmlString(obj: Record<string, unknown> | null | undefined): string {
-  if (!obj) return '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n</document>'
-
-  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n'
-  for (const [key, value] of Object.entries(obj)) {
-    xml += `  <${key}>${value ?? ''}</${key}>\n`
-  }
-  xml += '</document>'
-  return xml
-}
-
 const requestJson = JSON.stringify(request ?? {}, null, 2)
-const requestXml = jsonToXmlString(request)
+const requestXml = serializeXmlBody(request ?? {})
 const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
   const isArray = Array.isArray(value)
 
@@ -93,7 +83,7 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
           <UrlSelector urlVersioned={urlVersioned} urlLatest={urlLatest} buildNumberLastVersion={buildNumberLastVersion} />
 
           <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
-            <RequestPanel bearerToken={bearerToken} variableEntries={variableEntries} requestJson={requestJson} requestXml={requestXml} />
+            <RequestPanel bearerToken={bearerToken} requestJson={requestJson} requestXml={requestXml} />
             <ResponsePanel />
           </div>
         </TabsContent>
@@ -117,8 +107,7 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
 <script>
   import { toast } from '@/scripts/toast'
 
-  type BodyFormat = 'form' | 'json' | 'xml'
-  type SerializeAs = 'json' | 'xml'
+  type BodyFormat = 'json' | 'xml'
   type SendMode = 'basic' | 'advanced'
 
   type ResponsePayload = {
@@ -169,45 +158,27 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
     return raw
   }
 
-  function escapeXml(value: string): string {
-    return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
-  }
-
-  function valueToXmlContent(value: unknown): string {
-    if (value == null) return ''
-    if (Array.isArray(value)) return value.map((item) => String(item ?? '')).join(',')
-    if (typeof value === 'object') return JSON.stringify(value)
-    return String(value)
-  }
-
-  function objectToXml(data: Record<string, unknown>): string {
-    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n'
-    for (const [key, value] of Object.entries(data)) {
-      xml += `  <${key}>${escapeXml(valueToXmlContent(value))}</${key}>\n`
-    }
-    xml += '</document>'
-    return xml
-  }
-
   function getBodyFormatContainer(root: HTMLElement): HTMLElement | null {
     return root.querySelector('[data-body-format-select]') as HTMLElement | null
   }
 
   function getActiveBodyFormat(root: HTMLElement): BodyFormat {
     const format = getBodyFormatContainer(root)?.dataset.bodyFormat
-    return format === 'json' || format === 'xml' || format === 'form' ? format : 'form'
+    return format === 'xml' ? 'xml' : 'json'
   }
 
-  function getFormSerializeAs(root: HTMLElement): SerializeAs {
-    const selected = root.querySelector('[data-form-serialize]:checked') as HTMLInputElement | null
-    return (selected?.value as SerializeAs) || 'json'
-  }
-
-  function getContentType(format: BodyFormat, serializeAs: SerializeAs): string {
-    if (format === 'form') {
-      return serializeAs === 'xml' ? 'application/xml' : 'application/json'
-    }
+  function getContentType(format: BodyFormat): string {
     return format === 'xml' ? 'application/xml' : 'application/json'
+  }
+
+  function toUtcIsoString(datetimeLocal: string): string {
+    if (!datetimeLocal) return ''
+
+    const [date, time = '00:00:00'] = datetimeLocal.split('T')
+    const [hours = '00', minutes = '00', seconds = '00'] = time.split(':')
+    const normalizedSeconds = seconds.padStart(2, '0').slice(0, 2)
+
+    return `${date}T${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}:${normalizedSeconds}Z`
   }
 
   function collectFormPayload(scope: ParentNode): Record<string, unknown> {
@@ -217,6 +188,17 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
     fields.forEach((field) => {
       const key = field.dataset.formField || field.name
       const originalType = field.dataset.originalType || 'string'
+
+      if (field.type === 'checkbox') {
+        payload[key] = field.checked
+        return
+      }
+
+      if (field.type === 'datetime-local') {
+        payload[key] = toUtcIsoString(field.value)
+        return
+      }
+
       payload[key] = parseTypedValue(field.value, originalType)
     })
 
@@ -234,17 +216,7 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
 
   function buildAdvancedRequestBody(root: HTMLElement): { contentType: string; body: string } {
     const format = getActiveBodyFormat(root)
-    const serializeAs = getFormSerializeAs(root)
-    const contentType = getContentType(format, serializeAs)
-
-    if (format === 'form') {
-      const form = root.querySelector('[data-body-form]') as HTMLFormElement | null
-      const payload = collectFormPayload(form ?? root)
-      if (serializeAs === 'xml') {
-        return { contentType, body: objectToXml(payload) }
-      }
-      return { contentType, body: JSON.stringify(payload) }
-    }
+    const contentType = getContentType(format)
 
     if (format === 'json') {
       const textarea = root.querySelector('[data-body-json]') as HTMLTextAreaElement

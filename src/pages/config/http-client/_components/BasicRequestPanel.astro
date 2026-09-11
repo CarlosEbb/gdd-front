@@ -2,6 +2,7 @@
 import Card from '@/components/ui/Card.astro'
 import Button from '@/components/ui/Button.astro'
 import Input from '@/components/form/Input.astro'
+import Checkbox from '@/components/form/Checkbox.astro'
 import TagInput from '@/components/form/TagInput.astro'
 import Select from '@/components/form/Select.astro'
 
@@ -21,7 +22,14 @@ interface Props {
   buildNumberLastVersion: string
 }
 
+const DATE_FIELD_KEY = 'fecha_vencimiento'
+const CHECKBOX_FIELD_KEY = 'mostrar_una_sola_vez'
+
 const { variableEntries, urlVersioned, urlLatest, buildNumberLastVersion } = Astro.props
+
+function isCheckedValue(value: string): boolean {
+  return ['true', '1', 'on', 'yes'].includes(value.trim().toLowerCase())
+}
 ---
 
 <Card class="flex h-full min-h-112 flex-col" data-basic-request-card>
@@ -53,27 +61,60 @@ const { variableEntries, urlVersioned, urlLatest, buildNumberLastVersion } = Ast
       variableEntries.length > 0 ? (
         <form data-basic-body-form class="min-h-0 flex-1 overflow-y-auto">
           <div class="space-y-3 p-0.5">
-            {variableEntries.map((field) =>
-              field.isArray ? (
-                <TagInput
-                  name={field.key}
-                  idPrefix="basic-"
-                  label={field.key}
-                  values={field.arrayValues}
-                  validateEmail={field.isEmailList}
-                  placeholder={field.isEmailList ? 'Escribe un correo y separa con coma' : 'Escribe y separa con coma'}
-                />
-              ) : (
+            {variableEntries.map((field) => {
+              if (field.isArray) {
+                return (
+                  <TagInput
+                    name={field.key}
+                    idPrefix="basic-"
+                    label={field.key.replaceAll('_', ' ')}
+                    values={field.arrayValues}
+                    validateEmail={field.isEmailList}
+                    placeholder={field.isEmailList ? 'Escribe un correo y separa con coma' : 'Escribe y separa con coma'}
+                  />
+                )
+              }
+
+              if (field.key === DATE_FIELD_KEY) {
+                return (
+                  <Input
+                    id={`basic-${field.key}`}
+                    name={field.key}
+                    label={field.key.replaceAll('_', ' ')}
+                    type="datetime-local"
+                    step="1"
+                    value={field.displayValue}
+                    placeholder=""
+                    data-form-field={field.key}
+                    data-original-type="datetime"
+                  />
+                )
+              }
+
+              if (field.key === CHECKBOX_FIELD_KEY) {
+                return (
+                  <Checkbox
+                    id={`basic-${field.key}`}
+                    name={field.key}
+                    label={field.key.replaceAll('_', ' ')}
+                    checked={isCheckedValue(field.displayValue)}
+                    data-form-field={field.key}
+                    data-original-type="boolean"
+                  />
+                )
+              }
+
+              return (
                 <Input
                   id={`basic-${field.key}`}
                   name={field.key}
-                  label={field.key}
+                  label={field.key.replaceAll('_', ' ')}
                   value={field.displayValue}
                   data-form-field={field.key}
                   data-original-type={field.originalType}
                 />
               )
-            )}
+            })}
           </div>
         </form>
       ) : (
@@ -82,9 +123,7 @@ const { variableEntries, urlVersioned, urlLatest, buildNumberLastVersion } = Ast
     }
 
     <div class="shrink-0 pt-1">
-      <Button type="button" size="lg" icon="Send" loadingText="Enviando..." data-send-btn data-send-mode="basic" class="h-10 w-full">
-        Enviar
-      </Button>
+      <Button type="button" size="lg" icon="Send" loadingText="Enviando..." data-send-btn data-send-mode="basic" class="h-10 w-full"> Enviar </Button>
     </div>
   </div>
 </Card>

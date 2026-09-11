@@ -1,40 +1,26 @@
 ---
 import Card from '@/components/ui/Card.astro'
 import Button from '@/components/ui/Button.astro'
-import Input from '@/components/form/Input.astro'
-import TagInput from '@/components/form/TagInput.astro'
 import Icon from '@/components/ui/Icon.astro'
 import Tabs from '@/components/tabs/Tabs.astro'
 import TabsList from '@/components/tabs/TabsList.astro'
 import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
 import TabsContent from '@/components/tabs/TabsContent.astro'
 import Dropdown from '@/components/ui/Dropdown.astro'
-import Radio from '@/pages/audits/_components/Radio.astro'
 import CodeEditor from '@/components/editor/CodeEditor.astro'
-
-interface VariableEntry {
-  key: string
-  isArray: boolean
-  displayValue: string
-  arrayValues: string[]
-  originalType: string
-  isEmailList: boolean
-}
 
 interface Props {
   bearerToken: string
-  variableEntries: VariableEntry[]
   requestJson: string
   requestXml: string
 }
 
 const BODY_FORMAT_OPTIONS = [
-  { value: 'form', label: 'Formulario' },
   { value: 'json', label: 'JSON' },
   { value: 'xml', label: 'XML' },
 ] as const
 
-const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
+const { bearerToken, requestJson, requestXml } = Astro.props
 ---
 
 <Card class="flex h-full min-h-112 flex-col overflow-visible!">
@@ -45,15 +31,11 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
         <TabsTrigger value="body">Body</TabsTrigger>
       </TabsList>
 
-      <div class="ml-auto w-36 shrink-0" data-body-format-select data-body-format="form">
-        <Dropdown buttonLabel="Formulario" size="sm" shadow="none" position="right" menuClass="min-w-[140px] md:min-w-[160px]" mobileIcon="Braces">
+      <div class="ml-auto w-36 shrink-0" data-body-format-select data-body-format="json">
+        <Dropdown buttonLabel="JSON" size="sm" shadow="none" position="right" menuClass="min-w-[140px] md:min-w-[160px]" mobileIcon="Braces">
           {
             BODY_FORMAT_OPTIONS.map((option) => (
-              <button
-                type="button"
-                data-body-format-option={option.value}
-                class="flex w-full cursor-pointer items-center px-4 py-2 text-left text-sm whitespace-nowrap text-heading hover:bg-muted"
-              >
+              <button type="button" data-body-format-option={option.value} class="flex w-full cursor-pointer items-center px-4 py-2 text-left text-sm whitespace-nowrap text-heading hover:bg-muted">
                 {option.label}
               </button>
             ))
@@ -79,41 +61,7 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
 
     <TabsContent value="body" class="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden">
       <div class="flex min-h-0 flex-1 flex-col gap-3">
-        <div data-body-panel="form" class="space-y-3">
-          <div class="space-y-1.5">
-            <p class="text-sm font-medium text-heading">Enviar formulario como</p>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Serialización del formulario">
-              <Radio name="form-serialize" value="json" label="JSON" description="application/json" checked data-form-serialize />
-              <Radio name="form-serialize" value="xml" label="XML" description="application/xml" data-form-serialize />
-            </div>
-          </div>
-
-          {
-            variableEntries.length > 0 ? (
-              <form data-body-form class="max-h-88 overflow-y-auto">
-                <div class="space-y-3 p-1.5">
-                  {variableEntries.map((field) =>
-                    field.isArray ? (
-                      <TagInput
-                        name={field.key}
-                        label={field.key}
-                        values={field.arrayValues}
-                        validateEmail={field.isEmailList}
-                        placeholder={field.isEmailList ? 'Escribe un correo y separa con coma' : 'Escribe y separa con coma'}
-                      />
-                    ) : (
-                      <Input name={field.key} label={field.key} value={field.displayValue} data-form-field={field.key} data-original-type={field.originalType} />
-                    )
-                  )}
-                </div>
-              </form>
-            ) : (
-              <p class="text-sm text-subheading">No hay variables disponibles para este documento.</p>
-            )
-          }
-        </div>
-
-        <div data-body-panel="json" class="hidden min-h-72 flex-1 flex-col">
+        <div data-body-panel="json" class="flex min-h-72 flex-1 flex-col">
           <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-main border border-border bg-background">
             <div class="flex shrink-0 items-center justify-between border-b border-border bg-secondary px-4 py-2">
               <div class="flex items-center gap-2">
@@ -152,13 +100,11 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
 </Card>
 
 <script>
-  type BodyFormat = 'form' | 'json' | 'xml'
-  type SerializeAs = 'json' | 'xml'
+  import { parseXmlBody, serializeXmlBody, type BodyData } from '@/scripts/xml-body'
 
-  type BodyData = Record<string, unknown>
+  type BodyFormat = 'json' | 'xml'
 
   const BODY_FORMAT_LABELS: Record<BodyFormat, string> = {
-    form: 'Formulario',
     json: 'JSON',
     xml: 'XML',
   }
@@ -169,68 +115,23 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
 
   function getActiveBodyFormat(root: HTMLElement): BodyFormat {
     const format = getBodyFormatContainer(root)?.dataset.bodyFormat
-    return format === 'json' || format === 'xml' || format === 'form' ? format : 'form'
+    return format === 'xml' ? 'xml' : 'json'
   }
 
-  function getFormSerializeAs(root: HTMLElement): SerializeAs {
-    const selected = root.querySelector('[data-form-serialize]:checked') as HTMLInputElement | null
-    return (selected?.value as SerializeAs) || 'json'
-  }
-
-  function getContentType(format: BodyFormat, serializeAs: SerializeAs): string {
-    if (format === 'form') {
-      return serializeAs === 'xml' ? 'application/xml' : 'application/json'
-    }
+  function getContentType(format: BodyFormat): string {
     return format === 'xml' ? 'application/xml' : 'application/json'
   }
 
   function updateContentTypeHeader(root: HTMLElement) {
     const contentTypeEl = root.querySelector('[data-header-content-type]') as HTMLElement | null
     if (!contentTypeEl) return
-
-    const format = getActiveBodyFormat(root)
-    const serializeAs = getFormSerializeAs(root)
-    contentTypeEl.textContent = getContentType(format, serializeAs)
+    contentTypeEl.textContent = getContentType(getActiveBodyFormat(root))
   }
 
   function closeBodyFormatDropdown(container: HTMLElement) {
     const dropdown = container.querySelector('[data-dropdown-container]')
     dropdown?.classList.remove('is-open')
     dropdown?.querySelector('[data-dropdown-menu]')?.classList.remove('is-open')
-  }
-
-  function parseFormValue(raw: string, originalType: string): unknown {
-    if (originalType === 'array' || originalType === 'object') {
-      try {
-        return JSON.parse(raw)
-      } catch {
-        return originalType === 'array' ? [] : raw
-      }
-    }
-
-    if (originalType === 'number') {
-      const value = Number(raw)
-      return Number.isNaN(value) ? raw : value
-    }
-
-    if (originalType === 'boolean') {
-      if (raw === 'true') return true
-      if (raw === 'false') return false
-    }
-
-    return raw
-  }
-
-  function collectFormData(root: HTMLElement): BodyData {
-    const data: BodyData = {}
-
-    root.querySelectorAll<HTMLInputElement>('[data-form-field]').forEach((field) => {
-      const key = field.dataset.formField || field.name
-      if (!key) return
-      data[key] = parseFormValue(field.value, field.dataset.originalType || 'string')
-    })
-
-    return data
   }
 
   function parseJsonData(raw: string): BodyData | null {
@@ -242,106 +143,15 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
     }
   }
 
-  function parseXmlData(raw: string): BodyData | null {
-    const document = new DOMParser().parseFromString(raw, 'application/xml')
-    if (document.querySelector('parsererror')) return null
-
-    const data: BodyData = {}
-    const root = document.documentElement
-    if (!root) return null
-
-    Array.from(root.children).forEach((element) => {
-      data[element.tagName] = element.children.length > 0 ? parseXmlElement(element) : element.textContent || ''
-    })
-    return data
-  }
-
-  function parseXmlElement(element: Element): unknown {
-    if (element.children.length === 0) return element.textContent || ''
-
-    const data: BodyData = {}
-    Array.from(element.children).forEach((child) => {
-      data[child.tagName] = child.children.length > 0 ? parseXmlElement(child) : child.textContent || ''
-    })
-    return data
-  }
-
-  function escapeXml(value: string): string {
-    return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
-  }
-
-  function xmlValue(value: unknown): string {
-    if (value == null) return ''
-    if (Array.isArray(value)) return value.map((item) => String(item ?? '')).join(',')
-    if (typeof value === 'object') return JSON.stringify(value)
-    return String(value)
-  }
-
-  function serializeXml(data: BodyData): string {
-    const lines = Object.entries(data).map(([key, value]) => `  <${key}>${escapeXml(xmlValue(value))}</${key}>`)
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<document>\n${lines.join('\n')}\n</document>`
-  }
-
-  function formatFormValue(value: unknown, originalType: string): string {
-    if (originalType === 'object' && typeof value === 'string') {
-      return value
-    }
-    if (originalType === 'array' || originalType === 'object') {
-      return JSON.stringify(value ?? (originalType === 'array' ? [] : {}))
-    }
-    return value == null ? '' : String(value)
-  }
-
-  function updateTagInput(root: HTMLElement, key: string, value: unknown) {
-    const hidden = Array.from(root.querySelectorAll<HTMLInputElement>('[data-form-field]')).find((field) => field.dataset.formField === key)
-    const tagInput = hidden?.closest('[data-tag-input]')
-    if (!hidden || !tagInput) return
-
-    const values = Array.isArray(value) ? value.map((item) => String(item ?? '')) : String(value ?? '').split(',').map((item) => item.trim()).filter(Boolean)
-    const list = tagInput.querySelector('[data-tag-list]')
-    const template = tagInput.querySelector('[data-tag-template]') as HTMLTemplateElement | null
-    if (!list || !template) return
-
-    list.replaceChildren()
-    values.forEach((tagValue) => {
-      const tag = template.content.firstElementChild?.cloneNode(true) as HTMLElement | null
-      if (!tag) return
-      tag.dataset.value = tagValue
-      tag.querySelector('[data-tag-label]')?.replaceChildren(document.createTextNode(tagValue))
-      tag.querySelector('[data-tag-remove]')?.setAttribute('aria-label', `Eliminar ${tagValue}`)
-      list.appendChild(tag)
-    })
-
-    hidden.value = JSON.stringify(values)
-    const pendingField = tagInput.querySelector<HTMLInputElement>('[data-tag-input-field]')
-    if (pendingField) pendingField.value = ''
-  }
-
-  function updateFormData(root: HTMLElement, data: BodyData) {
-    root.querySelectorAll<HTMLInputElement>('[data-form-field]').forEach((field) => {
-      const key = field.dataset.formField || field.name
-      if (!key || !Object.prototype.hasOwnProperty.call(data, key)) return
-
-      if (field.dataset.originalType === 'array') {
-        updateTagInput(root, key, data[key])
-        return
-      }
-
-      field.value = formatFormValue(data[key], field.dataset.originalType || 'string')
-    })
-  }
-
   function getBodyData(root: HTMLElement, format: BodyFormat): BodyData | null {
-    if (format === 'form') return collectFormData(root)
-
     const selector = format === 'json' ? '[data-body-json]' : '[data-body-xml]'
     const raw = root.querySelector<HTMLTextAreaElement>(selector)?.value || ''
-    return format === 'json' ? parseJsonData(raw) : parseXmlData(raw)
+    return format === 'json' ? parseJsonData(raw) : parseXmlBody(raw)
   }
 
   function setBodyFormat(root: HTMLElement, format: BodyFormat) {
     const currentFormat = getActiveBodyFormat(root)
-    const data = getBodyData(root, currentFormat)
+    const data = currentFormat === format ? null : getBodyData(root, currentFormat)
 
     const container = getBodyFormatContainer(root)
     if (container) {
@@ -353,19 +163,14 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
     root.querySelectorAll('[data-body-panel]').forEach((panel) => {
       const element = panel as HTMLElement
       const isActive = element.dataset.bodyPanel === format
-      const isEditorPanel = element.dataset.bodyPanel === 'json' || element.dataset.bodyPanel === 'xml'
       element.classList.toggle('hidden', !isActive)
-      if (isEditorPanel) element.classList.toggle('flex', isActive)
+      element.classList.toggle('flex', isActive)
     })
 
     if (data) {
-      if (format === 'form') {
-        updateFormData(root, data)
-      } else {
-        const selector = format === 'json' ? '[data-body-json]' : '[data-body-xml]'
-        const textarea = root.querySelector<HTMLTextAreaElement>(selector)
-        if (textarea) textarea.value = format === 'json' ? JSON.stringify(data, null, 2) : serializeXml(data)
-      }
+      const selector = format === 'json' ? '[data-body-json]' : '[data-body-xml]'
+      const textarea = root.querySelector<HTMLTextAreaElement>(selector)
+      if (textarea) textarea.value = format === 'json' ? JSON.stringify(data, null, 2) : serializeXmlBody(data)
     }
 
     updateContentTypeHeader(root)
@@ -380,31 +185,17 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
       if (!(target instanceof Element)) return
 
       const formatOption = target.closest('[data-body-format-option]') as HTMLElement | null
-      if (formatOption) {
-        const format = formatOption.dataset.bodyFormatOption as BodyFormat
-        if (format === 'form' || format === 'json' || format === 'xml') {
-          setBodyFormat(root, format)
-          const container = getBodyFormatContainer(root)
-          if (container) closeBodyFormatDropdown(container)
-        }
+      if (!formatOption) return
+
+      const format = formatOption.dataset.bodyFormatOption
+      if (format === 'json' || format === 'xml') {
+        setBodyFormat(root, format)
+        const container = getBodyFormatContainer(root)
+        if (container) closeBodyFormatDropdown(container)
       }
     })
 
-    root.addEventListener('change', (event) => {
-      const target = event.target
-      if (!(target instanceof Element)) return
-
-      if (target.matches('[data-form-serialize]') && (target as HTMLInputElement).checked) {
-        updateContentTypeHeader(root)
-      }
-    })
-
-    const bodyForm = root.querySelector('[data-body-form]') as HTMLFormElement | null
-    bodyForm?.addEventListener('submit', (event) => {
-      event.preventDefault()
-    })
-
-    setBodyFormat(root, 'form')
+    setBodyFormat(root, 'json')
   }
 
   function initRequestPanels() {
