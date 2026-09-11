@@ -10,6 +10,7 @@ import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
 import TabsContent from '@/components/tabs/TabsContent.astro'
 import Dropdown from '@/components/ui/Dropdown.astro'
 import Radio from '@/pages/audits/_components/Radio.astro'
+import CodeEditor from '@/components/editor/CodeEditor.astro'
 
 interface VariableEntry {
   key: string
@@ -76,8 +77,8 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
       </div>
     </TabsContent>
 
-    <TabsContent value="body" class="mt-4 min-h-0 flex-1 overflow-visible">
-      <div class="space-y-3">
+    <TabsContent value="body" class="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div class="flex min-h-0 flex-1 flex-col gap-3">
         <div data-body-panel="form" class="space-y-3">
           <div class="space-y-1.5">
             <p class="text-sm font-medium text-heading">Enviar formulario como</p>
@@ -112,51 +113,37 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
           }
         </div>
 
-        <div data-body-panel="json" class="hidden">
-          <div class="overflow-hidden rounded-main border border-border bg-background">
-            <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+        <div data-body-panel="json" class="hidden min-h-72 flex-1 flex-col">
+          <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-main border border-border bg-background">
+            <div class="flex shrink-0 items-center justify-between border-b border-border bg-secondary px-4 py-2">
               <div class="flex items-center gap-2">
                 <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
                 <span class="font-mono text-xs text-muted-foreground">body.json</span>
               </div>
             </div>
-            <div class="code-scroll code-container p-0">
+            <div class="min-h-0 flex-1">
               <label for="body-json" class="sr-only">JSON</label>
-              <textarea
-                id="body-json"
-                name="body-json"
-                rows="14"
-                spellcheck="false"
-                data-body-json
-                class="w-full resize-y border-0 bg-transparent p-4 font-mono text-sm text-heading focus:ring-0 focus:outline-none">{requestJson}</textarea
-              >
+              <CodeEditor id="body-json" name="body-json" language="json" value={requestJson} data-body-json aria-label="JSON" />
             </div>
           </div>
         </div>
 
-        <div data-body-panel="xml" class="hidden">
-          <div class="overflow-hidden rounded-main border border-border bg-background">
-            <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
+        <div data-body-panel="xml" class="hidden min-h-72 flex-1 flex-col">
+          <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-main border border-border bg-background">
+            <div class="flex shrink-0 items-center justify-between border-b border-border bg-secondary px-4 py-2">
               <div class="flex items-center gap-2">
                 <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
                 <span class="font-mono text-xs text-muted-foreground">body.xml</span>
               </div>
             </div>
-            <div class="code-scroll code-container p-0">
+            <div class="min-h-0 flex-1">
               <label for="body-xml" class="sr-only">XML</label>
-              <textarea
-                id="body-xml"
-                name="body-xml"
-                rows="14"
-                spellcheck="false"
-                data-body-xml
-                class="w-full resize-y border-0 bg-transparent p-4 font-mono text-sm text-heading focus:ring-0 focus:outline-none">{requestXml}</textarea
-              >
+              <CodeEditor id="body-xml" name="body-xml" language="xml" value={requestXml} data-body-xml aria-label="XML" />
             </div>
           </div>
         </div>
 
-        <div class="pt-1 lg:hidden">
+        <div class="shrink-0 pt-1 lg:hidden">
           <Button type="button" size="lg" icon="Send" loadingText="Enviando..." data-send-btn data-send-mode="advanced" class="h-10 w-full"> Enviar </Button>
         </div>
       </div>
@@ -366,7 +353,9 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
     root.querySelectorAll('[data-body-panel]').forEach((panel) => {
       const element = panel as HTMLElement
       const isActive = element.dataset.bodyPanel === format
+      const isEditorPanel = element.dataset.bodyPanel === 'json' || element.dataset.bodyPanel === 'xml'
       element.classList.toggle('hidden', !isActive)
+      if (isEditorPanel) element.classList.toggle('flex', isActive)
     })
 
     if (data) {
@@ -425,10 +414,3 @@ const { bearerToken, variableEntries, requestJson, requestXml } = Astro.props
   initRequestPanels()
   document.addEventListener('astro:page-load', initRequestPanels)
 </script>
-
-<style>
-  .code-container,
-  pre {
-    background-color: transparent !important;
-  }
-</style>

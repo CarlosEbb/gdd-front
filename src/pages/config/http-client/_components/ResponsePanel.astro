@@ -1,11 +1,11 @@
 ---
-import { Code } from 'astro:components'
 import Card from '@/components/ui/Card.astro'
 import Tabs from '@/components/tabs/Tabs.astro'
 import TabsList from '@/components/tabs/TabsList.astro'
 import TabsTrigger from '@/components/tabs/TabsTrigger.astro'
 import TabsContent from '@/components/tabs/TabsContent.astro'
 import Link from '@/components/ui/Link.astro'
+import CodeEditor from '@/components/editor/CodeEditor.astro'
 ---
 
 <Card class="flex h-full min-h-112 flex-col" data-response-card>
@@ -22,20 +22,36 @@ import Link from '@/components/ui/Link.astro'
       </div>
     </div>
 
-    <TabsContent value="headers" class="mt-4 flex min-h-0 flex-1 flex-col">
-      <div class="code-scroll code-container h-full min-h-0 w-full flex-1 overflow-auto" data-response-headers>
-        <Code theme="catppuccin-latte" lang="json" defaultColor={false} code="Sin respuesta aún." />
+    <TabsContent value="headers" class="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div class="min-h-72 flex-1 overflow-hidden rounded-main border border-border bg-background">
+        <CodeEditor
+          id="response-headers"
+          name="response-headers"
+          language="plaintext"
+          readOnly
+          value="Sin respuesta aún."
+          data-response-headers
+          aria-label="Headers de la respuesta"
+        />
       </div>
     </TabsContent>
 
-    <TabsContent value="response" class="mt-4 flex min-h-0 flex-1 flex-col">
+    <TabsContent value="response" class="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden">
       <div class="mb-3 hidden shrink-0" data-response-url-container>
         <Link href="#" target="_blank" rel="noopener noreferrer" variant="outline" size="sm" icon="ExternalLink" iconPosition="right" data-response-url>
           Abrir enlace de la respuesta
         </Link>
       </div>
-      <div class="code-scroll code-container h-full min-h-0 w-full flex-1 overflow-auto" data-response-body>
-        <Code theme="catppuccin-latte" lang="json" defaultColor={false} code="Envía una solicitud para ver la respuesta aquí." />
+      <div class="min-h-72 flex-1 overflow-hidden rounded-main border border-border bg-background">
+        <CodeEditor
+          id="response-body"
+          name="response-body"
+          language="plaintext"
+          readOnly
+          value="Envía una solicitud para ver la respuesta aquí."
+          data-response-body
+          aria-label="Cuerpo de la respuesta"
+        />
       </div>
     </TabsContent>
   </Tabs>
@@ -49,65 +65,6 @@ import Link from '@/components/ui/Link.astro'
     headersText: string
     bodyText: string
     bodyLang: 'json' | 'xml' | 'plaintext'
-  }
-
-  // Colores alineados con el tema catppuccin-latte de <Code />
-  const JSON_COLORS = {
-    key: '#1E66F5',
-    string: '#40A02B',
-    value: '#FE640B',
-    punctuation: '#7C7F93',
-  } as const
-
-  function createColorSpan(text: string, color: string): HTMLSpanElement {
-    const span = document.createElement('span')
-    span.style.color = color
-    span.textContent = text
-    return span
-  }
-
-  function appendHighlightedJson(codeEl: HTMLElement, code: string) {
-    const tokenPattern = /("(?:\\.|[^"\\])*")(\s*:)?|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b|[{}\[\]:,]|\s+|./g
-
-    for (const match of code.matchAll(tokenPattern)) {
-      const [token, stringLiteral, colon] = match
-
-      if (stringLiteral !== undefined) {
-        if (colon !== undefined) {
-          codeEl.appendChild(createColorSpan(stringLiteral, JSON_COLORS.key))
-          codeEl.appendChild(createColorSpan(colon, JSON_COLORS.punctuation))
-        } else {
-          codeEl.appendChild(createColorSpan(stringLiteral, JSON_COLORS.string))
-        }
-        continue
-      }
-
-      if (/^-?\d/.test(token) || token === 'true' || token === 'false' || token === 'null') {
-        codeEl.appendChild(createColorSpan(token, JSON_COLORS.value))
-        continue
-      }
-
-      codeEl.appendChild(createColorSpan(token, JSON_COLORS.punctuation))
-    }
-  }
-
-  function updateCodeBlock(container: HTMLElement, code: string, lang: 'json' | 'xml' | 'plaintext' = 'plaintext') {
-    const pre = document.createElement('pre')
-    pre.className = 'astro-code h-full min-h-full w-full'
-    pre.style.backgroundColor = 'transparent'
-    pre.style.color = '#4c4f69'
-    pre.tabIndex = 0
-
-    const codeEl = document.createElement('code')
-
-    if (lang === 'json') {
-      appendHighlightedJson(codeEl, code)
-    } else {
-      codeEl.textContent = code
-    }
-
-    pre.appendChild(codeEl)
-    container.replaceChildren(pre)
   }
 
   function statusClasses(status: number): string {
@@ -134,19 +91,28 @@ import Link from '@/components/ui/Link.astro'
     }
   }
 
+  function updateEditor(input: HTMLTextAreaElement | null, value: string, language?: string) {
+    if (!input) return
+
+    const editorRoot = input.closest<HTMLElement>('[data-code-editor]')
+    if (language && editorRoot) editorRoot.dataset.language = language
+    input.value = value
+  }
+
   function renderResponse(root: HTMLElement, payload: ResponsePayload) {
     const statusEl = root.querySelector('[data-response-status]') as HTMLElement
     const timeEl = root.querySelector('[data-response-time]') as HTMLElement
-    const headersEl = root.querySelector('[data-response-headers]') as HTMLElement
-    const bodyEl = root.querySelector('[data-response-body]') as HTMLElement
+    const headersInput = root.querySelector<HTMLTextAreaElement>('[data-response-headers]')
+    const bodyInput = root.querySelector<HTMLTextAreaElement>('[data-response-body]')
     const urlContainer = root.querySelector('[data-response-url-container]') as HTMLElement
     const urlEl = root.querySelector('[data-response-url]') as HTMLAnchorElement
 
     statusEl.className = `inline-flex items-center rounded-main border px-2 py-1 font-mono text-xs ${statusClasses(payload.status)}`
     statusEl.textContent = `${payload.status} ${payload.statusText}`.trim()
     timeEl.textContent = `${payload.durationMs} ms`
-    updateCodeBlock(headersEl, payload.headersText || '(sin headers)', 'plaintext')
-    updateCodeBlock(bodyEl, payload.bodyText, payload.bodyLang)
+
+    updateEditor(headersInput, payload.headersText || '(sin headers)', 'plaintext')
+    updateEditor(bodyInput, payload.bodyText, payload.bodyLang)
 
     const responseUrl = getResponseUrl(payload.bodyText)
     urlEl.href = responseUrl || '#'
@@ -171,11 +137,6 @@ import Link from '@/components/ui/Link.astro'
 </script>
 
 <style>
-  .code-container,
-  pre {
-    background-color: transparent !important;
-  }
-
   [data-response-card] > div {
     display: flex;
     min-height: 0;
@@ -196,19 +157,5 @@ import Link from '@/components/ui/Link.astro'
     min-height: 0;
     flex: 1;
     flex-direction: column;
-  }
-
-  [data-response-card] .code-container {
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    flex: 1;
-  }
-
-  [data-response-card] .code-container :global(pre),
-  [data-response-card] .code-container :global(.astro-code) {
-    width: 100%;
-    min-height: 100%;
-    margin: 0;
   }
 </style>

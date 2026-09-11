@@ -10,6 +10,12 @@ export default defineConfig({
   vite: {
     // @ts-ignore
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      include: ['monaco-editor'],
+    },
+    worker: {
+      format: 'es',
+    },
   },
   security: {
     checkOrigin: false, // Desactiva la verificación de CSRF en endpoints/formularios

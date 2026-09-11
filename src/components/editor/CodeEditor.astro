@@ -1,0 +1,61 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+interface Props extends HTMLAttributes<'textarea'> {
+  language?: 'json' | 'xml' | 'plaintext'
+  readOnly?: boolean
+}
+
+const { language = 'plaintext', readOnly = false, class: className, value = '', id, name, ...rest } = Astro.props
+
+const { 'aria-label': ariaLabel, ...textareaAttrs } = rest
+const editorId = id ?? name
+---
+
+<div
+  class:list={['h-full min-h-0 w-full overflow-hidden', className]}
+  data-code-editor
+  data-language={language}
+  data-readonly={readOnly ? 'true' : 'false'}
+  data-aria-label={ariaLabel}
+>
+  <textarea
+    id={editorId}
+    name={name}
+    class="sr-only"
+    aria-hidden="true"
+    tabindex="-1"
+    spellcheck="false"
+    readonly={readOnly}
+    data-code-editor-input
+    {...textareaAttrs}>{value}</textarea
+  >
+  <div data-code-editor-mount class="h-full min-h-0 w-full"></div>
+</div>
+
+<script>
+  import { disposeCodeEditors, initCodeEditors } from '@/scripts/code-editor'
+
+  initCodeEditors()
+  document.addEventListener('astro:page-load', initCodeEditors)
+  document.addEventListener('astro:before-swap', disposeCodeEditors)
+</script>
+
+<style>
+  [data-code-editor],
+  [data-code-editor-mount] {
+    height: 100%;
+  }
+
+  [data-code-editor-mount] :global(.monaco-editor),
+  [data-code-editor-mount] :global(.overflow-guard) {
+    height: 100%;
+  }
+
+  [data-code-editor-mount] :global(.current-line),
+  [data-code-editor-mount] :global(.current-line-both),
+  [data-code-editor-mount] :global(.current-line-margin),
+  [data-code-editor-mount] :global(.current-line-margin-both) {
+    border: none;
+  }
+</style>
