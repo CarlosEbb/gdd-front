@@ -1,0 +1,409 @@
+---
+import Layout from './_components/Layout.astro'
+import Card from '@/components/ui/Card.astro'
+import Button from '@/components/ui/Button.astro'
+import Icon from '@/components/ui/Icon.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
+import Dropdown from '@/components/ui/Dropdown.astro'
+import Modal from '@/components/modal/Modal.astro'
+import ClientBadge from './_components/ClientBadge.astro'
+import { actions } from 'astro:actions'
+
+const { data: listData, error: listError } = await Astro.callAction(actions.clients.list, {})
+const clients = listData?.data ?? []
+const selectedClient = clients[0]
+const hasClients = clients.length > 0
+
+const clientResult = selectedClient ? await Astro.callAction(actions.clients.getByUuid, { uuid: selectedClient.uuid }) : { data: undefined, error: undefined }
+
+const token = clientResult.data?.data?.securityToken || null
+const clientError = clientResult.error
+const maskedToken = token ? `${token.slice(0, 10)}${'•'.repeat(80)}` : ''
+---
+
+<Layout>
+  {
+    listError ? (
+      <EmptyState title="Servicio no disponible" state="error" description={listError.message ?? 'No se pudo cargar la lista de clientes.'} hiddenAction />
+    ) : !hasClients ? (
+      <EmptyState title="No hay clientes" state="info" description="Crea un cliente para generar su token de acceso." hiddenAction />
+    ) : (
+      <div class="space-y-4">
+        <div>
+          <p class="mb-1 text-sm font-medium text-heading">Cliente</p>
+          <div id="client-picker" class="w-full" data-client-uuid={selectedClient.uuid}>
+            <Dropdown fieldTrigger menuClass="md:w-full">
+              <ClientBadge slot="trigger" name={selectedClient.name} logo={selectedClient.logo} />
+              <ul>
+                {clients.map((client) => (
+                  <li>
+                    <button type="button" class="flex w-full items-center px-3 py-2 text-left hover:bg-muted" data-client-option data-client-uuid={client.uuid}>
+                      <ClientBadge name={client.name} logo={client.logo} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Dropdown>
+          </div>
+        </div>
+
+        <Card id="token-ready" class:list={['overflow-hidden', token && !clientError ? '' : 'hidden']}>
+          <div class="flex items-start gap-4">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-sm font-semibold text-primary">
+              <Icon name="KeyRound" stroke-width={1.5} class="size-4" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-base font-semibold text-heading">Token de acceso</h2>
+              <p class="mt-1 text-sm text-subheading">
+                Utiliza este token en el header <code class="rounded bg-muted px-1.5 py-0.5 text-xs">Authorization: Bearer</code> para consumir servicios externos.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-6 overflow-hidden rounded-main border border-border bg-muted">
+            <div class="flex items-center justify-between gap-2 border-b border-border bg-secondary px-4 py-2">
+              <div class="flex items-center gap-2">
+                <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
+                <span class="font-mono text-xs text-muted-foreground">token</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <button type="button" id="btn-reveal-token" class="p-1 text-muted-foreground transition-colors hover:text-heading" title="Mostrar u ocultar token" aria-label="Mostrar u ocultar token">
+                  <Icon name="Eye" stroke-width={1.5} class="icon-reveal-show size-4" />
+                  <Icon name="EyeOff" stroke-width={1.5} class="icon-reveal-hide hidden size-4" />
+                </button>
+                <button type="button" id="btn-copy-token" class="copy-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar token" data-content={token ?? ''}>
+                  <Icon name="Copy" stroke-width={1.5} class="size-4" />
+                </button>
+              </div>
+            </div>
+            <div class="bg-background p-4 font-mono text-sm text-heading">
+              <span id="token-display" class="block w-full truncate" data-token={token ?? ''}>
+                {maskedToken}
+              </span>
+            </div>
+          </div>
+
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Button type="button" variant="destructive" size="sm" icon="Trash" id="btn-open-delete-token">
+              Eliminar token
+            </Button>
+            <Button type="button" size="sm" icon="RefreshCw" id="btn-generate-token" data-has-token="true">
+              Generar token
+            </Button>
+          </div>
+
+          <div slot="footer" class="flex items-start gap-2 text-sm text-subheading">
+            <Icon name="Info" stroke-width={1.5} class="mt-0.5 size-4 shrink-0 text-primary" />
+            <p>Al generar un nuevo token, el anterior dejará de funcionar de inmediato.</p>
+          </div>
+        </Card>
+
+        <div id="token-empty" class:list={['flex flex-col items-center justify-center rounded-main border-2 border-dashed border-border bg-background py-8', !token && !clientError ? '' : 'hidden']}>
+          <div class="mb-4 rounded-main border border-border p-2.5">
+            <Icon name="Info" size={24} class="text-subheading" />
+          </div>
+          <p class="text-lg font-semibold text-heading">Sin token configurado</p>
+          <p class="mb-4 text-center text-sm text-subheading">Genera un token para autorizar peticiones a los servicios externos.</p>
+          <Button type="button" size="sm" icon="Plus" id="btn-generate-empty">
+            Generar token
+          </Button>
+        </div>
+
+        <div id="token-error" class:list={[clientError ? '' : 'hidden']}>
+          <EmptyState title="Servicio no disponible" state="error" description={clientError?.message ?? 'No se pudo cargar el token del cliente.'} hiddenAction />
+        </div>
+      </div>
+    )
+  }
+</Layout>
+
+<Modal modalId="regenerate-token" title="Regenerar token">
+  <div class="flex flex-col items-center justify-center py-5 text-center">
+    <Icon name="RefreshCw" size={48} stroke-width={1.5} class="text-primary" />
+    <p class="mt-4 text-sm text-subheading">El token actual dejará de funcionar. ¿Deseas generar uno nuevo?</p>
+  </div>
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="button" size="sm" id="btn-confirm-regenerate" loadingText="Generando...">Generar token</Button>
+  </div>
+</Modal>
+
+<Modal modalId="delete-token" title="Eliminar token">
+  <div class="flex flex-col items-center justify-center py-5 text-center">
+    <Icon name="Trash" size={48} stroke-width={1.5} class="text-red-300" />
+    <p class="mt-4 text-sm text-subheading">Las integraciones que usen este token dejarán de autenticarse. ¿Continuar?</p>
+  </div>
+  <div slot="footer">
+    <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
+    <Button type="button" size="sm" variant="destructive" id="btn-confirm-delete" loadingText="Eliminando...">Eliminar token</Button>
+  </div>
+</Modal>
+
+<script>
+  import { actions } from 'astro:actions'
+  import { toast } from '@/scripts/toast'
+  import { callAction, setButtonLoading } from '@/scripts/utils'
+  import type { ApiResponse } from '@/types/response'
+  import type { ServiceTokenGenerateData } from '@/types/serviceToken'
+
+  type TokenViewState = {
+    token: string
+    revealed: boolean
+    justGenerated: boolean
+  }
+
+  let viewState: TokenViewState | null = null
+
+  const getPicker = () => document.getElementById('client-picker')
+  const getSelectedUuid = () => getPicker()?.dataset.clientUuid ?? ''
+
+  const showPanel = (panel: 'ready' | 'empty' | 'error') => {
+    document.getElementById('token-ready')?.classList.toggle('hidden', panel !== 'ready')
+    document.getElementById('token-empty')?.classList.toggle('hidden', panel !== 'empty')
+    document.getElementById('token-error')?.classList.toggle('hidden', panel !== 'error')
+  }
+
+  const maskToken = (token: string) => `${token.slice(0, 10)}${'•'.repeat(80)}`
+
+  const renderTokenDisplay = () => {
+    const display = document.getElementById('token-display')
+    const copyBtn = document.getElementById('btn-copy-token') as HTMLButtonElement | null
+    const revealBtn = document.getElementById('btn-reveal-token')
+    const iconShow = revealBtn?.querySelector('.icon-reveal-show')
+    const iconHide = revealBtn?.querySelector('.icon-reveal-hide')
+
+    if (!display || !viewState?.token) return
+
+    const { token, revealed, justGenerated } = viewState
+    const showPlain = revealed || justGenerated
+
+    display.textContent = showPlain ? token : maskToken(token)
+    display.classList.toggle('truncate', !showPlain)
+    display.classList.toggle('break-all', showPlain)
+    display.classList.toggle('whitespace-nowrap', !showPlain)
+    display.dataset.token = token
+    copyBtn?.setAttribute('data-content', token)
+
+    iconShow?.classList.toggle('hidden', showPlain)
+    iconHide?.classList.toggle('hidden', !showPlain)
+    revealBtn?.toggleAttribute('disabled', justGenerated)
+  }
+
+  const setTokenOnPage = (token: string, options: { justGenerated?: boolean } = {}) => {
+    viewState = {
+      token,
+      revealed: Boolean(options.justGenerated),
+      justGenerated: Boolean(options.justGenerated),
+    }
+
+    showPanel('ready')
+    renderTokenDisplay()
+
+    const generateBtn = document.getElementById('btn-generate-token') as HTMLButtonElement | null
+    generateBtn?.setAttribute('data-has-token', 'true')
+  }
+
+  const clearTokenOnPage = () => {
+    viewState = null
+    const display = document.getElementById('token-display')
+    const copyBtn = document.getElementById('btn-copy-token')
+    if (display) {
+      display.textContent = ''
+      display.dataset.token = ''
+    }
+    copyBtn?.setAttribute('data-content', '')
+    document.getElementById('btn-generate-token')?.setAttribute('data-has-token', 'false')
+    showPanel('empty')
+  }
+
+  const setupCopyButtons = () => {
+    document.querySelectorAll('.copy-btn').forEach((btn) => {
+      const button = btn as HTMLButtonElement
+
+      if (button.dataset.listenerAdded === 'true') return
+
+      button.addEventListener('click', async () => {
+        const content = button.getAttribute('data-content')
+        if (!content) {
+          toast.error(button.id === 'btn-copy-token' ? 'No hay token para copiar' : 'No hay contenido para copiar')
+          return
+        }
+
+        try {
+          await navigator.clipboard.writeText(content)
+          toast.success('Copiado al portapapeles')
+        } catch {
+          toast.error('Error al copiar')
+        }
+      })
+
+      button.dataset.listenerAdded = 'true'
+    })
+  }
+
+  const setupRevealButton = () => {
+    const revealBtn = document.getElementById('btn-reveal-token')
+
+    if (!revealBtn || revealBtn.dataset.listenerAdded === 'true') return
+
+    revealBtn.addEventListener('click', () => {
+      if (!viewState?.token || viewState.justGenerated) return
+
+      viewState.revealed = !viewState.revealed
+      renderTokenDisplay()
+    })
+
+    revealBtn.dataset.listenerAdded = 'true'
+  }
+
+  const runGenerate = async (button: HTMLButtonElement | null) => {
+    const uuid = getSelectedUuid()
+    if (!button || !uuid) return
+
+    setButtonLoading(button, true, { loadingText: 'Generando...' })
+
+    const { data, error } = await callAction(actions.serviceToken.generate({ uuid }))
+
+    setButtonLoading(button, false)
+
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+
+    const generateResponse = data as ApiResponse<ServiceTokenGenerateData> | undefined
+    const newToken = generateResponse?.data?.token
+    if (!newToken) {
+      toast.error('Respuesta inválida del servicio')
+      return
+    }
+
+    setTokenOnPage(newToken, { justGenerated: true })
+    toast.success('Token generado')
+    ;(document.getElementById('regenerate-token') as HTMLDialogElement | null)?.close()
+  }
+
+  const runDelete = async (button: HTMLButtonElement | null) => {
+    const uuid = getSelectedUuid()
+    if (!button || !uuid) return
+
+    setButtonLoading(button, true, { loadingText: 'Eliminando...' })
+
+    const { error } = await callAction(actions.serviceToken.delete({ uuid }))
+
+    setButtonLoading(button, false)
+
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+
+    clearTokenOnPage()
+    toast.success('Token eliminado')
+    ;(document.getElementById('delete-token') as HTMLDialogElement | null)?.close()
+  }
+
+  const bindClick = (element: HTMLElement | null, handler: () => void) => {
+    if (!element || element.dataset.listenerAdded === 'true') return
+
+    element.addEventListener('click', handler)
+    element.dataset.listenerAdded = 'true'
+  }
+
+  const setupGenerateFlow = () => {
+    const generateBtn = document.getElementById('btn-generate-token') as HTMLButtonElement | null
+    const generateEmptyBtn = document.getElementById('btn-generate-empty') as HTMLButtonElement | null
+    const confirmRegenerateBtn = document.getElementById('btn-confirm-regenerate') as HTMLButtonElement | null
+    const regenerateModal = document.getElementById('regenerate-token') as HTMLDialogElement | null
+
+    const handleGenerateClick = () => {
+      const hasToken = generateBtn?.dataset.hasToken === 'true' || Boolean(viewState?.token) || Boolean(document.getElementById('token-display')?.dataset.token)
+
+      if (hasToken) {
+        regenerateModal?.showModal()
+        return
+      }
+
+      void runGenerate(generateBtn ?? generateEmptyBtn)
+    }
+
+    bindClick(generateBtn, handleGenerateClick)
+    bindClick(generateEmptyBtn, () => void runGenerate(generateEmptyBtn))
+    bindClick(confirmRegenerateBtn, () => void runGenerate(confirmRegenerateBtn))
+  }
+
+  const setupDeleteFlow = () => {
+    const openDeleteBtn = document.getElementById('btn-open-delete-token')
+    const confirmDeleteBtn = document.getElementById('btn-confirm-delete') as HTMLButtonElement | null
+    const deleteModal = document.getElementById('delete-token') as HTMLDialogElement | null
+
+    bindClick(openDeleteBtn, () => deleteModal?.showModal())
+    bindClick(confirmDeleteBtn, () => void runDelete(confirmDeleteBtn))
+  }
+
+  const closeClientMenu = () => {
+    const picker = getPicker()
+    picker?.classList.remove('is-open')
+    picker?.querySelector('[data-dropdown-menu]')?.classList.remove('is-open')
+  }
+
+  const selectClient = async (option: HTMLButtonElement) => {
+    const uuid = option.dataset.clientUuid
+    const picker = getPicker()
+    if (!uuid || !picker || uuid === picker.dataset.clientUuid) {
+      closeClientMenu()
+      return
+    }
+
+    const { data, error } = await callAction(actions.clients.getByUuid({ uuid }))
+
+    if (error) {
+      toast.error(error.message)
+      closeClientMenu()
+      return
+    }
+
+    const badge = option.querySelector('[data-client-badge]')
+    const trigger = picker.querySelector('[data-dropdown-toggle] [data-client-badge]')
+    if (badge && trigger) trigger.replaceWith(badge.cloneNode(true))
+
+    picker.dataset.clientUuid = uuid
+    closeClientMenu()
+
+    const securityToken = data?.data?.securityToken || null
+    if (securityToken) setTokenOnPage(securityToken)
+    else clearTokenOnPage()
+  }
+
+  const setupClientPicker = () => {
+    const picker = getPicker()
+    if (!picker || picker.dataset.listenerAdded === 'true') return
+
+    picker.addEventListener('click', (event) => {
+      const option = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-client-option]')
+      if (!option) return
+      void selectClient(option)
+    })
+
+    picker.dataset.listenerAdded = 'true'
+  }
+
+  const initPage = () => {
+    const display = document.getElementById('token-display')
+    const initialToken = display?.dataset.token
+
+    if (initialToken) {
+      viewState = { token: initialToken, revealed: false, justGenerated: false }
+      renderTokenDisplay()
+    }
+
+    setupCopyButtons()
+    setupRevealButton()
+    setupGenerateFlow()
+    setupDeleteFlow()
+    setupClientPicker()
+  }
+
+  initPage()
+  document.addEventListener('astro:page-load', initPage)
+</script>

@@ -47,6 +47,9 @@ const routePolicies: RoutePolicy[] = [
   // --- Permissions (config) ---
   { pattern: /^\/config\/security(\/|$)/, permissions: ['permissions.view'], mode: 'any' },
 
+  // --- Settings ---
+  { pattern: /^\/settings(\/|$)/, permissions: ['admin.full'], mode: 'any' },
+
   // --- Audits ---
   { pattern: /^\/audits(\/|$)/, permissions: ['audit.view', 'admin.full'], mode: 'any' },
 ]

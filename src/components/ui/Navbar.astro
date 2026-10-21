@@ -4,6 +4,7 @@ import Search from './Search.astro'
 import Dropdown from './Dropdown.astro'
 import Icon from './Icon.astro'
 import Avatar from './Avatar.astro'
+import PermissionGuard from './PermissionGuard.astro'
 import type { InfoProfile } from '@/types/profile'
 
 const PUBLIC_NAME_PROJECT = import.meta.env.PUBLIC_NAME_PROJECT
@@ -41,6 +42,13 @@ const email = user?.email ?? ''
             <span class="font-medium">Perfil</span>
             <Icon name="User" class="size-4 text-subheading" />
           </a>
+
+          <PermissionGuard permission="admin.full">
+            <a href="/settings" class="flex items-center justify-between gap-3 rounded-main px-3 py-2 text-sm text-heading hover:bg-muted">
+              <span class="font-medium">Configuración</span>
+              <Icon name="Settings" class="size-4 text-subheading" />
+            </a>
+          </PermissionGuard>
 
           <div class="flex items-center justify-between gap-3 px-3 py-2 text-sm text-heading" data-no-close>
             <span class="font-medium">Tema</span>

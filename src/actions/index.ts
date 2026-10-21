@@ -10,6 +10,7 @@ import { permissions } from './permissions'
 import { publications } from './publications'
 import { metrics } from './metrics'
 import { audits } from './audits'
+import { serviceToken } from './serviceToken'
 
 export const server = {
   auth,
@@ -24,4 +25,5 @@ export const server = {
   publications,
   metrics,
   audits,
+  serviceToken,
 }

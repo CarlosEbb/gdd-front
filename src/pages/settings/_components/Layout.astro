@@ -1,0 +1,12 @@
+---
+import TabsLayout from '@/layouts/TabsLayout.astro'
+
+const navigation = [
+  { href: '/settings', label: 'Generar token' },
+  { href: '/settings/documentation', label: 'Documentación' },
+]
+---
+
+<TabsLayout title="Configuración" navigation={navigation} titleForPage="Configuración" subtitle="Token de acceso y documentación de la API de plantillas">
+  <slot />
+</TabsLayout>

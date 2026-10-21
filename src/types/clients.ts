@@ -6,6 +6,7 @@ export interface DetailsClient {
   name: string
   rif: string
   logo: string
+  securityToken?: string | null
   createdAt: Date | string
   updatedAt: Date | string
   databases: Databases[]
