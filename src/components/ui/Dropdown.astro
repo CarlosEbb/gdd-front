@@ -13,6 +13,7 @@ interface Props {
   icon?: keyof typeof icons
   menuClass?: string
   hideLabel?: boolean
+  fieldTrigger?: boolean
 }
 
 const {
@@ -26,9 +27,11 @@ const {
   icon = undefined,
   menuClass = '',
   hideLabel = false,
+  fieldTrigger = false,
 } = Astro.props
 
 const hasTriggerSlot = Astro.slots.has('trigger')
+const iconTrigger = hasTriggerSlot && !fieldTrigger
 
 const sizeClasses = {
   default: 'h-10 px-2',
@@ -59,7 +62,7 @@ const positionClasses = {
   <div class="fixed inset-0 z-40 hidden bg-background/50 opacity-0 transition-opacity duration-300 in-[.is-open]:block in-[.is-open]:opacity-100 md:hidden!" data-dropdown-backdrop></div>
   <button
     class:list={[
-      hasTriggerSlot
+      iconTrigger
         ? 'inline-flex cursor-pointer items-center justify-center rounded-full bg-transparent p-0 text-subheading transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground disabled:cursor-not-allowed disabled:opacity-50'
         : [
             'inline-flex w-full cursor-pointer items-center justify-between gap-x-1.5 rounded-main bg-background backdrop-blur-sm transition duration-200 focus:border-transparent focus:ring-2 focus:ring-primary-foreground focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50',
@@ -72,7 +75,26 @@ const positionClasses = {
   >
     {
       hasTriggerSlot ? (
-        <slot name="trigger" />
+        <>
+          <span class="flex min-w-0 flex-1 items-center">
+            <slot name="trigger" />
+          </span>
+          {fieldTrigger && (
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="-mr-1 ml-2 h-5 w-5 shrink-0 text-heading transition-transform duration-200 ease-in-out in-[.is-open]:rotate-180"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          )}
+        </>
       ) : (
         <>
           {mobileIcon && (
