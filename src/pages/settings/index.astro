@@ -53,9 +53,9 @@ const maskedToken = token ? `${token.slice(0, 10)}${'•'.repeat(80)}` : ''
               <Icon name="KeyRound" stroke-width={1.5} class="size-4" />
             </div>
             <div class="min-w-0 flex-1">
-              <h2 class="text-base font-semibold text-heading">Token de acceso</h2>
+              <h2 class="text-base font-semibold text-heading">API Key de acceso</h2>
               <p class="mt-1 text-sm text-subheading">
-                Utiliza este token en el header <code class="rounded bg-muted px-1.5 py-0.5 text-xs">Authorization: Bearer</code> para consumir servicios externos.
+                Utiliza esta API Key en el header <code class="rounded bg-muted px-1.5 py-0.5 text-xs">Authorization: Bearer</code> para consumir servicios externos.
               </p>
             </div>
           </div>
@@ -64,7 +64,7 @@ const maskedToken = token ? `${token.slice(0, 10)}${'•'.repeat(80)}` : ''
             <div class="flex items-center justify-between gap-2 border-b border-border bg-secondary px-4 py-2">
               <div class="flex items-center gap-2">
                 <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
-                <span class="font-mono text-xs text-muted-foreground">token</span>
+                <span class="font-mono text-xs text-muted-foreground">API Key</span>
               </div>
               <div class="flex items-center gap-1">
                 <button type="button" id="btn-reveal-token" class="p-1 text-muted-foreground transition-colors hover:text-heading" title="Mostrar u ocultar token" aria-label="Mostrar u ocultar token">
@@ -85,16 +85,16 @@ const maskedToken = token ? `${token.slice(0, 10)}${'•'.repeat(80)}` : ''
 
           <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
             <Button type="button" variant="destructive" size="sm" icon="Trash" id="btn-open-delete-token">
-              Eliminar token
+              Eliminar API Key
             </Button>
             <Button type="button" size="sm" icon="RefreshCw" id="btn-generate-token" data-has-token="true">
-              Generar token
+              Generar API Key
             </Button>
           </div>
 
           <div slot="footer" class="flex items-start gap-2 text-sm text-subheading">
             <Icon name="Info" stroke-width={1.5} class="mt-0.5 size-4 shrink-0 text-primary" />
-            <p>Al generar un nuevo token, el anterior dejará de funcionar de inmediato.</p>
+            <p>Al generar una nueva API Key, la anterior dejará de funcionar de inmediato.</p>
           </div>
         </Card>
 
@@ -102,15 +102,15 @@ const maskedToken = token ? `${token.slice(0, 10)}${'•'.repeat(80)}` : ''
           <div class="mb-4 rounded-main border border-border p-2.5">
             <Icon name="Info" size={24} class="text-subheading" />
           </div>
-          <p class="text-lg font-semibold text-heading">Sin token configurado</p>
-          <p class="mb-4 text-center text-sm text-subheading">Genera un token para autorizar peticiones a los servicios externos.</p>
+          <p class="text-lg font-semibold text-heading">Sin API Key configurada</p>
+          <p class="mb-4 text-center text-sm text-subheading">Genera una API Key para autorizar peticiones a los servicios externos.</p>
           <Button type="button" size="sm" icon="Plus" id="btn-generate-empty">
-            Generar token
+            Generar API Key
           </Button>
         </div>
 
         <div id="token-error" class:list={[clientError ? '' : 'hidden']}>
-          <EmptyState title="Servicio no disponible" state="error" description={clientError?.message ?? 'No se pudo cargar el token del cliente.'} hiddenAction />
+          <EmptyState title="Servicio no disponible" state="error" description={clientError?.message ?? 'No se pudo cargar la API Key del cliente.'} hiddenAction />
         </div>
       </div>
     )
@@ -120,22 +120,22 @@ const maskedToken = token ? `${token.slice(0, 10)}${'•'.repeat(80)}` : ''
 <Modal modalId="regenerate-token" title="Regenerar token">
   <div class="flex flex-col items-center justify-center py-5 text-center">
     <Icon name="RefreshCw" size={48} stroke-width={1.5} class="text-primary" />
-    <p class="mt-4 text-sm text-subheading">El token actual dejará de funcionar. ¿Deseas generar uno nuevo?</p>
+    <p class="mt-4 text-sm text-subheading">La API Key actual dejará de funcionar. ¿Deseas generar una nueva?</p>
   </div>
   <div slot="footer">
     <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-    <Button type="button" size="sm" id="btn-confirm-regenerate" loadingText="Generando...">Generar token</Button>
+    <Button type="button" size="sm" id="btn-confirm-regenerate" loadingText="Generando...">Generar API Key</Button>
   </div>
 </Modal>
 
-<Modal modalId="delete-token" title="Eliminar token">
+<Modal modalId="delete-token" title="Eliminar API Key">
   <div class="flex flex-col items-center justify-center py-5 text-center">
     <Icon name="Trash" size={48} stroke-width={1.5} class="text-red-300" />
-    <p class="mt-4 text-sm text-subheading">Las integraciones que usen este token dejarán de autenticarse. ¿Continuar?</p>
+    <p class="mt-4 text-sm text-subheading">Las integraciones que usen esta API Key dejarán de autenticarse. ¿Continuar?</p>
   </div>
   <div slot="footer">
     <Button type="button" size="sm" variant="outline" data-close-modal>Cancelar</Button>
-    <Button type="button" size="sm" variant="destructive" id="btn-confirm-delete" loadingText="Eliminando...">Eliminar token</Button>
+    <Button type="button" size="sm" variant="destructive" id="btn-confirm-delete" loadingText="Eliminando...">Eliminar API Key</Button>
   </div>
 </Modal>
 
