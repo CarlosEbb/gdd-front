@@ -4,35 +4,17 @@ import Card from '@/components/ui/Card.astro'
 import Icon from '@/components/ui/Icon.astro'
 import { Code } from 'astro:components'
 
-const baseUrl = import.meta.env.PUBLIC_CARGA_URL.replace(/\/$/, '')
-const templateUuidPlaceholder = '{uuid-de-plantilla}'
-const documentUrl = `${baseUrl}/documents/${templateUuidPlaceholder}`
+const baseUrl = import.meta.env.PUBLIC_PROJECT_URL
+
+const documentUrl = `${baseUrl}`
+const documentationUrl = `/clients/documentation`
 
 const authorizationHeaderExample = {
   'Content-Type': 'application/json',
-  Authorization: 'Bearer {token}',
-}
-
-const requestBodyExample = {
-  nombre: '',
-  apellido: '',
-  correo_destino: ['contacto@miempresa.com', 'soporte@miempresa.com', 'ventas@miempresa.com'],
-  mostrar_una_sola_vez: false,
-  fecha_vencimiento: null,
-}
-
-const responseExample = {
-  status: 200,
-  message: 'Documento guardado exitosamente',
-  data: {
-    uuid: 'c73bc0b8-ea3b-49b7-8974-f3f9553ad281',
-    url: `${baseUrl}/documents/viewPDF/c73bc0b8-ea3b-49b7-8974-f3f9553ad281`,
-  },
+  Authorization: 'Bearer {API Key}',
 }
 
 const authorizationHeaderJson = JSON.stringify(authorizationHeaderExample, null, 2)
-const requestBodyJson = JSON.stringify(requestBodyExample, null, 2)
-const responseExampleJson = JSON.stringify(responseExample, null, 2)
 ---
 
 <Layout>
@@ -43,9 +25,7 @@ const responseExampleJson = JSON.stringify(responseExample, null, 2)
         <div class="flex-1">
           <h3 class="text-base font-semibold text-heading">URL a la que se debe enviar la solicitud</h3>
           <p class="mt-1 text-sm text-subheading">
-            Envía un <code class="rounded bg-muted px-1.5 py-0.5 text-xs">POST</code> por HTTPS al endpoint de documentos. Sustituye <code class="rounded bg-muted px-1.5 py-0.5 text-xs"
-              >{templateUuidPlaceholder}</code
-            > por el UUID de tu plantilla.
+            Envía un <code class="rounded bg-muted px-1.5 py-0.5 text-xs">GET</code>
           </p>
         </div>
       </div>
@@ -55,8 +35,8 @@ const responseExampleJson = JSON.stringify(responseExample, null, 2)
           <div class="flex items-center justify-between gap-2">
             <div>
               <span class="text-muted-foreground">1</span>
-              <span class="text-pink-600">POST</span>
-              <span class="text-heading">{baseUrl}<span class="text-primary">/documents/{templateUuidPlaceholder}</span></span>
+              <span class="text-pink-600">GET</span>
+              <span class="text-heading">{baseUrl}<span class="text-primary">{documentationUrl}</span></span>
             </div>
             <button type="button" class="copy-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar URL" data-content={documentUrl}>
               <Icon name="Copy" stroke-width={1.5} class="size-4" />
@@ -72,8 +52,8 @@ const responseExampleJson = JSON.stringify(responseExample, null, 2)
         <div class="flex-1">
           <h3 class="text-base font-semibold text-heading">Autenticación</h3>
           <p class="mt-1 text-sm text-subheading">
-            Incluye el token de la pestaña <strong>Token</strong> en <code class="rounded bg-muted px-1.5 py-0.5 text-xs">Authorization</code> con el esquema Bearer. Reemplaza <code
-              class="rounded bg-muted px-1.5 py-0.5 text-xs">{'{token}'}</code
+            Incluye el el API Key de la pestaña <strong>Generar API Key</strong> en <code class="rounded bg-muted px-1.5 py-0.5 text-xs">Authorization</code> con el esquema Bearer. Reemplaza <code
+              class="rounded bg-muted px-1.5 py-0.5 text-xs">{'{API Key}'}</code
             > por ese valor.
           </p>
         </div>
@@ -91,62 +71,6 @@ const responseExampleJson = JSON.stringify(responseExample, null, 2)
         </div>
         <div class="code-scroll code-container overflow-x-auto p-4">
           <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={authorizationHeaderJson} />
-        </div>
-      </div>
-    </Card>
-
-    <Card class="overflow-visible">
-      <div class="flex items-start gap-4">
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-sm font-semibold text-primary">3</div>
-        <div class="flex-1">
-          <h3 class="text-base font-semibold text-heading">Datos que debe contener la solicitud</h3>
-          <p class="mt-1 text-sm text-subheading">
-            Ejemplo para la plantilla <strong>Estado de cuenta</strong>. Los campos dependen de las variables definidas en cada plantilla.
-          </p>
-        </div>
-      </div>
-
-      <div class="mt-4 ml-12 overflow-hidden rounded-main border border-border bg-background">
-        <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
-          <div class="flex items-center gap-2">
-            <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
-            <span class="font-mono text-xs text-muted-foreground">body.json</span>
-          </div>
-          <button type="button" class="copy-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar código" data-content={requestBodyJson}>
-            <Icon name="Copy" stroke-width={1.5} class="size-4" />
-          </button>
-        </div>
-        <div class="code-scroll code-container overflow-x-auto p-4">
-          <Code theme="catppuccin-latte" lang="json" defaultColor={false} code={requestBodyJson} />
-        </div>
-      </div>
-    </Card>
-
-    <Card class="overflow-visible">
-      <div class="flex items-start gap-4">
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-sm font-semibold text-primary">4</div>
-        <div class="flex-1">
-          <h3 class="text-base font-semibold text-heading">Respuesta que devolverá el servidor</h3>
-          <p class="mt-1 text-sm text-subheading">
-            Si todo es correcto, recibirás un código <code class="rounded bg-muted px-1.5 py-0.5 text-xs">200 OK</code>. La respuesta incluirá un <code class="rounded bg-muted px-1.5 py-0.5 text-xs"
-              >uuid</code
-            > único de documento y la URL para ver el documento.
-          </p>
-        </div>
-      </div>
-
-      <div class="mt-4 ml-12 overflow-hidden rounded-main border border-border bg-background">
-        <div class="flex items-center justify-between border-b border-border bg-secondary px-4 py-2">
-          <div class="flex items-center gap-2">
-            <Icon name="Terminal" stroke-width={1.5} class="size-4 text-muted-foreground" />
-            <span class="font-mono text-xs text-muted-foreground">response.json</span>
-          </div>
-          <button type="button" class="copy-btn p-1 text-muted-foreground transition-colors hover:text-heading" title="Copiar código" data-content={responseExampleJson}>
-            <Icon name="Copy" stroke-width={1.5} class="size-4" />
-          </button>
-        </div>
-        <div class="code-scroll code-container overflow-x-auto p-4">
-          <Code theme="catppuccin-latte" lang="json" code={responseExampleJson} />
         </div>
       </div>
     </Card>
