@@ -17,6 +17,8 @@ import type {
 } from '@/types/documents'
 import { requireAuth, requirePermission } from '@/lib/permissions'
 import { PAPER_SIZES, ORIENTATION, MARGIN_PRESETS } from '@/constants/file-settings'
+import { DOCUMENT_ALLOWED_EXTENSIONS, DOCUMENT_UPLOAD_MAX_BYTES } from '@/lib/document-upload'
+import { getDocumentExtension } from '@/scripts/utils'
 
 export const documents = {
   getByWorkspaces: defineAction({
@@ -76,6 +78,44 @@ export const documents = {
       try {
         const newDocument = await http.post<CreateDocument>('/template', token, request, input)
 
+        return newDocument
+      } catch (error) {
+        await handleApiError(error, request)
+      }
+    },
+  }),
+
+  createTemplateFromDocument: defineAction({
+    accept: 'form',
+    input: z.object({
+      title: z.string().trim().min(1, 'Ingrese un nombre para el documento'),
+      name: z.string().trim().min(1),
+      description: z.string().optional(),
+      uuid_workspace: z.string().min(1, 'Seleccione un espacio de trabajo'),
+      document: z
+        .instanceof(File)
+        .refine((file) => file.size > 0, 'El archivo está vacío')
+        .refine((file) => file.size <= DOCUMENT_UPLOAD_MAX_BYTES, 'El archivo excede el tamaño máximo permitido')
+        .refine(
+          (file) => DOCUMENT_ALLOWED_EXTENSIONS.includes(getDocumentExtension(file.name) as (typeof DOCUMENT_ALLOWED_EXTENSIONS)[number]),
+          'Solo se permiten archivos .pdf, .doc o .docx',
+        ),
+    }),
+    handler: async ({ title, name, description, uuid_workspace, document }, request) => {
+      await requirePermission(request, ['templates.create'])
+      const token = await requireAuth(request)
+
+      const formData = new FormData()
+      formData.append('title', title)
+      formData.append('name', name)
+      formData.append('uuid_workspace', uuid_workspace)
+      if (description?.trim()) {
+        formData.append('description', description.trim())
+      }
+      formData.append('document', document)
+
+      try {
+        const newDocument = await http.post<CreateDocument>('/template/from-document', token, request, formData)
         return newDocument
       } catch (error) {
         await handleApiError(error, request)

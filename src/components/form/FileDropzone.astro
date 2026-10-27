@@ -1,0 +1,80 @@
+---
+import Icon from '../ui/Icon.astro'
+import { DOCUMENT_ACCEPT_ATTR } from '@/lib/document-upload'
+
+interface Props {
+  id: string
+  inputName?: string
+  label?: string
+  hint?: string
+  class?: string
+  createTabField?: string
+}
+
+const { id, inputName = 'document', label = 'Archivo del documento', hint, class: className, createTabField } = Astro.props
+const inputId = `${id}-input`
+const dropZoneId = `${id}-drop-zone`
+---
+
+<div class:list={['space-y-2', className]} data-file-dropzone={id}>
+  {
+    label && (
+      <span class="block text-sm font-medium text-heading" id={`${id}-label`}>
+        {label}
+      </span>
+    )
+  }
+
+  <div
+    class="rounded-lg border-2 border-dashed border-border p-6 text-center transition-colors hover:bg-muted/50"
+    id={dropZoneId}
+    role="group"
+    aria-labelledby={label ? `${id}-label` : undefined}
+  >
+    <input
+      type="file"
+      id={inputId}
+      name={inputName}
+      accept={DOCUMENT_ACCEPT_ATTR}
+      class="hidden"
+      data-file-dropzone-input
+      data-create-tab-field={createTabField}
+    />
+
+    <div id={`${id}-state-default`} class="flex cursor-pointer flex-col items-center gap-3">
+      <label for={inputId} class="flex w-full cursor-pointer flex-col items-center gap-3">
+        <div class="rounded-full bg-primary/10 p-3">
+          <Icon name="FileUp" class="h-6 w-6 text-primary" />
+        </div>
+        <div class="text-center text-heading">
+          <span class="font-medium text-primary">Haz clic para seleccionar</span> o arrastra un archivo aquí
+        </div>
+        <p class="text-xs text-subheading" id={`${id}-file-name-display`}>Ningún archivo seleccionado</p>
+      </label>
+    </div>
+
+    <div id={`${id}-state-success`} class="hidden flex-col items-center gap-3">
+      <div class="rounded-full bg-emerald-500/10 p-3">
+        <div class="rounded-full bg-emerald-500 p-2 text-white">
+          <Icon name="Check" class="h-6 w-6" />
+        </div>
+      </div>
+      <div class="text-center">
+        <h3 class="text-base font-semibold text-emerald-600">Archivo listo</h3>
+        <p class="mt-1 text-sm text-subheading">Puedes crear el documento o elegir otro archivo.</p>
+      </div>
+      <div class="mt-1 flex max-w-full items-center gap-2 rounded-md border border-border bg-muted px-4 py-2">
+        <Icon name="File" class="h-5 w-5 shrink-0 text-emerald-600" />
+        <span class="max-w-[200px] truncate text-sm font-medium text-heading md:max-w-[320px]" id={`${id}-success-file-name`}></span>
+        <span class="shrink-0 text-xs text-subheading" id={`${id}-success-file-size`}></span>
+      </div>
+      <button type="button" class="mt-2 text-xs font-medium text-primary hover:underline" id={`${id}-btn-change-file`} data-file-dropzone-change>
+        Seleccionar otro archivo
+      </button>
+    </div>
+  </div>
+
+  <p class="hidden text-sm text-destructive" id={`${id}-error`} role="alert" data-file-dropzone-error></p>
+
+  {hint && <p class="text-xs text-subheading">{hint}</p>}
+</div>

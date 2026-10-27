@@ -15,6 +15,14 @@ export function getQueryParam(paramName: string): string | null {
   return paramValue
 }
 
+/** Extensión en minúsculas, con el punto. Ej: "Informe.DOCX" → ".docx". Vacío si no hay extensión. */
+export function getDocumentExtension(fileName: string): string {
+  const lower = fileName.toLowerCase()
+  const dot = lower.lastIndexOf('.')
+  if (dot === -1) return ''
+  return lower.slice(dot)
+}
+
 export function setCookie({ name, value, days = 30 }: { name: string; value: string; days: number }) {
   const expires = new Date(Date.now() + days * 864e5).toUTCString()
   const secure = location.protocol === 'https:' ? '; Secure' : ''
