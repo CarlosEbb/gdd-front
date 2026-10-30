@@ -5,28 +5,15 @@ import Link from '@/components/ui/Link.astro'
 import StateSwitch from '@/components/ui/StateSwitch.astro'
 import WorkspacesLink from '@/components/ui/WorkspacesLink.astro'
 import WorkspaceFormModal from '@/components/modal/WorkspaceFormModal.astro'
-import { actions } from 'astro:actions'
 import type { Workspace } from '@/types/workspaces'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 
-const getWorkspacesFromSession = async () => {
-  const workspaces = (await Astro.session?.get('workspaces')) ?? []
-  return workspaces as Workspace[]
+interface Props {
+  workspaces: Workspace[]
+  error?: string | null
 }
 
-const sessionWorkspaces = await getWorkspacesFromSession()
-const hasWorkspacesInSession = sessionWorkspaces.length > 0
-
-let workspaces: Workspace[] = []
-let error: string | null = null
-
-if (hasWorkspacesInSession) {
-  workspaces = sessionWorkspaces
-} else {
-  const { data, error: actionError } = await Astro.callAction(actions.workspaces.list, {})
-  workspaces = data?.data ?? []
-  error = actionError?.message ?? null
-}
+const { workspaces, error = null } = Astro.props
 
 const latestWorkspaces = workspaces.slice(0, 4)
 const hasWorkSpaces = workspaces.length > 0
@@ -48,7 +35,7 @@ const hasWorkSpaces = workspaces.length > 0
     </div>
   </header>
 
-  <StateSwitch isEmpty={!hasWorkSpaces}>
+  <StateSwitch hasError={Boolean(error)} isEmpty={!hasWorkSpaces}>
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {hasWorkSpaces && latestWorkspaces.map((workspace, index) => <WorkspacesLink workspace={workspace} index={index} />)}
     </div>

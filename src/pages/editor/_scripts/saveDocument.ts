@@ -9,7 +9,7 @@ function updateUrlWithNewVersion(buildNumber: string) {
   window.history.replaceState({}, '', url.toString())
 }
 
-export function setupSaveDocument(ctx: EditorContext) {
+export function setupSaveDocument(ctx: EditorContext, signal: AbortSignal) {
   const documentationLink = document.getElementById('documentationLink') as HTMLAnchorElement
   const modalNewVersionDocument = document.getElementById('new-version-document') as HTMLDialogElement
   const saveDocumentButton = document.getElementById('btn-save-document') as HTMLButtonElement
@@ -67,6 +67,6 @@ export function setupSaveDocument(ctx: EditorContext) {
     await handleSave(uuidTemplate, '', '#btn-save-document')
   }
 
-  document.addEventListener('create-version:submit', handleNewVersion)
-  saveDocumentButton.addEventListener('click', handleSaveNewDocument)
+  document.addEventListener('create-version:submit', handleNewVersion, { signal })
+  saveDocumentButton.addEventListener('click', handleSaveNewDocument, { signal })
 }

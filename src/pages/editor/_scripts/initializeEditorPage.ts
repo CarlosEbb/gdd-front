@@ -17,6 +17,50 @@ import { setupDeleteDocument } from './deleteDocument'
 import { setupTemplateIO } from './templateIO'
 import { setupUnsavedChanges } from './unsavedChanges'
 
+const mountedContainers = new WeakSet<HTMLElement>()
+let sessionAbort: AbortController | null = null
+let activeDesigner: Designer | null = null
+let mountObserver: MutationObserver | null = null
+let isWatchingDocument = false
+
+function destroyActiveDesigner() {
+  const designer = activeDesigner
+  activeDesigner = null
+  if (!designer) return
+  try {
+    designer.destroy()
+  } catch {
+    // El contenedor puede haber salido del DOM durante la transición
+  }
+}
+
+function startEditorSession(): AbortSignal {
+  sessionAbort?.abort()
+  sessionAbort = new AbortController()
+  return sessionAbort.signal
+}
+
+function waitForContainerLayout(container: HTMLElement, signal: AbortSignal) {
+  return new Promise<void>((resolve) => {
+    let frames = 0
+
+    const step = () => {
+      if (signal.aborted || !container.isConnected || frames >= 60) {
+        resolve()
+        return
+      }
+      if (container.clientWidth > 0 && container.clientHeight > 0) {
+        resolve()
+        return
+      }
+      frames += 1
+      requestAnimationFrame(step)
+    }
+
+    step()
+  })
+}
+
 function createEditorContext(domContainer: HTMLElement): EditorContext {
   const state: EditorState = {
     designer: undefined,
@@ -90,8 +134,12 @@ function createEditorContext(domContainer: HTMLElement): EditorContext {
   }
 }
 
-async function initializeEditor(ctx: EditorContext, schemaFile: any) {
+async function initializeEditor(ctx: EditorContext, schemaFile: any, signal: AbortSignal) {
   const fonts = await initializeFonts()
+  if (signal.aborted || !ctx.domContainer.isConnected) return
+
+  await waitForContainerLayout(ctx.domContainer, signal)
+  if (signal.aborted || !ctx.domContainer.isConnected) return
 
   let template = schemaFile
 
@@ -124,6 +172,8 @@ async function initializeEditor(ctx: EditorContext, schemaFile: any) {
   ctx.state.pagination = new PaginationManager(template)
   const initialTemplate = ctx.state.pagination.isSingleChunk ? template : ctx.state.pagination.getChunkedTemplate()
 
+  if (signal.aborted || !ctx.domContainer.isConnected) return
+
   ctx.state.designer = new Designer({
     domContainer: ctx.domContainer,
     template: initialTemplate,
@@ -138,12 +188,18 @@ async function initializeEditor(ctx: EditorContext, schemaFile: any) {
       },
     },
   })
+  activeDesigner = ctx.state.designer
+
+  if (signal.aborted) {
+    destroyActiveDesigner()
+    return
+  }
 
   const pagination = setupPagination(ctx)
   pagination.bindControls()
 
   setupGeneratePdf(ctx, plugins, fonts)
-  setupTemplateIO(ctx)
+  setupTemplateIO(ctx, signal)
   setupMobileActions(ctx, ctx.state.designer, plugins, fonts)
   setupDocumentSettings(ctx)
   requestAnimationFrame(() => {
@@ -170,13 +226,61 @@ export function initializeEditorPage() {
     return
   }
 
+  const signal = startEditorSession()
   const ctx = createEditorContext(domContainer)
 
   setupDeleteDocument(ctx)
-  setupSaveDocument(ctx)
+  setupSaveDocument(ctx, signal)
   setupUnsavedChanges(ctx)
 
-  initializeEditor(ctx, schemaFile).catch(() => {
+  initializeEditor(ctx, schemaFile, signal).catch(() => {
+    if (signal.aborted) return
     toast.error('Ha ocurrido un error al inicializar el editor. Por favor, intente nuevamente.')
   })
+}
+
+function disposeEditorSession() {
+  sessionAbort?.abort()
+  sessionAbort = null
+  mountObserver?.disconnect()
+  mountObserver = null
+  destroyActiveDesigner()
+}
+
+function tryInitializeEditor(): boolean {
+  if (!location.pathname.startsWith('/editor/')) return false
+
+  const container = document.getElementById('container')
+  const schema = document.getElementById('schema-file-data')
+  if (!(container instanceof HTMLElement) || !schema) return false
+  if (mountedContainers.has(container)) return true
+
+  mountedContainers.add(container)
+  initializeEditorPage()
+  return true
+}
+
+function armEditorMount() {
+  mountObserver?.disconnect()
+  mountObserver = null
+  if (!location.pathname.startsWith('/editor/')) return
+  if (tryInitializeEditor()) return
+
+  mountObserver = new MutationObserver(() => {
+    if (tryInitializeEditor()) {
+      mountObserver?.disconnect()
+      mountObserver = null
+    }
+  })
+  mountObserver.observe(document.body, { childList: true, subtree: true })
+}
+
+export function watchEditorDocument() {
+  if (isWatchingDocument) return
+  isWatchingDocument = true
+
+  document.addEventListener('astro:before-swap', disposeEditorSession)
+  document.addEventListener('astro:after-swap', armEditorMount)
+  document.addEventListener('astro:page-load', armEditorMount)
+  armEditorMount()
 }

@@ -31,7 +31,7 @@ const ALL_MENU_ITEMS: MenuItem[] = [
   { href: '/servers', name: 'Servidores', icon: Server, module: 'servers' },
   { href: '/workspaces', name: 'Espacios', icon: SquareLibrary, module: 'workspaces' },
   { href: '/audits', name: 'Auditorías', icon: ShieldCheck, permission: 'audit.view' },
-  { href: '/settings', name: 'API', icon: Braces, permission: 'admin.full' },
+  { href: '/settings', name: 'API', icon: Braces, permission: 'documents.view' },
 ]
 
 const permissions = (await Astro.session?.get('permissions')) as PermissionData | undefined

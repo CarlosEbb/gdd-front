@@ -5,15 +5,33 @@ import ListDocuments from '@/sections/documents/List.astro'
 import TitleForPage from '@/components/ui/TitleForPage.astro'
 import Container from '@/components/ui/Container.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
-import { isSuperAdmin } from '@/lib/permissions/policy'
+import { hasPermission, isSuperAdmin } from '@/lib/permissions/policy'
 import type { PermissionData } from '@/lib/permissions/types'
+import type { Workspace } from '@/types/workspaces'
 import ListActions from '@/sections/metrics/ListActions.astro'
+import { actions } from 'astro:actions'
 
 const user = await Astro.session?.get('user')
 const userPermissions = (await Astro.session?.get('permissions')) as PermissionData | undefined
 const isAdmin = userPermissions ? isSuperAdmin(userPermissions) : false
+const canViewWorkspaces = userPermissions ? hasPermission(userPermissions, 'workspaces.view') : false
 
 const name = user?.name
+
+let workspaces: Workspace[] = []
+let workspacesError: string | null = null
+
+if (!isAdmin && canViewWorkspaces) {
+  const sessionWorkspaces = ((await Astro.session?.get('workspaces')) ?? []) as Workspace[]
+
+  if (sessionWorkspaces.length > 0) {
+    workspaces = sessionWorkspaces
+  } else {
+    const { data, error } = await Astro.callAction(actions.workspaces.list, {})
+    workspaces = data?.data ?? []
+    workspacesError = error?.message ?? null
+  }
+}
 ---
 
 <MainLayout title="Inicio">
@@ -26,7 +44,7 @@ const name = user?.name
       ) : (
         <>
           <PermissionGuard permission="workspaces.view">
-            <ListWorkspaces />
+            <ListWorkspaces workspaces={workspaces} error={workspacesError} />
           </PermissionGuard>
 
           <ListDocuments title="Últimos documentos" subtitle="Consulta los documentos que has creado recientemente" limit={8} />

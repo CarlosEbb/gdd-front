@@ -38,16 +38,14 @@ if (uuidWorkspace) {
   grid = 'grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
 }
 
-hasDocuments = true
-error = undefined
 const currentPath = '/home'
 ---
 
 <StateSwitch hasError={error !== undefined} isEmpty={!hasDocuments}>
-  <EmptyState slot="error-state" title="Error al cargar los documentos" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
+  <EmptyState slot="error" title="Error al cargar los documentos" description="Intenta nuevamente." href={currentPath} hrefText="Recargar" state="error" action="refresh" />
 
   <EmptyState
-    slot="empty-state"
+    slot="empty"
     title="Documentos no encontrados"
     description="Crea un nuevo documento para empezar a trabajar."
     modalId="save-template"

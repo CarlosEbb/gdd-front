@@ -7,6 +7,7 @@ import EmptyState from '@/components/ui/EmptyState.astro'
 import Dropdown from '@/components/ui/Dropdown.astro'
 import Modal from '@/components/modal/Modal.astro'
 import ClientBadge from './_components/ClientBadge.astro'
+import PermissionGuard from '@/components/ui/PermissionGuard.astro'
 import { actions } from 'astro:actions'
 
 const { data: listData, error: listError } = await Astro.callAction(actions.clients.list, {})
@@ -84,12 +85,16 @@ const maskedToken = token ? `${token.slice(0, 10)}${'•'.repeat(80)}` : ''
           </div>
 
           <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button type="button" variant="destructive" size="sm" icon="Trash" id="btn-open-delete-token">
-              Eliminar API Key
-            </Button>
-            <Button type="button" size="sm" icon="RefreshCw" id="btn-generate-token" data-has-token="true">
-              Generar API Key
-            </Button>
+            <PermissionGuard permission="documents.delete">
+              <Button type="button" variant="destructive" size="sm" icon="Trash" id="btn-open-delete-token">
+                Eliminar API Key
+              </Button>
+            </PermissionGuard>
+            <PermissionGuard permission="documents.update">
+              <Button type="button" size="sm" icon="RefreshCw" id="btn-generate-token" data-has-token="true">
+                Generar API Key
+              </Button>
+            </PermissionGuard>
           </div>
 
           <div slot="footer" class="flex items-start gap-2 text-sm text-subheading">
@@ -104,9 +109,11 @@ const maskedToken = token ? `${token.slice(0, 10)}${'•'.repeat(80)}` : ''
           </div>
           <p class="text-lg font-semibold text-heading">Sin API Key configurada</p>
           <p class="mb-4 text-center text-sm text-subheading">Genera una API Key para autorizar peticiones a los servicios externos.</p>
-          <Button type="button" size="sm" icon="Plus" id="btn-generate-empty">
-            Generar API Key
-          </Button>
+          <PermissionGuard permission="documents.update">
+            <Button type="button" size="sm" icon="Plus" id="btn-generate-empty">
+              Generar API Key
+            </Button>
+          </PermissionGuard>
         </div>
 
         <div id="token-error" class:list={[clientError ? '' : 'hidden']}>

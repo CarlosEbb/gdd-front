@@ -41,4 +41,12 @@ const SHOW_PAGE_FOR_VIEW = false
     <SchemaIOModal />
   </PermissionGuard>
   <CreateDocumentModal />
+
+  <script>
+    import { watchEditorDocument } from './_scripts/initializeEditorPage'
+
+    // El canvas llega después, en el server island. Este script vive en la página
+    // para volver a montar el editor en cada navegación con view transitions.
+    watchEditorDocument()
+  </script>
 </EditorLayout>

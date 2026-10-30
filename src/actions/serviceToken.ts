@@ -13,7 +13,7 @@ export const serviceToken = {
   generate: defineAction({
     input: clientUuidInput,
     handler: async ({ uuid }, request): Promise<ApiResponse<ServiceTokenGenerateData>> => {
-      await requirePermission(request, ['admin.full'])
+      await requirePermission(request, ['documents.update'])
       const token = await requireAuth(request)
 
       try {
@@ -27,7 +27,7 @@ export const serviceToken = {
   delete: defineAction({
     input: clientUuidInput,
     handler: async ({ uuid }, request): Promise<ApiResponse<ServiceTokenDeleteData>> => {
-      await requirePermission(request, ['admin.full'])
+      await requirePermission(request, ['documents.delete'])
       const token = await requireAuth(request)
 
       try {

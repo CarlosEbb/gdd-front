@@ -18,7 +18,7 @@ function closeSchemaIOModal() {
   modal?.close()
 }
 
-export function setupTemplateIO(ctx: EditorContext) {
+export function setupTemplateIO(ctx: EditorContext, signal: AbortSignal) {
   const basePdfInput = document.getElementById('basePdfInput')
   if (basePdfInput) {
     basePdfInput.addEventListener('change', (e) => {
@@ -85,9 +85,13 @@ export function setupTemplateIO(ctx: EditorContext) {
     toggleFullscreenBtn.addEventListener('click', toggleFullscreen)
   }
 
-  document.addEventListener('keydown', (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && document.body.classList.contains('editor-fullscreen')) {
-      toggleFullscreen()
-    }
-  })
+  document.addEventListener(
+    'keydown',
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && document.body.classList.contains('editor-fullscreen')) {
+        toggleFullscreen()
+      }
+    },
+    { signal },
+  )
 }
