@@ -55,12 +55,7 @@ const showWarningFromServer = workspaces !== undefined && workspaces.length === 
         <div class="space-y-4">
           <div>
             <input type="checkbox" name="generate_with_ai" id="generate_with_ai" class="hidden" data-create-tab-field="blank" />
-            <button
-              type="button"
-              class="flex w-full cursor-pointer items-center justify-between border-b border-border pb-1.5"
-              id="generate-with-ai-toggle"
-              data-create-tab-field="blank"
-            >
+            <button type="button" class="flex w-full cursor-pointer items-center justify-between border-b border-border pb-1.5" id="generate-with-ai-toggle" data-create-tab-field="blank">
               <h3 class="flex items-center gap-2 text-sm font-semibold text-subheading">
                 <Icon class="text-primary" name="Sparkles" size={18} />
                 Crear documento con IA
@@ -75,8 +70,7 @@ const showWarningFromServer = workspaces !== undefined && workspaces.length === 
                   id="prompt"
                   placeholder="Crea un documento sobre..."
                   class="field-sizing-content w-full rounded-main border border-border bg-background p-2"
-                  data-create-tab-field="blank"
-                ></textarea>
+                  data-create-tab-field="blank"></textarea>
                 <p class="text-sm text-subheading">Ingrese el prompt para crear el documento con IA.</p>
               </div>
             </div>
@@ -108,7 +102,7 @@ const showWarningFromServer = workspaces !== undefined && workspaces.length === 
                       name="marginType"
                       placeholder="Seleccione un margen"
                       options={MARGIN_PRESETS.map((margin) => ({ value: margin, label: margin }))}
-                      value={MARGIN_PRESETS[1]}
+                      value={MARGIN_PRESETS[0]}
                       required
                       data-create-tab-field="blank"
                     />
