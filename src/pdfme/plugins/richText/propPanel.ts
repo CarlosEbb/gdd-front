@@ -76,9 +76,9 @@ export const propPanel: PropPanel<RichTextSchema> = {
   defaultSchema: {
     name: '',
     type: 'richText',
-    text: 'Escribe aquí tu <b>texto</b>',
-    variables: [],
-    content: '',
+    text: 'Escribe aquí tu <b>texto</b> {variable}',
+    variables: ['variable'],
+    content: '{"variable":""}',
     position: { x: 0, y: 0 },
     width: 80,
     height: 20,

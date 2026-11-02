@@ -2,5 +2,13 @@
 ---
 
 <div id="container" class="h-[calc(100vh-56px)] w-full"></div>
+
+<style>
+  /* text y multiVariableText siguen registrados para documentos existentes */
+  :global(.pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-text)),
+  :global(.pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-multiVariableText)) {
+    display: none;
+  }
+</style>
 <input type="file" id="uploadTemplateInput" accept=".json" class="hidden" />
 <input type="file" id="basePdfInput" class="hidden" accept="application/pdf" />

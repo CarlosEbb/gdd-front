@@ -155,16 +155,16 @@ async function initializeEditor(ctx: EditorContext, schemaFile: any, signal: Abo
   }
 
   const plugins = {
-    text,
-    multiVariableText,
+    richText,
     table,
     line,
     rectangle,
     ellipse,
     image,
     signature,
-    richText,
     svg,
+    text,
+    multiVariableText,
   }
 
   const primaryColor = getComputedColorInHex('--primary') || '#2c62db'
@@ -181,6 +181,7 @@ async function initializeEditor(ctx: EditorContext, schemaFile: any, signal: Abo
     options: {
       lang: 'es',
       font: fonts,
+      icons: multiVariableText.icon ? { richText: multiVariableText.icon } : undefined,
       theme: {
         token: {
           colorPrimary: primaryColor,
