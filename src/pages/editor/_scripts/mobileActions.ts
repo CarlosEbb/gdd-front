@@ -45,6 +45,15 @@ export function setupMobileActions(ctx: EditorContext, designer: Designer | unde
         case 'delete':
           modalDeleteDocument?.showModal()
           break
+        case 'toggle-static-schema': {
+          ctx.toggleStaticSchemaMode?.()
+          break
+        }
+        case 'header-footer': {
+          const modal = document.getElementById('header-footer') as HTMLDialogElement | null
+          modal?.showModal()
+          break
+        }
         case 'document-settings': {
           const modal = document.getElementById('document-settings') as HTMLDialogElement | null
           modal?.showModal()

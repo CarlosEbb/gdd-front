@@ -1,0 +1,267 @@
+---
+import Modal from '@/components/modal/Modal.astro'
+import Button from '@/components/ui/Button.astro'
+import Input from '@/components/form/Input.astro'
+import Select from '@/components/form/Select.astro'
+import Icon from '@/components/ui/Icon.astro'
+
+const alignmentOptions = [
+  { value: 'left', label: 'Izquierda' },
+  { value: 'center', label: 'Centro' },
+  { value: 'right', label: 'Derecha' },
+]
+
+const fontSizeOptions = [
+  { value: '8', label: '8 pt' },
+  { value: '9', label: '9 pt' },
+  { value: '10', label: '10 pt' },
+  { value: '11', label: '11 pt' },
+  { value: '12', label: '12 pt' },
+  { value: '14', label: '14 pt' },
+]
+---
+
+<Modal title="Configuración de encabezado y pie" modalId="header-footer">
+  <div id="header-footer-non-blank-warning" class="hidden rounded-main border border-warning/30 bg-warning/10 p-4 text-sm text-heading">
+    <div class="flex items-start gap-3">
+      <Icon name="Info" class="mt-0.5 size-5 shrink-0 text-warning" stroke-width={1.5} />
+      <div class="space-y-1">
+        <p class="font-medium">No disponible para PDFs base externos</p>
+        <p class="text-xs text-subheading">
+          Según la documentación de pdfme, la propiedad <code>staticSchema</code> para encabezados y pies de página solo se puede utilizar en documentos con base de dimensiones en blanco (no en archivos PDF cargados como plantilla).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <form id="header-footer-form" class="space-y-4">
+    <div id="header-footer-content" class="space-y-4">
+      {/* Sección Encabezado */}
+      <div class="rounded-main border border-border bg-foreground/30 p-3 sm:p-4">
+        <div class="flex items-center justify-between">
+          <label for="enable-header" class="flex cursor-pointer items-center gap-2 text-sm font-semibold text-heading">
+            <input
+              type="checkbox"
+              id="enable-header"
+              name="enableHeader"
+              class="size-4 rounded border-border text-primary focus:ring-primary"
+            />
+            <span>Habilitar encabezado (Header)</span>
+          </label>
+          <span class="rounded bg-muted px-2 py-0.5 text-xs text-subheading">Superior</span>
+        </div>
+
+        <div id="header-fields" class="mt-3 space-y-3 border-t border-border/60 pt-3">
+          <div>
+            <Input
+              id="header-text"
+              name="headerText"
+              label="Texto del encabezado"
+              placeholder="Ej: Documento Oficial | {currentPage}"
+            />
+            <div class="mt-1.5 flex flex-wrap items-center gap-1">
+              <span class="text-xs text-subheading">Insertar:</span>
+              <button
+                type="button"
+                class="cursor-pointer rounded border border-border bg-muted/60 px-1.5 py-0.5 text-xs text-heading hover:bg-muted"
+                data-insert-target="header-text"
+                data-insert-text="{currentPage}"
+              >
+                + {'{currentPage}'}
+              </button>
+              <button
+                type="button"
+                class="cursor-pointer rounded border border-border bg-muted/60 px-1.5 py-0.5 text-xs text-heading hover:bg-muted"
+                data-insert-target="header-text"
+                data-insert-text="{totalPages}"
+              >
+                + {'{totalPages}'}
+              </button>
+              <button
+                type="button"
+                class="cursor-pointer rounded border border-border bg-muted/60 px-1.5 py-0.5 text-xs text-heading hover:bg-muted"
+                data-insert-target="header-text"
+                data-insert-text="{currentPage} / {totalPages}"
+              >
+                + {'{currentPage} / {totalPages}'}
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div>
+              <Select
+                id="header-alignment"
+                name="headerAlignment"
+                label="Alineación"
+                options={alignmentOptions}
+              />
+            </div>
+            <div>
+              <Select
+                id="header-font-size"
+                name="headerFontSize"
+                label="Tamaño fuente"
+                options={fontSizeOptions}
+              />
+            </div>
+            <div>
+              <Input
+                id="header-offset"
+                name="headerOffset"
+                type="number"
+                min="2"
+                max="60"
+                label="Posición Y (mm)"
+                value="10"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
+            <label for="header-line" class="flex cursor-pointer items-center gap-2 text-sm text-subheading hover:text-heading">
+              <input
+                type="checkbox"
+                id="header-line"
+                name="headerLine"
+                class="size-4 rounded border-border text-primary focus:ring-primary"
+              />
+              <span>Incluir línea divisoria inferior</span>
+            </label>
+
+            <div class="flex items-center gap-2">
+              <label for="header-color" class="text-xs text-subheading">Color texto:</label>
+              <input
+                type="color"
+                id="header-color"
+                name="headerColor"
+                value="#4d4d4d"
+                class="size-7 cursor-pointer rounded border border-border bg-transparent p-0.5"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección Pie de página */}
+      <div class="rounded-main border border-border bg-foreground/30 p-3 sm:p-4">
+        <div class="flex items-center justify-between">
+          <label for="enable-footer" class="flex cursor-pointer items-center gap-2 text-sm font-semibold text-heading">
+            <input
+              type="checkbox"
+              id="enable-footer"
+              name="enableFooter"
+              class="size-4 rounded border-border text-primary focus:ring-primary"
+            />
+            <span>Habilitar pie de página (Footer)</span>
+          </label>
+          <span class="rounded bg-muted px-2 py-0.5 text-xs text-subheading">Inferior</span>
+        </div>
+
+        <div id="footer-fields" class="mt-3 space-y-3 border-t border-border/60 pt-3">
+          <div>
+            <Input
+              id="footer-text"
+              name="footerText"
+              label="Texto del pie de página"
+              placeholder="Ej: Página {currentPage} de {totalPages}"
+            />
+            <div class="mt-1.5 flex flex-wrap items-center gap-1">
+              <span class="text-xs text-subheading">Insertar:</span>
+              <button
+                type="button"
+                class="cursor-pointer rounded border border-border bg-muted/60 px-1.5 py-0.5 text-xs text-heading hover:bg-muted"
+                data-insert-target="footer-text"
+                data-insert-text="Página {currentPage} de {totalPages}"
+              >
+                + Página X de Y
+              </button>
+              <button
+                type="button"
+                class="cursor-pointer rounded border border-border bg-muted/60 px-1.5 py-0.5 text-xs text-heading hover:bg-muted"
+                data-insert-target="footer-text"
+                data-insert-text="{currentPage} / {totalPages}"
+              >
+                + X / Y
+              </button>
+              <button
+                type="button"
+                class="cursor-pointer rounded border border-border bg-muted/60 px-1.5 py-0.5 text-xs text-heading hover:bg-muted"
+                data-insert-target="footer-text"
+                data-insert-text="{currentPage}"
+              >
+                + {'{currentPage}'}
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div>
+              <Select
+                id="footer-alignment"
+                name="footerAlignment"
+                label="Alineación"
+                options={alignmentOptions}
+              />
+            </div>
+            <div>
+              <Select
+                id="footer-font-size"
+                name="footerFontSize"
+                label="Tamaño fuente"
+                options={fontSizeOptions}
+              />
+            </div>
+            <div>
+              <Input
+                id="footer-offset"
+                name="footerOffset"
+                type="number"
+                min="2"
+                max="60"
+                label="Distancia inferior (mm)"
+                value="10"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
+            <label for="footer-line" class="flex cursor-pointer items-center gap-2 text-sm text-subheading hover:text-heading">
+              <input
+                type="checkbox"
+                id="footer-line"
+                name="footerLine"
+                class="size-4 rounded border-border text-primary focus:ring-primary"
+              />
+              <span>Incluir línea divisoria superior</span>
+            </label>
+
+            <div class="flex items-center gap-2">
+              <label for="footer-color" class="text-xs text-subheading">Color texto:</label>
+              <input
+                type="color"
+                id="footer-color"
+                name="footerColor"
+                value="#4d4d4d"
+                class="size-7 cursor-pointer rounded border border-border bg-transparent p-0.5"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-xs text-subheading">
+        Los cambios aplicados se reflejarán en el documento y se persistirán al presionar <b>Guardar</b>.
+      </p>
+
+      <div class="flex justify-end space-x-3 border-t border-border pt-4">
+        <Button type="button" size="sm" variant="outline" data-close-modal>
+          Cancelar
+        </Button>
+        <Button type="submit" size="sm" id="btn-apply-header-footer">
+          Aplicar
+        </Button>
+      </div>
+    </div>
+  </form>
+</Modal>

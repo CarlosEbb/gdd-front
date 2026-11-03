@@ -23,6 +23,8 @@ export type EditorState = {
   isDirty: boolean
   isReady: boolean
   updatePaginationUI: () => void
+  isEditingStaticSchema?: boolean
+  savedTemplateBeforeStatic?: any
 }
 
 export type EditorContext = {
@@ -34,4 +36,5 @@ export type EditorContext = {
   withSyncing: (fn: () => void) => void
   markDirty: () => void
   clearDirty: () => void
+  toggleStaticSchemaMode?: () => void
 }

@@ -2,6 +2,7 @@
 import Button from '@/components/ui/Button.astro'
 import Search from '@/components/ui/Search.astro'
 import PermissionGuard from '@/components/ui/PermissionGuard.astro'
+import Icon from '@/components/ui/Icon.astro'
 ---
 
 <div class="hidden shrink-0 items-center gap-x-0.5 md:flex">
@@ -21,6 +22,15 @@ import PermissionGuard from '@/components/ui/PermissionGuard.astro'
     class="shrink-0"
     icon="Settings"
   />
+  <button
+    type="button"
+    id="btn-toggle-static-schema"
+    title="Editar esquemas estáticos (Encabezado y Pie de página)"
+    class="inline-flex h-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-main border border-border bg-background px-3 text-sm font-medium text-heading transition-colors hover:bg-muted focus-visible:outline-none"
+  >
+    <Icon name="PanelTop" id="static-schema-btn-icon" class="size-4 shrink-0" stroke-width={1.5} />
+    <span id="static-schema-btn-text" class="hidden xl:inline">Esquema estático</span>
+  </button>
   <PermissionGuard permission="admin.full">
     <Button
       type="button"

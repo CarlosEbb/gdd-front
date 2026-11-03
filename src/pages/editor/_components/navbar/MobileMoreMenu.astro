@@ -41,6 +41,12 @@ const documentationHref = `/config/documentation/${uuid}?${documentationParams.t
             Configuración del documento
           </button>
         </li>
+        <li class="md:hidden">
+          <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" id="btn-mobile-toggle-static-schema" data-mobile-action="toggle-static-schema">
+            <Icon name="PanelTop" class="size-4" stroke-width={1.5} />
+            <span id="mobile-static-schema-text">Esquema estático</span>
+          </button>
+        </li>
         <PermissionGuard permission="admin.full">
           <li class="md:hidden">
             <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" data-mobile-action="schema-io">

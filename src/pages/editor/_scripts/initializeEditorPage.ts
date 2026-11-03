@@ -10,6 +10,7 @@ import { PaginationManager } from '@/pdfme/pagination.js'
 import type { EditorContext, EditorState, OutputTemplateResult } from './types'
 import { setupPagination } from './pagination'
 import { setupDocumentSettings } from './documentSettings'
+import { setupHeaderFooter, toggleStaticSchemaMode } from './headerFooter'
 import { setupSaveDocument } from './saveDocument'
 import { setupGeneratePdf } from './generatePdf'
 import { setupMobileActions } from './mobileActions'
@@ -70,6 +71,8 @@ function createEditorContext(domContainer: HTMLElement): EditorContext {
     isDirty: false,
     isReady: false,
     updatePaginationUI: () => {},
+    isEditingStaticSchema: false,
+    savedTemplateBeforeStatic: null,
   }
 
   const markDirty = () => {
@@ -90,8 +93,22 @@ function createEditorContext(domContainer: HTMLElement): EditorContext {
     }
   }
 
+  const formatStaticElements = (elements: any[]) =>
+    elements.map((item) => {
+      if (typeof item?.content === 'string' && item.content.includes('{') && item.content.includes('}')) {
+        return { ...item, readOnly: true }
+      }
+      return item
+    })
+
   const getFullSyncedTemplate = () => {
     if (!state.designer) return null
+    if (state.isEditingStaticSchema && state.savedTemplateBeforeStatic) {
+      const currentStatic = formatStaticElements(state.designer.getTemplate().schemas[0] || [])
+      const tpl = JSON.parse(JSON.stringify(state.savedTemplateBeforeStatic))
+      tpl.basePdf.staticSchema = currentStatic
+      return tpl
+    }
     if (!state.pagination || state.pagination.isSingleChunk) {
       return state.designer.getTemplate()
     }
@@ -103,6 +120,12 @@ function createEditorContext(domContainer: HTMLElement): EditorContext {
     if (!state.designer) {
       throw new Error('Designer no está inicializado')
     }
+    if (state.isEditingStaticSchema && state.savedTemplateBeforeStatic) {
+      const currentStatic = formatStaticElements(state.designer.getTemplate().schemas[0] || [])
+      const fullTemplate = JSON.parse(JSON.stringify(state.savedTemplateBeforeStatic))
+      fullTemplate.basePdf.staticSchema = currentStatic
+      return { template: fullTemplate, renamed: [] }
+    }
     if (!state.pagination) {
       return { template: state.designer.getTemplate(), renamed: [] }
     }
@@ -111,6 +134,11 @@ function createEditorContext(domContainer: HTMLElement): EditorContext {
 
   const syncEditorWithOutputTemplate = (template: any) => {
     if (!template || !state.designer || !state.pagination) return
+
+    if (state.isEditingStaticSchema) {
+      state.savedTemplateBeforeStatic = JSON.parse(JSON.stringify(template))
+      return
+    }
 
     state.pagination.applyOutputTemplate(template)
     const currentTemplate = state.pagination.isSingleChunk ? template : state.pagination.getChunkedTemplate()
@@ -122,7 +150,7 @@ function createEditorContext(domContainer: HTMLElement): EditorContext {
     state.updatePaginationUI()
   }
 
-  return {
+  const ctx: EditorContext = {
     state,
     domContainer,
     getFullSyncedTemplate,
@@ -131,7 +159,10 @@ function createEditorContext(domContainer: HTMLElement): EditorContext {
     withSyncing,
     markDirty,
     clearDirty,
+    toggleStaticSchemaMode: () => toggleStaticSchemaMode(ctx),
   }
+
+  return ctx
 }
 
 async function initializeEditor(ctx: EditorContext, schemaFile: any, signal: AbortSignal) {
@@ -203,6 +234,7 @@ async function initializeEditor(ctx: EditorContext, schemaFile: any, signal: Abo
   setupTemplateIO(ctx, signal)
   setupMobileActions(ctx, ctx.state.designer, plugins, fonts)
   setupDocumentSettings(ctx)
+  setupHeaderFooter(ctx)
   requestAnimationFrame(() => {
     ctx.clearDirty()
     ctx.state.isReady = true
@@ -241,6 +273,7 @@ export function initializeEditorPage() {
 }
 
 function disposeEditorSession() {
+  document.body.removeAttribute('data-editing-static-schema')
   sessionAbort?.abort()
   sessionAbort = null
   mountObserver?.disconnect()

@@ -6,6 +6,7 @@ import CreateDocumentModal from '@/components/modal/CreateDocumentModal.astro'
 import DeleteDocumentModal from './_components/modals/DeleteDocumentModal.astro'
 import UnsavedChangesModal from './_components/modals/UnsavedChangesModal.astro'
 import DocumentSettingsModal from './_components/modals/DocumentSettingsModal.astro'
+import HeaderFooterModal from './_components/modals/HeaderFooterModal.astro'
 import SchemaIOModal from './_components/modals/SchemaIOModal.astro'
 import EditorNavbar from './_components/EditorNavbar.astro'
 import EditorDocumentLoader from './_components/EditorDocumentLoader.astro'
@@ -37,6 +38,7 @@ const SHOW_PAGE_FOR_VIEW = false
   <DeleteDocumentModal uuid={uuid} buildNumber={buildNumber} nameDocument={nameDocument} />
   <UnsavedChangesModal />
   <DocumentSettingsModal />
+  <HeaderFooterModal />
   <PermissionGuard permission="admin.full">
     <SchemaIOModal />
   </PermissionGuard>

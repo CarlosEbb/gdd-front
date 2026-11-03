@@ -1,6 +1,30 @@
 ---
 ---
 
+<div id="static-schema-banner" class="hidden items-center justify-between border-b border-primary/30 bg-primary/10 px-4 py-2 text-xs text-heading">
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="inline-flex size-2 rounded-full bg-primary animate-pulse"></span>
+    <span class="font-medium text-primary">Modo Esquema Estático:</span>
+    <span class="text-subheading">Edita el encabezado y pie de página directamente en el lienzo. Se mostrarán fijos en todas las páginas.</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <button
+      type="button"
+      data-open-modal="header-footer"
+      class="cursor-pointer rounded border border-border bg-background px-2.5 py-1 text-xs font-medium text-heading transition-colors hover:bg-muted"
+    >
+      Configuración
+    </button>
+    <button
+      type="button"
+      id="btn-end-static-banner"
+      class="cursor-pointer rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+    >
+      Terminar edición
+    </button>
+  </div>
+</div>
+
 <div id="container" class="h-[calc(100vh-56px)] w-full"></div>
 
 <style>
@@ -8,6 +32,16 @@
   :global(.pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-text)),
   :global(.pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-multiVariableText)) {
     display: none;
+  }
+
+  /* En modo esquema estático, mostrar plugins necesarios (text, multiVariableText) y ocultar tabla */
+  :global(body[data-editing-static-schema="true"] .pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-text)),
+  :global(body[data-editing-static-schema="true"] .pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-multiVariableText)) {
+    display: flex !important;
+  }
+
+  :global(body[data-editing-static-schema="true"] .pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-table)) {
+    display: none !important;
   }
 </style>
 <input type="file" id="uploadTemplateInput" accept=".json" class="hidden" />

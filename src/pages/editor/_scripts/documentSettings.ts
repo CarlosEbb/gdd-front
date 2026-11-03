@@ -7,7 +7,9 @@ function getCurrentDocumentSettings(ctx: EditorContext): DocumentSettings {
   const defaults: DocumentSettings = { pageSize: 'A4', marginType: 'NORMAL', orientation: 'PORTRAIT' }
   const designerInstance = ctx.state.designer
   if (!designerInstance) return defaults
-  const basePdf = designerInstance.getTemplate().basePdf as any
+  const basePdf = ctx.state.isEditingStaticSchema && ctx.state.savedTemplateBeforeStatic
+    ? (ctx.state.savedTemplateBeforeStatic.basePdf as any)
+    : (designerInstance.getTemplate().basePdf as any)
   if (!basePdf || typeof basePdf !== 'object' || typeof basePdf.width !== 'number' || typeof basePdf.height !== 'number') {
     return defaults
   }
@@ -28,7 +30,10 @@ function getCurrentDocumentSettings(ctx: EditorContext): DocumentSettings {
   if (Array.isArray(padding) && padding.length === 4) {
     const [top, right, bottom, left] = padding
     for (const [name, m] of Object.entries(MARGIN_PRESETS_MAP)) {
-      if (Math.abs(m.top - top) < 0.2 && Math.abs(m.right - right) < 0.2 && Math.abs(m.bottom - bottom) < 0.2 && Math.abs(m.left - left) < 0.2) {
+      if (
+        (Math.abs(m.top - top) < 0.2 && Math.abs(m.right - right) < 0.2 && Math.abs(m.bottom - bottom) < 0.2 && Math.abs(m.left - left) < 0.2) ||
+        (Math.abs(m.left - top) < 0.2 && Math.abs(m.top - right) < 0.2 && Math.abs(m.right - bottom) < 0.2 && Math.abs(m.bottom - left) < 0.2)
+      ) {
         marginType = name
         break
       }
@@ -55,7 +60,14 @@ function applyDocumentSettings(ctx: EditorContext, settings: DocumentSettings) {
   }
 
   const padding = [margins.top, margins.right, margins.bottom, margins.left]
-  const newBasePdf = { width, height, padding }
+  const currentBasePdf = ctx.state.isEditingStaticSchema && ctx.state.savedTemplateBeforeStatic
+    ? (ctx.state.savedTemplateBeforeStatic.basePdf as any) || {}
+    : (designerInstance.getTemplate().basePdf as any) || {}
+  const newBasePdf = { ...currentBasePdf, width, height, padding }
+
+  if (ctx.state.isEditingStaticSchema && ctx.state.savedTemplateBeforeStatic) {
+    ctx.state.savedTemplateBeforeStatic.basePdf = newBasePdf
+  }
 
   const fullTpl = ctx.getFullSyncedTemplate() as any
   const fullSchemas = fullTpl?.schemas ?? designerInstance.getTemplate().schemas
@@ -63,7 +75,9 @@ function applyDocumentSettings(ctx: EditorContext, settings: DocumentSettings) {
 
   const currentSchemas = designerInstance.getTemplate().schemas
   const newTemplate = paginationManager.updateBasePdf(newBasePdf, currentSchemas)
-  designerInstance.updateTemplate(newTemplate as any)
+  ctx.withSyncing(() => {
+    designerInstance.updateTemplate(newTemplate as any)
+  })
   ctx.markDirty()
   ctx.state.updatePaginationUI()
 
