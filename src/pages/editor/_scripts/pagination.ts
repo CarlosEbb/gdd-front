@@ -154,7 +154,16 @@ export function setupPagination(ctx: EditorContext) {
     }, 80)
   }
 
+  function isInsideDesignerSidebar(target: EventTarget | null) {
+    const element = target instanceof Element ? target : target instanceof Node ? target.parentElement : null
+    if (!element) return false
+    return Boolean(element.closest('.pdfme-designer-right-sidebar, .pdfme-designer-left-sidebar'))
+  }
+
   function handleEditorWheel(event: WheelEvent) {
+    // Los paneles de pdfme tienen scroll propio. Si se cancela la rueda aquí, solo se puede mover la barra con el mouse.
+    if (isInsideDesignerSidebar(event.target)) return
+
     event.preventDefault()
     const paginationManager = state.pagination
     if (!paginationManager) return
