@@ -42,9 +42,14 @@ const documentationHref = `/config/documentation/${uuid}?${documentationParams.t
           </button>
         </li>
         <li class="md:hidden">
-          <button type="button" class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted" id="btn-mobile-toggle-static-schema" data-mobile-action="toggle-static-schema">
-            <Icon name="PanelTop" class="size-4" stroke-width={1.5} />
-            <span id="mobile-static-schema-text">Esquema estático</span>
+          <button
+            type="button"
+            class="flex w-full items-center gap-x-2 rounded-md px-2 py-1.5 text-sm text-heading hover:bg-muted"
+            id="btn-mobile-toggle-static-schema"
+            data-mobile-action="toggle-static-schema"
+          >
+            <Icon name="GalleryVertical" class="size-4" stroke-width={1.5} />
+            <span id="mobile-static-schema-text">Encabezado y Pie de página</span>
           </button>
         </li>
         <PermissionGuard permission="admin.full">

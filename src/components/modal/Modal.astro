@@ -2,12 +2,13 @@
 interface Props {
   modalId: string
   title: string
+  size?: 'default' | 'md' | 'lg'
 }
 
-const { modalId, title } = Astro.props
+const { modalId, title, size = 'default' } = Astro.props
 ---
 
-<dialog id={modalId} class="modal-dialog border border-border bg-background text-heading">
+<dialog id={modalId} class:list={['modal-dialog border border-border bg-background text-heading', size !== 'default' && `modal-${size}`]}>
   <div class="modal-content">
     <header class="modal-header border-b border-border bg-foreground">
       <h2 class="modal-title text-heading">{title}</h2>
@@ -75,6 +76,14 @@ const { modalId, title } = Astro.props
       transform 0.3s ease,
       display 0.3s allow-discrete,
       overlay 0.3s allow-discrete;
+  }
+
+  dialog.modal-dialog.modal-md {
+    max-width: 720px;
+  }
+
+  dialog.modal-dialog.modal-lg {
+    max-width: 960px;
   }
 
   dialog.modal-dialog[open] {

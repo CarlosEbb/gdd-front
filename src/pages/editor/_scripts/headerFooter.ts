@@ -310,7 +310,7 @@ export function setupHeaderFooter(ctx: EditorContext) {
   const headerToggle = form.querySelector('#enable-header') as HTMLInputElement | null
   const headerFields = form.querySelector('#header-fields') as HTMLElement | null
   const headerTextInput = form.querySelector('#header-text') as HTMLInputElement | null
-  const headerAlignmentSelect = form.querySelector('#header-alignment') as HTMLSelectElement | null
+  const headerAlignmentName = 'headerAlignment'
   const headerFontSizeSelect = form.querySelector('#header-font-size') as HTMLSelectElement | null
   const headerColorInput = form.querySelector('#header-color') as HTMLInputElement | null
   const headerOffsetInput = form.querySelector('#header-offset') as HTMLInputElement | null
@@ -319,7 +319,19 @@ export function setupHeaderFooter(ctx: EditorContext) {
   const footerToggle = form.querySelector('#enable-footer') as HTMLInputElement | null
   const footerFields = form.querySelector('#footer-fields') as HTMLElement | null
   const footerTextInput = form.querySelector('#footer-text') as HTMLInputElement | null
-  const footerAlignmentSelect = form.querySelector('#footer-alignment') as HTMLSelectElement | null
+  const footerAlignmentName = 'footerAlignment'
+
+  const readAlignment = (name: string, fallback: 'left' | 'center' | 'right') => {
+    const checked = form.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`)
+    const value = checked?.value
+    if (value === 'left' || value === 'center' || value === 'right') return value
+    return fallback
+  }
+
+  const setAlignment = (name: string, value: string) => {
+    const radio = form.querySelector<HTMLInputElement>(`input[name="${name}"][value="${value}"]`)
+    if (radio) radio.checked = true
+  }
   const footerFontSizeSelect = form.querySelector('#footer-font-size') as HTMLSelectElement | null
   const footerColorInput = form.querySelector('#footer-color') as HTMLInputElement | null
   const footerOffsetInput = form.querySelector('#footer-offset') as HTMLInputElement | null
@@ -328,13 +340,16 @@ export function setupHeaderFooter(ctx: EditorContext) {
   const nonBlankWarning = form.querySelector('#header-footer-non-blank-warning') as HTMLElement | null
   const formContent = form.querySelector('#header-footer-content') as HTMLElement | null
 
+  const headerFieldsHint = form.querySelector('#header-fields-hint') as HTMLElement | null
+  const footerFieldsHint = form.querySelector('#footer-fields-hint') as HTMLElement | null
+
   const updateSectionVisibility = () => {
-    if (headerFields && headerToggle) {
-      headerFields.classList.toggle('hidden', !headerToggle.checked)
-    }
-    if (footerFields && footerToggle) {
-      footerFields.classList.toggle('hidden', !footerToggle.checked)
-    }
+    const headerEnabled = Boolean(headerToggle?.checked)
+    const footerEnabled = Boolean(footerToggle?.checked)
+    headerFields?.classList.toggle('hidden', !headerEnabled)
+    headerFieldsHint?.classList.toggle('hidden', headerEnabled)
+    footerFields?.classList.toggle('hidden', !footerEnabled)
+    footerFieldsHint?.classList.toggle('hidden', footerEnabled)
   }
 
   headerToggle?.addEventListener('change', updateSectionVisibility)
@@ -361,7 +376,7 @@ export function setupHeaderFooter(ctx: EditorContext) {
 
     if (headerToggle) headerToggle.checked = config.enableHeader
     if (headerTextInput) headerTextInput.value = config.headerText
-    if (headerAlignmentSelect) headerAlignmentSelect.value = config.headerAlignment
+    setAlignment(headerAlignmentName, config.headerAlignment)
     if (headerFontSizeSelect) headerFontSizeSelect.value = String(config.headerFontSize)
     if (headerColorInput) headerColorInput.value = config.headerColor
     if (headerOffsetInput) headerOffsetInput.value = String(config.headerOffset)
@@ -369,7 +384,7 @@ export function setupHeaderFooter(ctx: EditorContext) {
 
     if (footerToggle) footerToggle.checked = config.enableFooter
     if (footerTextInput) footerTextInput.value = config.footerText
-    if (footerAlignmentSelect) footerAlignmentSelect.value = config.footerAlignment
+    setAlignment(footerAlignmentName, config.footerAlignment)
     if (footerFontSizeSelect) footerFontSizeSelect.value = String(config.footerFontSize)
     if (footerColorInput) footerColorInput.value = config.footerColor
     if (footerOffsetInput) footerOffsetInput.value = String(config.footerOffset)
@@ -399,7 +414,7 @@ export function setupHeaderFooter(ctx: EditorContext) {
   const readConfigFromForm = (): HeaderFooterConfig => ({
     enableHeader: Boolean(headerToggle?.checked),
     headerText: headerTextInput?.value ?? '',
-    headerAlignment: (headerAlignmentSelect?.value as 'left' | 'center' | 'right') || 'left',
+    headerAlignment: readAlignment(headerAlignmentName, 'left'),
     headerFontSize: Number(headerFontSizeSelect?.value) || 9,
     headerColor: headerColorInput?.value || '#4d4d4d',
     headerOffset: Number(headerOffsetInput?.value) || 10,
@@ -407,7 +422,7 @@ export function setupHeaderFooter(ctx: EditorContext) {
 
     enableFooter: Boolean(footerToggle?.checked),
     footerText: footerTextInput?.value ?? '',
-    footerAlignment: (footerAlignmentSelect?.value as 'left' | 'center' | 'right') || 'center',
+    footerAlignment: readAlignment(footerAlignmentName, 'center'),
     footerFontSize: Number(footerFontSizeSelect?.value) || 9,
     footerColor: footerColorInput?.value || '#4d4d4d',
     footerOffset: Number(footerOffsetInput?.value) || 10,

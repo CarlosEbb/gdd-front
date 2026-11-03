@@ -1,27 +1,16 @@
 ---
+import Button from '@/components/ui/Button.astro'
 ---
 
-<div id="static-schema-banner" class="hidden items-center justify-between border-b border-primary/30 bg-primary/10 px-4 py-2 text-xs text-heading">
-  <div class="flex flex-wrap items-center gap-2">
-    <span class="inline-flex size-2 rounded-full bg-primary animate-pulse"></span>
-    <span class="font-medium text-primary">Modo Esquema Estático:</span>
+<div id="static-schema-banner" class="hidden flex-col gap-2 border-b border-border bg-secondary px-3 py-2 text-sm text-heading sm:flex-row sm:items-center sm:justify-between sm:px-4">
+  <div class="flex min-w-0 flex-wrap items-center gap-2">
+    <span class="inline-flex size-2 shrink-0 animate-pulse rounded-full bg-primary"></span>
+    <span class="font-medium">Modo esquema estático:</span>
     <span class="text-subheading">Edita el encabezado y pie de página directamente en el lienzo. Se mostrarán fijos en todas las páginas.</span>
   </div>
-  <div class="flex items-center gap-2">
-    <button
-      type="button"
-      data-open-modal="header-footer"
-      class="cursor-pointer rounded border border-border bg-background px-2.5 py-1 text-xs font-medium text-heading transition-colors hover:bg-muted"
-    >
-      Configuración
-    </button>
-    <button
-      type="button"
-      id="btn-end-static-banner"
-      class="cursor-pointer rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-    >
-      Terminar edición
-    </button>
+  <div class="flex shrink-0 items-center gap-2">
+    <Button type="button" size="sm" variant="secondary" data-open-modal="header-footer"> Configuración </Button>
+    <Button type="button" size="sm" id="btn-end-static-banner"> Terminar edición </Button>
   </div>
 </div>
 
@@ -35,12 +24,12 @@
   }
 
   /* En modo esquema estático, mostrar plugins necesarios (text, multiVariableText) y ocultar tabla */
-  :global(body[data-editing-static-schema="true"] .pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-text)),
-  :global(body[data-editing-static-schema="true"] .pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-multiVariableText)) {
+  :global(body[data-editing-static-schema='true'] .pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-text)),
+  :global(body[data-editing-static-schema='true'] .pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-multiVariableText)) {
     display: flex !important;
   }
 
-  :global(body[data-editing-static-schema="true"] .pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-table)) {
+  :global(body[data-editing-static-schema='true'] .pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-table)) {
     display: none !important;
   }
 </style>

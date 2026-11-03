@@ -1,0 +1,44 @@
+---
+import Icon from './Icon.astro'
+import { icons } from '@lucide/astro'
+
+interface Option {
+  value: string
+  label: string
+  icon?: keyof typeof icons
+}
+
+interface Props {
+  name: string
+  label?: string
+  options: Option[]
+  value?: string
+}
+
+const { name, label, options, value } = Astro.props
+const labelId = `${name}-label`
+---
+
+<div>
+  {
+    label && (
+      <p id={labelId} class="mb-1 block text-sm font-medium text-heading">
+        {label}
+      </p>
+    )
+  }
+  <div role="radiogroup" aria-labelledby={label ? labelId : undefined} class="inline-flex h-10 overflow-hidden rounded-main border border-border bg-background">
+    {
+      options.map((option) => (
+        <label class="border-r border-border last:border-r-0">
+          <input type="radio" name={name} value={option.value} checked={option.value === value} aria-label={option.label} class="peer sr-only" />
+          <span class="flex h-10 min-w-10 cursor-pointer items-center justify-center px-2.5 text-heading transition-colors peer-checked:bg-primary peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-ring hover:bg-muted peer-checked:hover:bg-primary/80">
+            {option.icon && <Icon name={option.icon} size={16} stroke-width={1.5} aria-hidden="true" />}
+            {!option.icon && <span class="text-sm">{option.label}</span>}
+            {option.icon && <span class="sr-only">{option.label}</span>}
+          </span>
+        </label>
+      ))
+    }
+  </div>
+</div>
