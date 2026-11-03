@@ -11,7 +11,7 @@
   "dependencies": {
     "@astrojs/check": "^0.9.10",
     "@astrojs/node": "11.1.5",
-    "@lucide/astro": "0.552.0",
+    "@lucide/astro": "1.67.0",
     "@pdfme/common": "6.0.6",
     "@pdfme/generator": "6.0.6",
     "@pdfme/schemas": "6.0.6",
