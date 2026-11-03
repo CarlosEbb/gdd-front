@@ -32,6 +32,31 @@ import Button from '@/components/ui/Button.astro'
   :global(body[data-editing-static-schema='true'] .pdfme-designer-left-sidebar > div:has(.pdfme-designer-plugin-table)) {
     display: none !important;
   }
+
+  /*
+    pdfme pinta los controles de la hoja (columnas de la tabla, borrar firma, etc.)
+    como <button> sin color. El preflight los deja transparentes y heredan el texto
+    del body, que en modo claro es casi blanco, así que desaparecen sobre el papel.
+  */
+  :global(.pdfme-designer-canvas .selectable button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #171717;
+    background-color: #ffffff;
+    border: 1px solid #a3a3a3;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  :global(.pdfme-designer-canvas .selectable button:hover) {
+    background-color: #f3f4f6;
+    border-color: #525252;
+  }
 </style>
 <input type="file" id="uploadTemplateInput" accept=".json" class="hidden" />
 <input type="file" id="basePdfInput" class="hidden" accept="application/pdf" />

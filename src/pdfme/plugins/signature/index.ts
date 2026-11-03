@@ -43,8 +43,20 @@ export const signature: Plugin<Signature> = {
     } else {
       signaturePad.on();
       const clearButton = document.createElement('button');
+      clearButton.type = 'button';
       clearButton.style.position = 'absolute';
       clearButton.style.zIndex = '1';
+      clearButton.style.top = '4px';
+      clearButton.style.right = '4px';
+      clearButton.style.padding = '2px 8px';
+      clearButton.style.color = '#171717';
+      clearButton.style.backgroundColor = '#ffffff';
+      clearButton.style.border = '1px solid #a3a3a3';
+      clearButton.style.borderRadius = '6px';
+      clearButton.style.fontSize = '12px';
+      clearButton.style.fontWeight = '600';
+      clearButton.style.lineHeight = '1.2';
+      clearButton.style.cursor = 'pointer';
       clearButton.textContent = i18n('clear') || 'Borrar';
       clearButton.addEventListener('click', () => {
         onChange && onChange({ key: 'content', value: '' });
