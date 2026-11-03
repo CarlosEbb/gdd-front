@@ -50,19 +50,13 @@ export function updateStaticSchemaUI(isEditing: boolean) {
     document.body.removeAttribute('data-editing-static-schema')
   }
 
-  // Botón navbar desktop
   const desktopBtn = document.getElementById('btn-toggle-static-schema')
-  const desktopBtnText = document.getElementById('static-schema-btn-text')
-  if (desktopBtn && desktopBtnText) {
-    if (isEditing) {
-      desktopBtnText.textContent = 'Terminar edición'
-      desktopBtn.classList.add('bg-primary', 'text-primary-foreground', 'border-primary', 'hover:bg-primary/90')
-      desktopBtn.classList.remove('bg-background', 'text-heading', 'hover:bg-muted')
-    } else {
-      desktopBtnText.textContent = 'Esquema estático'
-      desktopBtn.classList.remove('bg-primary', 'text-primary-foreground', 'border-primary', 'hover:bg-primary/90')
-      desktopBtn.classList.add('bg-background', 'text-heading', 'hover:bg-muted')
-    }
+  if (desktopBtn) {
+    desktopBtn.title = isEditing ? 'Terminar edición' : 'Editar encabezado y pie de página'
+    desktopBtn.setAttribute('aria-pressed', String(isEditing))
+    desktopBtn.classList.toggle('bg-primary', isEditing)
+    desktopBtn.classList.toggle('text-white', isEditing)
+    desktopBtn.classList.toggle('text-heading', !isEditing)
   }
 
   // Botón navbar mobile
