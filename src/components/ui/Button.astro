@@ -4,7 +4,7 @@ import Icon from './Icon.astro'
 import { icons } from '@lucide/astro'
 
 export interface Props extends HTMLAttributes<'button'> {
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient' | 'transparent'
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'gradient' | 'transparent' | 'primaryOutline'
   size?: 'default' | 'sm' | 'lg'
   rounded?: 'default' | 'full'
   loadingText?: string
@@ -27,6 +27,7 @@ const variantClasses = {
   ghost: 'hover:bg-background bg-foreground text-heading',
   gradient: 'bg-gradient-to-r from-primary via-primary/80 to-primary/60 hover:bg-gradient-to-r hover:from-primary/90 hover:via-primary/70 hover:to-primary/50 text-white transition-color',
   transparent: 'bg-transparent text-heading hover:bg-foreground',
+  primaryOutline: 'border border-primary bg-transparent text-primary hover:bg-primary/10 aria-pressed:focus:ring-0 aria-pressed:focus:ring-offset-0',
 }
 
 const sizeClasses = {
@@ -54,6 +55,8 @@ const roundedClasses = {
 ---
 
 <button
+  data-variant={variant}
+  data-button-variants={JSON.stringify(variantClasses)}
   class:list={[baseClasses, variantClasses[variant], iconOnly ? iconOnlyClasses[size] : sizeClasses[size], roundedClasses[rounded], className]}
   data-loading-text={loadingText}
   data-show-text-on-loading={showTextOnLoading}
@@ -98,6 +101,24 @@ const roundedClasses = {
       // Evitar inicializar el mismo botón múltiples veces
       if (button.hasAttribute('data-loading-initialized')) return
       button.setAttribute('data-loading-initialized', 'true')
+
+      button.addEventListener('button:set-variant', (event) => {
+        const variant = (event as CustomEvent<string>).detail
+        const raw = button.dataset.buttonVariants
+        if (!variant || !raw) return
+
+        const variants = JSON.parse(raw) as Record<string, string>
+        const nextClasses = variants[variant]
+        if (!nextClasses) return
+
+        const tokens = new Set(Object.values(variants).flatMap((classes) => classes.split(/\s+/).filter(Boolean)))
+        tokens.forEach((token) => button.classList.remove(token))
+        nextClasses
+          .split(/\s+/)
+          .filter(Boolean)
+          .forEach((token) => button.classList.add(token))
+        button.dataset.variant = variant
+      })
 
       const originalContent = content.innerHTML
 
