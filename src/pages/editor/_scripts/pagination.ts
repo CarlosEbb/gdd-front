@@ -161,6 +161,9 @@ export function setupPagination(ctx: EditorContext) {
   }
 
   function handleEditorWheel(event: WheelEvent) {
+    // En el esquema estático el lienzo es una sola hoja. La rueda y el trackpad vuelven a desplazar.
+    if (state.isEditingStaticSchema) return
+
     // Los paneles de pdfme tienen scroll propio. Si se cancela la rueda aquí, solo se puede mover la barra con el mouse.
     if (isInsideDesignerSidebar(event.target)) return
 

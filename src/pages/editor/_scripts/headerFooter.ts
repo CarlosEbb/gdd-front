@@ -25,21 +25,11 @@ export interface HeaderFooterConfig {
 }
 
 function isBlankBasePdf(basePdf: unknown): basePdf is { width: number; height: number; padding: [number, number, number, number]; staticSchema?: any[] } {
-  return (
-    typeof basePdf === 'object' &&
-    basePdf !== null &&
-    typeof (basePdf as any).width === 'number' &&
-    typeof (basePdf as any).height === 'number'
-  )
+  return typeof basePdf === 'object' && basePdf !== null && typeof (basePdf as any).width === 'number' && typeof (basePdf as any).height === 'number'
 }
 
 function isManagedItem(name: string): boolean {
-  return (
-    name === STATIC_HEADER_TEXT_NAME ||
-    name === STATIC_HEADER_LINE_NAME ||
-    name === STATIC_FOOTER_TEXT_NAME ||
-    name === STATIC_FOOTER_LINE_NAME
-  )
+  return name === STATIC_HEADER_TEXT_NAME || name === STATIC_HEADER_LINE_NAME || name === STATIC_FOOTER_TEXT_NAME || name === STATIC_FOOTER_LINE_NAME
 }
 
 export function updateStaticSchemaUI(isEditing: boolean) {
@@ -51,30 +41,16 @@ export function updateStaticSchemaUI(isEditing: boolean) {
   }
 
   const desktopBtn = document.getElementById('btn-toggle-static-schema')
-  if (desktopBtn) {
+  if (desktopBtn instanceof HTMLButtonElement) {
     desktopBtn.title = isEditing ? 'Terminar edición' : 'Editar encabezado y pie de página'
     desktopBtn.setAttribute('aria-pressed', String(isEditing))
-    desktopBtn.classList.toggle('bg-primary', isEditing)
-    desktopBtn.classList.toggle('text-white', isEditing)
-    desktopBtn.classList.toggle('text-heading', !isEditing)
+    desktopBtn.dispatchEvent(new CustomEvent('button:set-variant', { detail: isEditing ? 'primaryOutline' : 'transparent' }))
   }
 
   // Botón navbar mobile
   const mobileBtnText = document.getElementById('mobile-static-schema-text')
   if (mobileBtnText) {
     mobileBtnText.textContent = isEditing ? 'Terminar edición' : 'Esquema estático'
-  }
-
-  // Banner superior del canvas
-  const banner = document.getElementById('static-schema-banner')
-  if (banner) {
-    if (isEditing) {
-      banner.classList.remove('hidden')
-      banner.classList.add('flex')
-    } else {
-      banner.classList.add('hidden')
-      banner.classList.remove('flex')
-    }
   }
 
   // Desactivar controles de paginación mientras se edita el esquema estático
@@ -121,9 +97,7 @@ export function toggleStaticSchemaMode(ctx: EditorContext) {
 
     if (state.pagination) {
       state.pagination.applyOutputTemplate(restoredTemplate)
-      const currentTemplate = state.pagination.isSingleChunk
-        ? restoredTemplate
-        : state.pagination.getChunkedTemplate()
+      const currentTemplate = state.pagination.isSingleChunk ? restoredTemplate : state.pagination.getChunkedTemplate()
 
       ctx.withSyncing(() => {
         designer.updateTemplate(currentTemplate as any)
@@ -166,7 +140,7 @@ export function toggleStaticSchemaMode(ctx: EditorContext) {
 
     state.isEditingStaticSchema = true
     updateStaticSchemaUI(true)
-    toast.info('Modo esquema estático activo. Edita encabezados y pies de página directamente en el lienzo.')
+    toast.info('Modo esquema estático activo. Edita encabezados y pies de página.')
   }
 }
 
@@ -198,10 +172,7 @@ function extractConfigFromTemplate(basePdf: any): { config: HeaderFooterConfig; 
     footerAlignment: (footerItem?.alignment as 'left' | 'center' | 'right') ?? 'center',
     footerFontSize: Number(footerItem?.fontSize) || 9,
     footerColor: footerItem?.fontColor ?? '#4d4d4d',
-    footerOffset:
-      footerItem?.position?.y != null && isBlank
-        ? Math.max(4, Math.round(basePdf.height - footerItem.position.y))
-        : defaultFooterOffset,
+    footerOffset: footerItem?.position?.y != null && isBlank ? Math.max(4, Math.round(basePdf.height - footerItem.position.y)) : defaultFooterOffset,
     footerLine: Boolean(footerLineItem),
   }
 
@@ -214,9 +185,7 @@ function buildUpdatedStaticSchema(currentBasePdf: any, config: HeaderFooterConfi
 
   const width = currentBasePdf.width || 210
   const height = currentBasePdf.height || 297
-  const padding = Array.isArray(currentBasePdf.padding) && currentBasePdf.padding.length === 4
-    ? currentBasePdf.padding
-    : [20, 20, 20, 20]
+  const padding = Array.isArray(currentBasePdf.padding) && currentBasePdf.padding.length === 4 ? currentBasePdf.padding : [20, 20, 20, 20]
   const [top, right, bottom, left] = padding
   const contentWidth = Math.max(10, width - left - right)
 
@@ -359,9 +328,7 @@ export function setupHeaderFooter(ctx: EditorContext) {
     const designerInstance = ctx.state.designer
     if (!designerInstance) return
 
-    const basePdf = ctx.state.isEditingStaticSchema && ctx.state.savedTemplateBeforeStatic
-      ? ctx.state.savedTemplateBeforeStatic.basePdf
-      : designerInstance.getTemplate().basePdf
+    const basePdf = ctx.state.isEditingStaticSchema && ctx.state.savedTemplateBeforeStatic ? ctx.state.savedTemplateBeforeStatic.basePdf : designerInstance.getTemplate().basePdf
 
     const { config, isBlank } = extractConfigFromTemplate(basePdf)
 
@@ -440,9 +407,7 @@ export function setupHeaderFooter(ctx: EditorContext) {
     const paginationManager = ctx.state.pagination
     if (!designerInstance || !paginationManager) return
 
-    const currentBasePdf = ctx.state.isEditingStaticSchema && ctx.state.savedTemplateBeforeStatic
-      ? ctx.state.savedTemplateBeforeStatic.basePdf
-      : designerInstance.getTemplate().basePdf
+    const currentBasePdf = ctx.state.isEditingStaticSchema && ctx.state.savedTemplateBeforeStatic ? ctx.state.savedTemplateBeforeStatic.basePdf : designerInstance.getTemplate().basePdf
 
     if (!isBlankBasePdf(currentBasePdf)) {
       toast.error('No se pueden añadir esquemas estáticos a un archivo PDF externo')

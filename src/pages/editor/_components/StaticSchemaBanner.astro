@@ -1,0 +1,30 @@
+---
+import Button from '@/components/ui/Button.astro'
+---
+
+<div id="static-schema-banner" class="hidden h-14 w-full items-center gap-2 border-b border-border bg-secondary px-2 text-sm text-heading">
+  <span class="inline-flex size-2 shrink-0 animate-pulse rounded-full bg-primary"></span>
+  <p class="min-w-0 flex-1 truncate">
+    <span class="font-medium">Modo esquema estático.</span>
+    <span class="hidden text-subheading sm:inline"> El encabezado y el pie se aplican en todas las páginas.</span>
+  </p>
+  <div class="flex shrink-0 items-center gap-2">
+    <Button type="button" size="sm" variant="secondary" icon="Settings" data-open-modal="header-footer" class="shrink-0">
+      <span class="hidden sm:inline">Configuración</span>
+    </Button>
+    <Button type="button" size="sm" id="btn-end-static-banner" class="shrink-0">
+      <span class="sm:hidden">Terminar</span>
+      <span class="hidden sm:inline">Terminar edición</span>
+    </Button>
+  </div>
+</div>
+
+<style>
+  :global(body[data-editing-static-schema='true'] #editor-nav-bar) {
+    display: none;
+  }
+
+  :global(body[data-editing-static-schema='true'] #static-schema-banner) {
+    display: flex;
+  }
+</style>
