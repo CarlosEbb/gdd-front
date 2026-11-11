@@ -1,13 +1,14 @@
 ---
-import { icons, Info, type IconProps } from '@lucide/astro'
+import { icons, Info, type LucideProps } from '@lucide/astro'
 
-interface Props extends IconProps {
+interface Props extends Omit<LucideProps, 'class'> {
   name: keyof typeof icons
   strokeWidth?: number
+  class?: string
 }
 
-const { name, strokeWidth = 2, ...restProps } = Astro.props
+const { name, strokeWidth = 2, class: className, ...restProps } = Astro.props
 const IconComponent = icons[name] || (Info as any)
 ---
 
-<IconComponent {...restProps} stroke-width={strokeWidth} />
+<IconComponent {...restProps} class={className} stroke-width={strokeWidth} />
