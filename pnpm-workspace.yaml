@@ -4,3 +4,5 @@ allowBuilds:
   sharp: true
 minimumReleaseAgeExclude:
   - '@lucide/astro@1.67.0'
+patchedDependencies:
+  '@pdfme/ui@6.0.6': patches/@pdfme__ui@6.0.6.patch
