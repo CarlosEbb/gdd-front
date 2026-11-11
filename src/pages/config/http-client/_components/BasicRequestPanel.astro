@@ -4,13 +4,17 @@ import Button from '@/components/ui/Button.astro'
 import Input from '@/components/form/Input.astro'
 import Checkbox from '@/components/form/Checkbox.astro'
 import TagInput from '@/components/form/TagInput.astro'
+import ObjectListField from './ObjectListField.astro'
 import Select from '@/components/form/Select.astro'
 
 interface VariableEntry {
   key: string
   isArray: boolean
+  isObjectArray: boolean
   displayValue: string
   arrayValues: string[]
+  objectFields: string[]
+  objectItems: Record<string, string>[]
   originalType: string
   isEmailList: boolean
 }
@@ -32,8 +36,8 @@ function isCheckedValue(value: string): boolean {
 }
 ---
 
-<Card class="flex h-full min-h-112 flex-col" data-basic-request-card>
-  <div class="flex h-full min-h-0 flex-1 flex-col space-y-4">
+<Card class="sticky top-20 z-10 flex h-[calc(100dvh-23rem)] shrink-0 flex-col self-start" data-basic-request-card>
+  <div class="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
     <div>
       <h3 class="text-sm font-semibold text-heading">Datos del documento</h3>
       <p class="mt-1 text-xs text-subheading">Completa los campos y envía la solicitud. Se enviará como JSON.</p>
@@ -59,9 +63,13 @@ function isCheckedValue(value: string): boolean {
 
     {
       variableEntries.length > 0 ? (
-        <form data-basic-body-form class="min-h-0 flex-1 overflow-y-auto">
+        <form data-basic-body-form>
           <div class="space-y-3 p-0.5">
             {variableEntries.map((field) => {
+              if (field.isObjectArray) {
+                return <ObjectListField name={field.key} label={field.key.replaceAll('_', ' ')} fields={field.objectFields} items={field.objectItems} />
+              }
+
               if (field.isArray) {
                 return (
                   <TagInput
@@ -121,11 +129,9 @@ function isCheckedValue(value: string): boolean {
         <p class="text-sm text-subheading">No hay variables disponibles para este documento.</p>
       )
     }
-
-    <div class="shrink-0 pt-1">
-      <Button type="button" size="lg" icon="Send" loadingText="Enviando..." data-send-btn data-send-mode="basic" class="h-10 w-full"> Enviar </Button>
-    </div>
   </div>
+
+  <Button slot="footer" type="button" size="lg" icon="Send" loadingText="Enviando..." data-send-btn data-send-mode="basic" class="h-10 w-full"> Enviar </Button>
 </Card>
 
 <script>

@@ -4,7 +4,7 @@ import Icon from '@/components/ui/Icon.astro'
 import Link from '@/components/ui/Link.astro'
 ---
 
-<Card class="flex h-full min-h-112 flex-col" data-basic-response-card>
+<Card class="sticky top-20 z-10 flex h-[calc(100dvh-23rem)] shrink-0 flex-col self-start" data-basic-response-card>
   <div class="flex h-full min-h-0 flex-1 flex-col space-y-4">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
@@ -19,7 +19,7 @@ import Link from '@/components/ui/Link.astro'
     </div>
 
     <div class="min-h-0 flex-1 overflow-y-auto" data-basic-response-content>
-      <div class="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-main border border-dashed border-border bg-muted/30 px-4 py-8 text-center" data-basic-response-empty>
+      <div class="flex h-full min-h-0 flex-col items-center justify-center gap-3 rounded-main border border-dashed border-border bg-muted/30 px-4 py-4 text-center" data-basic-response-empty>
         <Icon name="Inbox" stroke-width={1.5} class="size-8 text-muted-foreground" />
         <div class="space-y-1">
           <p class="text-sm font-medium text-heading">Sin respuesta aún</p>
@@ -60,9 +60,7 @@ import Link from '@/components/ui/Link.astro'
 
           <div class="space-y-2">
             <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Documento</p>
-            <Link href="#" target="_blank" variant="outline" size="sm" icon="ExternalLink" iconPosition="right" data-basic-response-url class="w-full sm:w-auto">
-              Ver documento PDF
-            </Link>
+            <Link href="#" target="_blank" variant="outline" size="sm" icon="ExternalLink" iconPosition="right" data-basic-response-url class="w-full sm:w-auto"> Ver documento PDF </Link>
           </div>
         </div>
 
@@ -244,13 +242,7 @@ import Link from '@/components/ui/Link.astro'
 
     const hasValidation = Array.isArray(parsed.data?.errors) || Array.isArray(parsed.data?.warnings) || !!parsed.data?.summary
     const isSuccess = !!parsed.data?.uuid || !!parsed.data?.url
-    const kind: ResponseKind = isSuccess
-      ? 'success'
-      : hasValidation || (parsed.code !== undefined && parsed.code >= 400)
-        ? 'error'
-        : payload.status >= 400 || payload.status === 0
-          ? 'error'
-          : 'info'
+    const kind: ResponseKind = isSuccess ? 'success' : hasValidation || (parsed.code !== undefined && parsed.code >= 400) ? 'error' : payload.status >= 400 || payload.status === 0 ? 'error' : 'info'
 
     bannerEl.className = `rounded-main border p-4 ${bannerClasses(kind)}`
     setActiveIcon(root, kind)

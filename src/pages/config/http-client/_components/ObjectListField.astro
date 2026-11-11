@@ -1,0 +1,89 @@
+---
+import Button from '@/components/ui/Button.astro'
+import ObjectListItem from './ObjectListItem.astro'
+
+interface Props {
+  label: string
+  name: string
+  fields: string[]
+  items: Record<string, string>[]
+}
+
+const { label, name, fields, items } = Astro.props
+
+const fieldDefinitions = fields.map((key) => ({
+  key,
+  label: key.replaceAll('_', ' '),
+}))
+
+const emptyValues = Object.fromEntries(fields.map((key) => [key, '']))
+---
+
+<fieldset class="min-w-0 space-y-2 border-0 p-0" data-object-list data-form-field={name} data-object-fields={JSON.stringify(fields)}>
+  <div class="overflow-x-auto rounded-main border border-border">
+    <p class="border-b border-border px-3 py-2 text-sm font-semibold text-heading">{label}</p>
+    <table class="w-full min-w-72 border-collapse">
+      <thead>
+        <tr class="border-b border-border">
+          {
+            fieldDefinitions.map((field, index) => (
+              <th class:list={['px-3 py-2 text-left text-xs font-medium text-subheading', fieldDefinitions.length > 1 && index === 0 && 'w-[30%]']}>{field.key}</th>
+            ))
+          }
+          <th class="w-10"></th>
+        </tr>
+      </thead>
+      <tbody data-object-list-items>
+        {items.map((item) => <ObjectListItem fields={fieldDefinitions} values={item} />)}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex justify-end">
+    <Button type="button" variant="default" size="sm" icon="Plus" data-object-list-add> Agregar </Button>
+  </div>
+
+  <template data-object-list-template>
+    <ObjectListItem fields={fieldDefinitions} values={emptyValues} />
+  </template>
+</fieldset>
+
+<script>
+  function appendObjectListItem(root: HTMLElement) {
+    const template = root.querySelector<HTMLTemplateElement>('[data-object-list-template]')
+    const items = root.querySelector<HTMLElement>('[data-object-list-items]')
+    if (!template || !items) return
+
+    items.append(template.content.cloneNode(true))
+
+    const textarea = items.lastElementChild?.querySelector('textarea')
+    if (textarea instanceof HTMLTextAreaElement) textarea.focus()
+  }
+
+  function setupObjectList(root: HTMLElement) {
+    if (root.dataset.objectListReady === 'true') return
+    root.dataset.objectListReady = 'true'
+
+    root.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : event.target instanceof Node ? event.target.parentElement : null
+      if (!target || !root.contains(target)) return
+
+      if (target.closest('[data-object-list-add]')) {
+        appendObjectListItem(root)
+        return
+      }
+
+      const removeButton = target.closest('[data-object-list-remove]')
+      if (!removeButton) return
+
+      removeButton.closest('[data-object-list-item]')?.remove()
+    })
+  }
+
+  function initObjectLists() {
+    document.querySelectorAll<HTMLElement>('[data-object-list]').forEach(setupObjectList)
+  }
+
+  initObjectLists()
+  document.addEventListener('astro:page-load', initObjectLists)
+</script>

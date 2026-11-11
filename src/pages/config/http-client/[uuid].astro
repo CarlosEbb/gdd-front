@@ -42,18 +42,49 @@ const urlLatest = `${base_url}/documents/${uuid}`
 const token = data?.data?.jwtToken
 const bearerToken = token ?? 'tu_token'
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function toTextValue(value: unknown): string {
+  if (value == null) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  return JSON.stringify(value)
+}
+
+function collectObjectFields(items: Record<string, unknown>[]): string[] {
+  const fields: string[] = []
+
+  items.forEach((item) => {
+    Object.keys(item).forEach((key) => {
+      if (!fields.includes(key)) fields.push(key)
+    })
+  })
+
+  return fields
+}
+
 const requestJson = JSON.stringify(request ?? {}, null, 2)
 const requestXml = serializeXmlBody(request ?? {})
 const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
   const isArray = Array.isArray(value)
+  const objectItemsSource = isArray && value.length > 0 && value.every(isPlainObject) ? value : null
+  const objectFields = objectItemsSource ? collectObjectFields(objectItemsSource) : []
+  const isObjectArray = objectFields.length > 0
 
   return {
     key,
-    isArray,
+    isArray: isArray && !isObjectArray,
+    isObjectArray,
     displayValue: value == null ? '' : typeof value === 'object' ? JSON.stringify(value) : String(value),
-    arrayValues: isArray ? value.map((item) => String(item ?? '')) : [],
-    originalType: isArray ? 'array' : typeof value,
-    isEmailList: isArray && /correo|email|mail/i.test(key),
+    arrayValues: isArray && !isObjectArray ? value.map((item) => String(item ?? '')) : [],
+    objectFields,
+    objectItems: objectItemsSource
+      ? objectItemsSource.map((item) => Object.fromEntries(objectFields.map((field) => [field, toTextValue(item[field])])))
+      : [],
+    originalType: isObjectArray ? 'object-array' : isArray ? 'array' : typeof value,
+    isEmailList: isArray && !isObjectArray && /correo|email|mail/i.test(key),
   }
 })
 ---
@@ -181,20 +212,54 @@ const variableEntries = Object.entries(request ?? {}).map(([key, value]) => {
     return `${date}T${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}:${normalizedSeconds}Z`
   }
 
+  function readObjectList(list: HTMLElement): Record<string, string>[] {
+    let fieldKeys: string[] = []
+
+    try {
+      const parsed = JSON.parse(list.dataset.objectFields || '[]')
+      fieldKeys = Array.isArray(parsed) ? parsed.filter((key): key is string => typeof key === 'string') : []
+    } catch {
+      fieldKeys = []
+    }
+
+    const items = list.querySelectorAll<HTMLElement>('[data-object-list-items] > [data-object-list-item]')
+
+    return Array.from(items).map((item) => {
+      const entry: Record<string, string> = {}
+
+      fieldKeys.forEach((fieldKey) => {
+        const control = item.querySelector<HTMLTextAreaElement>(`[data-object-field="${CSS.escape(fieldKey)}"]`)
+        entry[fieldKey] = control?.value ?? ''
+      })
+
+      return entry
+    })
+  }
+
   function collectFormPayload(scope: ParentNode): Record<string, unknown> {
     const payload: Record<string, unknown> = {}
-    const fields = scope.querySelectorAll('[data-form-field]') as NodeListOf<HTMLInputElement>
+
+    scope.querySelectorAll<HTMLElement>('[data-object-list]').forEach((list) => {
+      const key = list.dataset.formField
+      if (!key) return
+      payload[key] = readObjectList(list)
+    })
+
+    const fields = scope.querySelectorAll<HTMLElement>('[data-form-field]')
 
     fields.forEach((field) => {
+      if (field.closest('[data-object-list]')) return
+      if (!(field instanceof HTMLInputElement) && !(field instanceof HTMLTextAreaElement)) return
+
       const key = field.dataset.formField || field.name
       const originalType = field.dataset.originalType || 'string'
 
-      if (field.type === 'checkbox') {
+      if (field instanceof HTMLInputElement && field.type === 'checkbox') {
         payload[key] = field.checked
         return
       }
 
-      if (field.type === 'datetime-local') {
+      if (field instanceof HTMLInputElement && field.type === 'datetime-local') {
         payload[key] = toUtcIsoString(field.value)
         return
       }

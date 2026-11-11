@@ -1,0 +1,31 @@
+---
+import Button from '@/components/ui/Button.astro'
+
+interface Field {
+  key: string
+  label: string
+}
+
+interface Props {
+  fields: Field[]
+  values: Record<string, string>
+}
+
+const { fields, values } = Astro.props
+
+const textareaClass =
+  'field-sizing-content min-h-9 w-full resize-none border-0 bg-transparent px-3 py-2 text-sm text-heading outline-none placeholder:text-subheading focus:bg-foreground focus:ring-2 focus:ring-ring focus:ring-inset'
+---
+
+<tr class="border-b border-border last:border-b-0" data-object-list-item>
+  {
+    fields.map((field, index) => (
+      <td class:list={['p-0 align-top', fields.length > 1 && index === 0 && 'w-[30%]']}>
+        <textarea class={textareaClass} rows="1" aria-label={field.key} data-object-field={field.key} set:text={values[field.key] ?? ''} />
+      </td>
+    ))
+  }
+  <td class="w-10 p-1 text-center align-middle">
+    <Button type="button" variant="destructive" size="sm" icon="X" iconOnly aria-label="Quitar fila" data-object-list-remove />
+  </td>
+</tr>
