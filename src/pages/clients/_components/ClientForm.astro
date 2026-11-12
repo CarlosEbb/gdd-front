@@ -50,13 +50,13 @@ const rifPrefix = ['J', 'G', 'V', 'E'].includes(rifPrefixCandidate) ? rifPrefixC
         idInput="rif"
         nameInput="rif"
         label="RIF"
-        placeholderInput="1234567"
+        placeholderInput="12345678-9"
         valuePrefix={rifPrefix}
         valueInput={rifNumber}
         requiredPrefix
         requiredInput
         typeInput="text"
-        patternInput="^\\d{8}-\\d$"
+        patternInput="^[0-9]{8}-[0-9]$"
         minlengthInput={10}
         maxlengthInput={10}
         placeholderPrefix="Tipo"
