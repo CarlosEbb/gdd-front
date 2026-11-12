@@ -2,6 +2,7 @@
 import '@/styles/global.css'
 
 import logo from '@/assets/images/imagotipo.png'
+import darkLogo from '@/assets/images/imagotipo_dark.png'
 import Layout from './Layout.astro'
 
 import bgTest2 from '@/assets/images/bg-1.avif'
@@ -53,7 +54,8 @@ const promoSlide = promoSlides[Math.floor(Math.random() * promoSlides.length)]
           <header class="flex flex-col items-center">
             <a href="/" class="mb-7 flex items-center gap-2 font-medium">
               <div class="flex w-40 items-center justify-center rounded-md text-primary-foreground">
-                <img src={logo.src} alt="Salto angel" class="h-full w-64 rounded-main object-cover select-none lg:w-full" draggable="false" />
+                <img src={logo.src} alt="Salto angel" class="h-full w-64 rounded-main object-cover select-none lg:w-full dark:hidden" draggable="false" />
+                <img src={darkLogo.src} alt="Salto angel" class="hidden h-full w-64 rounded-main object-cover select-none lg:w-full dark:block" draggable="false" />
               </div>
             </a>
             <div class="flex flex-col items-center gap-1 text-center text-heading">
